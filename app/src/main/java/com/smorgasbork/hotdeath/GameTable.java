@@ -366,6 +366,13 @@ public class GameTable extends View
 		m_bottomMarginExternal = m;
 	}
 
+	public void moveCardToPlayer(Card card, int seat)
+	{
+		card.setX(m_ptDrawPile.x);
+		card.setY(m_ptDrawPile.y);
+		startCardAnimation(card, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 2);
+	}
+
 	public void moveCardToDiscardPile(Card card)
 	{
 		startCardAnimation(card, m_discardPileBoundingRect.left, m_discardPileBoundingRect.top, 0, true, m_game.getDelay() / 2);
@@ -929,33 +936,18 @@ public class GameTable extends View
 		int x = 0;
 		int y = 0;
 
-		// draw the hands
-
-		for (i = 0; i < 4; i++) 
-		{
-			Player p = m_game.getPlayer(i);
-
-
-			// don't draw ejected players' cards
-			
-			if (p.getActive()) 
-			{
-				RedrawHand (canvas, i + 1);
-			}
-		}
-		
 		Player p = m_game.getCurrPlayer();
 		if (p != null && !m_game.getRoundComplete())
 		{
 			Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
-	
+
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
 			m_drawMatrix.setTranslate(pt.x, pt.y);
-			
+
 			canvas.drawBitmap(m_bmpPlayerIndicator[curr_color - 1][p.getSeat() - 1], m_drawMatrix, null);
-		}		
-		
+		}
+
 		if (m_game.getFastForward())
 		{
 			return;
@@ -964,7 +956,7 @@ public class GameTable extends View
 		// draw the draw pile
 
 		CardPile pile = m_game.getDrawPile();
-		CardDeck deck = m_game.getDeck ();
+		CardDeck deck = m_game.getDeck();
 
 		int skip = 16;
 		if (deck != null)
@@ -1002,9 +994,9 @@ public class GameTable extends View
 		m_drawPileBoundingRect = new Rect(m_ptDrawPile.x, m_ptDrawPile.y, x + m_cardWidth, y + m_cardHeight);
 
 		// draw the discard pile
-		
-		pile = m_game.getDiscardPile ();
-		
+
+		pile = m_game.getDiscardPile();
+
 		if (pile != null)
 		{
 			int numCardsInPile = pile.getNumCards();
@@ -1017,9 +1009,9 @@ public class GameTable extends View
 				{
 					i = numCardsInPile - 2;
 				}
-				
+
 				Card c = pile.getCard(i);
-				if (c != null) 
+				if (c != null)
 				{
 					// FIXME -- make resolution independent
 					x = m_ptDiscardPile.x + (int)((float)i / (float)skip) * 2;
@@ -1042,9 +1034,24 @@ public class GameTable extends View
 			}
 		}
 
-		
+
 		m_discardPileBoundingRect = new Rect(m_ptDiscardPile.x, m_ptDiscardPile.y, x + m_cardWidth, y + m_cardHeight);
-		
+
+		// draw the hands
+
+		for (i = 0; i < 4; i++)
+		{
+			p = m_game.getPlayer(i);
+
+
+			// don't draw ejected players' cards
+
+			if (p.getActive())
+			{
+				RedrawHand (canvas, i + 1);
+			}
+		}
+
 
 		if (m_game.getWinner() != 0)
 		{
@@ -1052,10 +1059,10 @@ public class GameTable extends View
 			m_drawMatrix.setScale(1, 1);
 			m_drawMatrix.setTranslate(m_ptWinningMessage.x, m_ptWinningMessage.y);
 
-			canvas.drawBitmap(m_bmpWinningMessage[m_game.getWinner() - 1], m_drawMatrix, null);			
+			canvas.drawBitmap(m_bmpWinningMessage[m_game.getWinner() - 1], m_drawMatrix, null);
 		}
-		
-		drawPenalty(canvas);		
+
+		drawPenalty(canvas);
 	}
 	
 	private void RedrawHand (Canvas cv, int seat)
@@ -1145,10 +1152,15 @@ public class GameTable extends View
 				continue;
 			}
 
-			c.setX(x);
-			c.setY(y);
+			if (c.isAnimating()) {
+				c.setTargetX(x);
+				c.setTargetY(y);
+			} else {
+				c.setX(x);
+				c.setY(y);
+			}
 			if (revealedOffset <= j && j < stop) {
-				this.drawCard(cv, c, x, y, c.getFaceUp());
+				this.drawCard(cv, c);
 				x += dx;
 				y += dy;
 			}
@@ -1206,12 +1218,20 @@ public class GameTable extends View
 				continue;
 			}
 
-			c.setX(x);
-			c.setY(y);
-			if (unrevealedOffset <= j && j < stop) {
-				this.drawCard(cv, c, x, y, c.getFaceUp());
-				x += dx;
-				y += dy;
+            if (c.isAnimating()) {
+                c.setTargetX(x);
+                c.setTargetY(y);
+            } else {
+                c.setX(x);
+                c.setY(y);
+            }
+            if (unrevealedOffset <= j && j < stop || c.isAnimating()) {
+				this.drawCard(cv, c);
+				if (unrevealedOffset <= j && j < stop)
+				{
+					x += dx;
+					y += dy;
+				}
 			}
 		}
 

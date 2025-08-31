@@ -92,6 +92,11 @@ public class Game extends Thread {
 		m_gt = gt;
 	}
 
+	public GameTable getGameTable ()
+	{
+		return m_gt;
+	}
+
 	public Player getDealer()
     {
         return m_dealer;
@@ -728,6 +733,7 @@ public class Game extends Thread {
 		
 		dealHands();
 		postDealHands();
+		waitABit();
 	}
 	
 	private void postDealHands ()
@@ -920,6 +926,7 @@ public class Game extends Thread {
 				m_discardPile.addCard(m_currCard);
 
 				m_gt.moveCardToDiscardPile(m_currCard);
+				waitABit();
 
 				m_currColor = m_currCard.getColor();
 				if (m_currColor == Card.COLOR_WILD) 
@@ -935,6 +942,7 @@ public class Game extends Thread {
 					redrawTable ();
 					Log.d("HDU", msg);
 					//PromptUser(msg);
+					//waitABit();
 				}
 
 				handleSpecialCards();
@@ -983,23 +991,27 @@ public class Game extends Thread {
                         }
                     }
 				}
+				//waitABit();
 				m_currPlayer = nextPlayer();
 				redrawTable();
 			}
 			
 			else if (m_currPlayer.getWantsToDraw() && !getCurrPlayerDrawn())
 			{
-				if (!m_currPlayer.drawCard())
+				Card card = m_currPlayer.drawCard();
+				if (card == null)
 				{
 					return true;
 				}
-				redrawTable ();
+
+				m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
+				waitABit();
 
 				if (m_currPlayer instanceof HumanPlayer)
 				{
 					String msg = String.format(getString (R.string.msg_player_draws_specific_card), seatToString(m_currPlayer.getSeat()), cardToString(m_currPlayer.getLastDrawn()));
 					Log.d("HDU", msg);
-					promptUser(msg);
+					//promptUser(msg);
 				}				
 			}
 			
@@ -1031,10 +1043,17 @@ public class Game extends Thread {
 				}
 				else
 				{
-					m_currPlayer.drawCard();
+					Card card = m_currPlayer.drawCard();
+					if (card == null)
+					{
+						return true;
+					}
+
+					m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
+					waitABit();
 		
 					//m_currPlayer.getHand().sort(); //redundant
-					redrawTable();
+					//redrawTable();
 		
 					String msg = String.format(getString (R.string.msg_player_draws_card), seatToString(m_currPlayer.getSeat()));
 					Log.d("HDU", msg);
@@ -1399,7 +1418,7 @@ public class Game extends Thread {
 	
 	void promptUser(final String msg)
 	{
-		promptUser(msg, true);
+		promptUser(msg, false);
 	}
 
 	void promptUser(final String msg, boolean wait)
@@ -1903,6 +1922,7 @@ public class Game extends Thread {
 				msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim.getSeat()));
 				promptUser (msg);
 			}
+			waitABit();
 
 			if (pVictim2 != null) 
 			{
@@ -1913,6 +1933,7 @@ public class Game extends Thread {
 					msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim2.getSeat()));
 					promptUser (msg);
 				}
+				waitABit();
 			}
 			m_currPlayer = m_penalty.getGeneratingPlayer();
 		}
@@ -1923,6 +1944,7 @@ public class Game extends Thread {
 			msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim.getSeat()));
 			redrawTable();
 			promptUser (msg);
+			waitABit();
 
 			if (pVictim == m_players[SEAT_SOUTH - 1])
 			{
@@ -1936,6 +1958,7 @@ public class Game extends Thread {
 				msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim2.getSeat()));
 				redrawTable();
 				promptUser (msg);
+				waitABit();
 
 				if (pVictim2 == m_players[SEAT_SOUTH - 1])
 				{
@@ -2065,6 +2088,13 @@ public class Game extends Thread {
 				{
 					p.getHand().sort();
 				}
+				m_gt.moveCardToPlayer(c, p.getSeat());
+				try
+				{
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
 			}
 			else
 			{
@@ -2079,7 +2109,8 @@ public class Game extends Thread {
 			promptUser (getString(R.string.msg_discard_empty));
 		}
 
-		redrawTable();
+		//redrawTable();
+		waitABit();
 		m_currPlayer = realCurrPlayer;
 	}
 	

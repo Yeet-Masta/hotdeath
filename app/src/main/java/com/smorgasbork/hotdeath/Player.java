@@ -259,7 +259,7 @@ public class Player {
 		return rgen.nextInt (11) + 5;
 	}
 
-	protected boolean drawCard()
+	protected Card drawCard()
 	{
 		m_hasTriedDrawing = true;
 
@@ -270,7 +270,7 @@ public class Player {
 		// table).  But it _can_ happen.
 		if (c == null) 
 		{
-			return false;
+			return null;
 		}
 
 		m_hand.addCard (c);
@@ -284,7 +284,7 @@ public class Player {
 			m_hand.sort();
 		}
 
-		return true;
+		return c;
 	}
 	
 	public JSONObject toJSON () throws JSONException

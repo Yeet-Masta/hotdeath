@@ -29,7 +29,7 @@ public class ComputerPlayer extends Player
 		this.m_wantsToPass = false;
 		this.m_wantsToPlayCard = false;
 				
-		m_game.waitABit ();
+		//m_game.waitABit ();
 		
 		if (!m_hand.hasValidCards(m_game))
 		{
@@ -52,15 +52,15 @@ public class ComputerPlayer extends Player
 	}
 	
 	@Override
-	public boolean drawCard ()
+	public Card drawCard ()
 	{
-		m_game.waitABit ();
+		//m_game.waitABit ();
 		return super.drawCard();
 	}
 
 	public int chooseColor()
 	{
-		m_game.waitABit();
+		//m_game.waitABit();
 		
 		// FIXME -- we need a real strategy
 		int maxCount = 0;

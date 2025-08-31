@@ -375,8 +375,13 @@ public class Card {
 	public void setX(int x) {
 		this.x = x;
 	}
-
 	public void setY(int y) {
 		this.y = y;
+	}
+	public void setTargetX(int x) {
+		this.targetX = x;
+	}
+	public void setTargetY(int y) {
+		this.targetY = y;
 	}
 }
