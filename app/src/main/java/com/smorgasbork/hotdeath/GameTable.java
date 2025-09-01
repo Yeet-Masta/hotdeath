@@ -108,8 +108,9 @@ public class GameTable extends View
 	private Game m_game;
 	private GameOptions m_go;
 
-	private AnimationManager animationManager;
-	
+	private final AnimationManager animationManager;
+	private boolean m_discardPileOnTop = false;
+
 	public void setHelpCardID (int id)
 	{
 		m_helpCardID = id;
@@ -368,6 +369,7 @@ public class GameTable extends View
 
 	public void moveCardToPlayer(Card card, int seat)
 	{
+		m_discardPileOnTop = false;
 		card.setX(m_ptDrawPile.x);
 		card.setY(m_ptDrawPile.y);
 		startCardAnimation(card, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 2);
@@ -375,6 +377,7 @@ public class GameTable extends View
 
 	public void moveCardToDiscardPile(Card card)
 	{
+		m_discardPileOnTop = true;
 		startCardAnimation(card, m_discardPileBoundingRect.left, m_discardPileBoundingRect.top, 0, true, m_game.getDelay() / 2);
 	}
 
@@ -955,87 +958,14 @@ public class GameTable extends View
 
 		// draw the draw pile
 
-		CardPile pile = m_game.getDrawPile();
-		CardDeck deck = m_game.getDeck();
-
-		int skip = 16;
-		if (deck != null)
-		{
-			if (deck.getNumCards () > 108)
-			{
-				skip = 32;
-			}
-		}
-
-		if (pile != null)
-		{
-			x = m_ptDrawPile.x;
-			y = m_ptDrawPile.y;
-			int numCardsInPile = pile.getNumCards();
-
-			for (i = 0; i < numCardsInPile; i += skip)
-			{
-				if (i >= numCardsInPile - skip)
-				{
-					i = numCardsInPile - 1;
-				}
-
-				Card c = pile.getCard(i);
-				if (c != null)
-				{
-					this.drawCard (canvas, c, x, y, false);
-					// FIXME -- make resolution independent!
-					x += 2;
-					y += 2;
-				}
-			}
-		}
-
-		m_drawPileBoundingRect = new Rect(m_ptDrawPile.x, m_ptDrawPile.y, x + m_cardWidth, y + m_cardHeight);
+		m_drawPileBoundingRect = drawPile(m_game.getDrawPile(), canvas, m_ptDrawPile, false, true);
 
 		// draw the discard pile
 
-		pile = m_game.getDiscardPile();
-
-		if (pile != null)
+		if (!m_discardPileOnTop)
 		{
-			int numCardsInPile = pile.getNumCards();
-			x = m_ptDiscardPile.x;
-			y = m_ptDiscardPile.y;
-			for (i = 0; i < numCardsInPile - 1; i += skip)
-			{
-				// make sure that the top card is drawn...
-				if (i >= numCardsInPile - 1 - skip)
-				{
-					i = numCardsInPile - 2;
-				}
-
-				Card c = pile.getCard(i);
-				if (c != null)
-				{
-					// FIXME -- make resolution independent
-					x = m_ptDiscardPile.x + (int)((float)i / (float)skip) * 2;
-					y = m_ptDiscardPile.y + (int)((float)i / (float)skip) * 2;
-					c.setFaceUp(true);
-
-					this.drawCard (canvas, c, x, y, true);
-				}
-			}
-			if (numCardsInPile > 0)
-			{
-				if (!pile.getCard(numCardsInPile - 1).isAnimating())
-				{
-					this.drawCard(canvas, pile.getCard(numCardsInPile - 1), x, y, true);
-				}
-				else
-				{
-					this.drawCard (canvas, pile.getCard(numCardsInPile - 1));
-				}
-			}
+			m_discardPileBoundingRect = drawPile(m_game.getDiscardPile(), canvas, m_ptDiscardPile, true, false);
 		}
-
-
-		m_discardPileBoundingRect = new Rect(m_ptDiscardPile.x, m_ptDiscardPile.y, x + m_cardWidth, y + m_cardHeight);
 
 		// draw the hands
 
@@ -1052,6 +982,11 @@ public class GameTable extends View
 			}
 		}
 
+		if (m_discardPileOnTop)
+		{
+			m_discardPileBoundingRect = drawPile(m_game.getDiscardPile(), canvas,m_ptDiscardPile, true, false);
+		}
+
 
 		if (m_game.getWinner() != 0)
 		{
@@ -1063,6 +998,70 @@ public class GameTable extends View
 		}
 
 		drawPenalty(canvas);
+	}
+
+	private Rect drawPile(CardPile pile, Canvas canvas, Point pt, boolean faceUp, boolean badge)
+	{
+		if (pile != null)
+		{
+			Card c;
+			CardDeck deck = m_game.getDeck();
+
+			int skip = 16;
+			if (deck != null)
+			{
+				if (deck.getNumCards () > 108)
+				{
+					skip = 32;
+				}
+			}
+
+			int x = pt.x;
+			int y = pt.y;
+			int numCardsInPile = pile.getNumCards();
+
+			for (int i = 0; i < numCardsInPile - 1; i += skip)
+			{
+				// make sure that the top card is drawn...
+				if (i >= numCardsInPile - 1 - skip)
+				{
+					i = numCardsInPile - 2;
+				}
+
+				c = pile.getCard(i);
+				if (c != null)
+				{
+					// FIXME -- make resolution independent
+					x = pt.x + (int)((float)i / (float)skip) * 2;
+					y = pt.y + (int)((float)i / (float)skip) * 2;
+					//c.setFaceUp(faceUp);
+					this.drawCard (canvas, c, x, y, faceUp);
+				}
+			}
+			if (numCardsInPile > 0)
+			{
+				c = pile.getCard(numCardsInPile - 1);
+				if (c != null)
+				{
+					if (!c.isAnimating())
+					{
+						this.drawCard(canvas, c, x, y, faceUp);
+					}
+					else
+					{
+						this.drawCard(canvas, c);
+					}
+				}
+			}
+
+			if (badge)
+			{
+
+			}
+
+			return new Rect(pt.x, pt.y, x + m_cardWidth, y + m_cardHeight);
+		}
+		return new Rect();
 	}
 	
 	private void RedrawHand (Canvas cv, int seat)
@@ -1947,7 +1946,7 @@ public class GameTable extends View
 
 			float fx = (float)(m_ptDiscardBadge.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numCards = "" + p.getNumCards();
+			String numCards = "+" + p.getNumCards();
 
 			m_paintCardBadgeText.getTextBounds(numCards, 0, numCards.length(), textBounds);
 			float fy = (float)(m_ptDiscardBadge.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));

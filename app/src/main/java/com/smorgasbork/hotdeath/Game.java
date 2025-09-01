@@ -925,7 +925,7 @@ public class Game extends Thread {
 				m_currCard.setFaceUp(true);
 				m_discardPile.addCard(m_currCard);
 
-				m_gt.moveCardToDiscardPile(m_currCard);
+				m_ga.runOnUiThread(() ->m_gt.moveCardToDiscardPile(m_currCard));
 				waitABit();
 
 				m_currColor = m_currCard.getColor();
@@ -1004,7 +1004,7 @@ public class Game extends Thread {
 					return true;
 				}
 
-				m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
+				m_ga.runOnUiThread(()-> m_gt.moveCardToPlayer(card, m_currPlayer.getSeat()));
 				waitABit();
 
 				if (m_currPlayer instanceof HumanPlayer)
@@ -1049,7 +1049,7 @@ public class Game extends Thread {
 						return true;
 					}
 
-					m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
+					m_ga.runOnUiThread(()-> m_gt.moveCardToPlayer(card, m_currPlayer.getSeat()));
 					waitABit();
 		
 					//m_currPlayer.getHand().sort(); //redundant
@@ -2072,36 +2072,37 @@ public class Game extends Thread {
 		promptUser (msg);
 
 		boolean notEnoughCards = false;
+		if (numcards > m_drawPile.getNumCards())
+		{
+			rolloverDiscardPile();
+		}
 		m_forceDrawing = true;
 		for (i = 0; i < numcards; i++)
 		{
 			Card c = drawCard();
 
-			if (c != null) 
-			{
-				p.addCardToHand(c);
-				if (p.getSeat() == SEAT_SOUTH)
-				{
-					c.setFaceUp(true);
-				}
-				if (p.getSeat() == SEAT_SOUTH || m_go.getFaceUp())
-				{
-					p.getHand().sort();
-				}
-				m_gt.moveCardToPlayer(c, p.getSeat());
-				try
-				{
-					Thread.sleep(50);
-				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-			}
-			else
-			{
-				notEnoughCards = true;
-				break;
-			}
-		}
+            if (c == null) {
+                notEnoughCards = true;
+                break;
+            } else {
+                p.addCardToHand(c);
+                if (p.getSeat() == SEAT_SOUTH)
+                {
+                    c.setFaceUp(true);
+                }
+                if (p.getSeat() == SEAT_SOUTH || m_go.getFaceUp())
+                {
+                    p.getHand().sort();
+                }
+                m_ga.runOnUiThread(()-> m_gt.moveCardToPlayer(c, p.getSeat()));
+                try
+                {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
 		m_forceDrawing = false;
 		
 		if (notEnoughCards)
