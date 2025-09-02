@@ -551,7 +551,7 @@ public class Hand {
 	}
 	
 	
-	public Hand(JSONObject o, Player p, CardDeck d) throws JSONException
+	public Hand(JSONObject o, Player p, CardDeck d, GameOptions go) throws JSONException
 	{
 		m_player = p;
 		m_cards = new Card[Game.MAX_NUM_CARDS];
@@ -564,6 +564,10 @@ public class Hand {
 			this.addCard(c);
 		}
 		m_firstUnrevealed = o.getInt("firstUnrevealed");
+		if (go.getFaceUp())
+		{
+			sort();
+		}
 	}
 	
 	public JSONObject toJSON () throws JSONException

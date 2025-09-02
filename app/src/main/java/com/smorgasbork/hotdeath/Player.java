@@ -312,7 +312,7 @@ public class Player {
 	public Player(JSONObject o, Game g, GameOptions go) throws JSONException
 	{
 		this (g, go);
-		m_hand = new Hand (o.getJSONObject("hand"), this, g.getDeck());
+		m_hand = new Hand (o.getJSONObject("hand"), this, g.getDeck(), go);
 		m_totalScore = o.getInt("totalScore");
 		m_lastScore = o.getInt("lastScore");
 		m_virusPenalty = o.getInt("virusPenalty");
