@@ -311,7 +311,7 @@ public class Card {
 		return o;
 	}
 
-	public void startAnimation(float toX, float toY, float toRot, boolean toFaceUp, long duration) {
+	public void setAnimation(float toX, float toY, float toRot, boolean toFaceUp, long duration) {
 		this.startX = this.x;
 		this.startY = this.y;
 		this.targetX = toX;

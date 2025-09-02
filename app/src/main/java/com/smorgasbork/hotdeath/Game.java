@@ -925,7 +925,7 @@ public class Game extends Thread {
 				m_currCard.setFaceUp(true);
 				m_discardPile.addCard(m_currCard);
 
-				m_ga.runOnUiThread(() ->m_gt.moveCardToDiscardPile(m_currCard));
+				m_gt.moveCardToDiscardPile(m_currCard);
 				waitABit();
 
 				m_currColor = m_currCard.getColor();
@@ -1004,7 +1004,7 @@ public class Game extends Thread {
 					return true;
 				}
 
-				m_ga.runOnUiThread(()-> m_gt.moveCardToPlayer(card, m_currPlayer.getSeat()));
+				m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
 				waitABit();
 
 				if (m_currPlayer instanceof HumanPlayer)
@@ -1049,7 +1049,7 @@ public class Game extends Thread {
 						return true;
 					}
 
-					m_ga.runOnUiThread(()-> m_gt.moveCardToPlayer(card, m_currPlayer.getSeat()));
+					m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
 					waitABit();
 		
 					//m_currPlayer.getHand().sort(); //redundant
@@ -2094,7 +2094,7 @@ public class Game extends Thread {
                 {
                     p.getHand().sort();
                 }
-                m_ga.runOnUiThread(()-> m_gt.moveCardToPlayer(c, p.getSeat()));
+              m_gt.moveCardToPlayer(c, p.getSeat());
                 try
                 {
                     Thread.sleep(50);

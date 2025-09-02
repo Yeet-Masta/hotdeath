@@ -372,17 +372,18 @@ public class GameTable extends View
 		m_discardPileOnTop = false;
 		card.setX(m_ptDrawPile.x);
 		card.setY(m_ptDrawPile.y);
-		startCardAnimation(card, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 2);
+		startCardAnimation(card, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
 	}
 
 	public void moveCardToDiscardPile(Card card)
 	{
 		m_discardPileOnTop = true;
-		startCardAnimation(card, m_discardPileBoundingRect.left, m_discardPileBoundingRect.top, 0, true, m_game.getDelay() / 2);
+		startCardAnimation(card, m_discardPileBoundingRect.left, m_discardPileBoundingRect.top, 0, true, m_game.getDelay() / 4);
 	}
 
 	public void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
-		animationManager.startCardAnimation(card, toX, toY, toRot, faceUp, duration);
+		card.setAnimation(toX, toY, toRot, faceUp, duration);
+		animationManager.startCardAnimation(card);
 	}
 
 	public void startGameWhenReady ()
