@@ -1688,8 +1688,6 @@ public class Game extends Thread {
 
 				forceDraw(victim, 2);
 			}
-			m_nextPlayerPreset = realCurrPlayer;
-			m_currPlayer = nextPlayer();
 		}
 
 		// check the wild draw fours
