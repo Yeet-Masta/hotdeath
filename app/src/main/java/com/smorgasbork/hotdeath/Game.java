@@ -1688,7 +1688,8 @@ public class Game extends Thread {
 
 				forceDraw(victim, 2);
 			}
-			m_currPlayer = realCurrPlayer;
+			m_nextPlayerPreset = realCurrPlayer;
+			m_currPlayer = nextPlayer();
 		}
 
 		// check the wild draw fours
@@ -1905,12 +1906,14 @@ public class Game extends Thread {
 			}
 
 			forceDraw(pVictim, numcards);
-			m_currPlayer = pVictim;
+			m_nextPlayerPreset = pVictim;
+			m_currPlayer = nextPlayer();
 
 			if (pVictim2 != null) 
 			{
 				forceDraw(pVictim2, m_penalty.getNumCards() / 2);
-				m_currPlayer = pVictim2;
+				m_nextPlayerPreset = pVictim2;
+				m_currPlayer = nextPlayer();
 			}
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_FACEUP) 
@@ -1935,7 +1938,8 @@ public class Game extends Thread {
 				}
 				waitABit();
 			}
-			m_currPlayer = m_penalty.getGeneratingPlayer();
+			m_nextPlayerPreset = m_penalty.getGeneratingPlayer();
+			m_currPlayer = nextPlayer();
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_EJECT) 
 		{
