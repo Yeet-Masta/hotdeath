@@ -2,15 +2,50 @@ plugins {
     id 'com.android.application'
 }
 
+import java.text.SimpleDateFormat
+
+// --- Centralized version info ---
+ext {
+    appVersionName = "2.0.00"
+}
+
+// --- Auto-increment versionCode using git commit count ---
+def getGitCommitCount() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            standardOutput = stdout
+        }
+        return Integer.parseInt(stdout.toString().trim())
+    } catch (Exception e) {
+        return 1 // fallback
+    }
+}
+
+// --- Short git hash for optional build metadata ---
+def gitShortHash() {
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+        }
+        return stdout.toString().trim()
+    } catch (Exception e) {
+        return "dev"
+    }
+}
+
 android {
     namespace 'com.smorgasbork.hotdeath'
     compileSdk 36
 
     defaultConfig {
-        minSdk 28 // Updated minimum to Android 9 (Pie)
+        minSdk 28
         targetSdk 36
-        versionCode 20
-        versionName "2.0.00"
+        versionCode getGitCommitCount()
+        versionName "${appVersionName}+${gitShortHash()}"
     }
 
     flavorDimensions "version"
@@ -18,12 +53,12 @@ android {
         production {
             dimension "version"
             applicationId "com.smorgasbork.hotdeath"
-            versionName "2.0.00"
+            versionName appVersionName
         }
         staging {
             dimension "version"
             applicationId "com.smorgasbork.hotdeath.staging"
-            versionName "2.0.00-staging"
+            versionName "${appVersionName}-staging"
         }
     }
 
