@@ -1134,15 +1134,13 @@ public class Game extends Thread {
 			// draw four, we can stack drawfours (except on the harvester
 			// of sorrows and mystery)
 			if (!(m_go.getStandardRules())) {
-				if (currCardID != Card.ID_GREEN_3_AIDS
-					&& (origCardValue == Card.VAL_WILD_DRAW)
-					&& (origCardId != Card.ID_WILD_HOS) && (origCardId != Card.ID_WILD_MYSTERY))
-				{
-					if (checkCardValue == Card.VAL_WILD_DRAW && checkCardId != Card.ID_WILD_MYSTERY)
-					{
-						return true;
-					}
-				}
+                if (m_penalty.getSecondaryVictim() != null
+                        && origCardValue == Card.VAL_WILD_DRAW
+                        && origCardId != Card.ID_WILD_HOS
+						&& origCardId != Card.ID_WILD_MYSTERY
+						&& checkCardId != Card.ID_WILD_MYSTERY) {
+                    return true;
+                }
 			}
 
 			// magic 5 is a defender against the hot death wild card only
@@ -1482,7 +1480,7 @@ public class Game extends Thread {
 
 				// no stacking on AIDS -- it gets too messy because it would
 				// throw the penalty back against the direction of play
-				if (m_currCard.getID() != Card.ID_GREEN_3_AIDS) {
+				if (m_penalty.getSecondaryVictim() != null) {
 					// all draw fours can stack, except for mystery draw
 					if ((val == Card.VAL_WILD_DRAW) && (prevID != Card.ID_WILD_MYSTERY) && (id != Card.ID_WILD_MYSTERY)) 
 					{
@@ -1783,6 +1781,10 @@ public class Game extends Thread {
 		{
 			m_penalty.setGeneratingPlayer(m_currPlayer);
 			m_penalty.setVictim(getNextPlayer());
+			if (m_penalty.getVictim() == m_penalty.getSecondaryVictim())
+			{
+				m_penalty.setSecondaryVictim(null);
+			}
 
 			String msg = String.format (getString(R.string.msg_holy_defender), seatToString(m_penalty.getVictim().getSeat()));
 			promptUser (msg);
