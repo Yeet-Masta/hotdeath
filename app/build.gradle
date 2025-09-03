@@ -2,79 +2,73 @@ plugins {
     id 'com.android.application'
 }
 
-import java.text.SimpleDateFormat
+def appVersionName = "2.0.15"
 
-// --- Centralized version info ---
-ext {
-    appVersionName = "2.0.00"
-}
+import javax.inject.Inject
+// --- Git helper for versionCode and short hash ---
+class GitHelper {
+    private final ExecOperations execOperations
 
-// --- Auto-increment versionCode using git commit count ---
-def getGitCommitCount() {
-    try {
-        def stdout = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'rev-list', '--count', 'HEAD'
-            standardOutput = stdout
+    @Inject
+    GitHelper(ExecOperations execOperations) {
+        this.execOperations = execOperations
+    }
+
+    int getCommitCount() {
+        try {
+            def stdout = new ByteArrayOutputStream()
+            execOperations.exec { spec ->
+                spec.commandLine = ['git', 'rev-list', '--count', 'HEAD']
+                spec.standardOutput = stdout
+            }
+            return Integer.parseInt(stdout.toString().trim())
+        } catch (Exception e) {
+            return 1
         }
-        return Integer.parseInt(stdout.toString().trim())
-    } catch (Exception e) {
-        return 1 // fallback
     }
 }
 
-// --- Short git hash for optional build metadata ---
-def gitShortHash() {
-    try {
-        def stdout = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'rev-parse', '--short', 'HEAD'
-            standardOutput = stdout
-        }
-        return stdout.toString().trim()
-    } catch (Exception e) {
-        return "dev"
-    }
-}
+// --- Instantiate GitHelper ---
+def gitHelper = new GitHelper(services.get(ExecOperations))
 
 android {
-    namespace 'com.smorgasbork.hotdeath'
-    compileSdk 36
+    namespace = 'com.smorgasbork.hotdeath'
+    compileSdk = 36
 
     defaultConfig {
-        minSdk 28
-        targetSdk 36
-        versionCode getGitCommitCount()
-        versionName "${appVersionName}+${gitShortHash()}"
+        minSdk = 28
+        targetSdk = 36
+        versionCode = gitHelper.getCommitCount()
+        versionName = appVersionName
     }
 
-    flavorDimensions "version"
+    flavorDimensions = ["version"]
     productFlavors {
         production {
-            dimension "version"
-            applicationId "com.smorgasbork.hotdeath"
-            versionName appVersionName
+            dimension = "version"
+            applicationId = "com.smorgasbork.hotdeath"
+            versionName = appVersionName // manual production version
         }
         staging {
-            dimension "version"
-            applicationId "com.smorgasbork.hotdeath.staging"
-            versionName "${appVersionName}-staging"
+            dimension = "version"
+            applicationId = "com.smorgasbork.hotdeath.staging"
+            versionName = "${appVersionName}-staging"
         }
     }
 
     buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
+            minifyEnabled = true
+            proguardFiles = [getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro']
+            signingConfig = signingConfigs.debug
         }
         debug {
-            versionNameSuffix 'g'
+            versionNameSuffix = 'g'
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
