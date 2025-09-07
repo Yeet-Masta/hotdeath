@@ -1138,6 +1138,7 @@ public class Game extends Thread {
                         && origCardValue == Card.VAL_WILD_DRAW
                         && origCardId != Card.ID_WILD_HOS
 						&& origCardId != Card.ID_WILD_MYSTERY
+						&& checkCardValue == Card.VAL_WILD_DRAW
 						&& checkCardId != Card.ID_WILD_MYSTERY) {
                     return true;
                 }
