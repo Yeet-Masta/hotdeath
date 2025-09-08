@@ -469,15 +469,12 @@ public class GameTable extends View
 				return;
 			}
 
+			// TODO: Replace with VibrationEffect when minSdk >= 26
 			android.os.Vibrator v = (android.os.Vibrator) GameTable.this.getContext().getSystemService(Context.VIBRATOR_SERVICE);
-			if (v != null && v.hasVibrator())
-			{
-				VibrationEffect effect = VibrationEffect.createOneShot(
-						100,
-						255
-				);
-				v.vibrate (effect);
+			if (v != null && v.hasVibrator()) {
+				v.vibrate(100); // Simple 100ms vibration, works on all APIs
 			}
+
 			ShowCardHelp(c);
 		}
 	};
