@@ -1,6 +1,8 @@
 package com.smorgasbork.hotdeath;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
@@ -88,7 +90,6 @@ public class Hand {
 		m_firstUnrevealed = m_numCards;
 		sort();
 	}
-
 
 	public void removeCard (Card c)
 	{
@@ -270,7 +271,12 @@ public class Hand {
 
 	private void sort(List<Card> cards)
 	{
-		cards.sort((c1, c2) -> Integer.compare(c1.getDeckIndex(), c2.getDeckIndex()));
+		Collections.sort(cards, new Comparator<Card>() {
+			@Override
+			public int compare(Card c1, Card c2) {
+				return Integer.compare(c1.getDeckIndex(), c2.getDeckIndex());
+			}
+		});
 	}
 
 
