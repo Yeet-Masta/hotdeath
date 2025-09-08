@@ -378,7 +378,7 @@ public class GameTable extends View
 	public void moveCardToDiscardPile(Card card)
 	{
 		m_discardPileOnTop = true;
-		startCardAnimation(card, m_discardPileBoundingRect.left, m_discardPileBoundingRect.top, 0, true, m_game.getDelay() / 4);
+		startCardAnimation(card, m_ptDiscardPile.x, m_ptDiscardPile.y, 0, true, m_game.getDelay() / 4);
 	}
 
 	public void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
