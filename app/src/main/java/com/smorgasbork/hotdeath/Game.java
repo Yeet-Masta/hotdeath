@@ -1146,7 +1146,7 @@ public class Game extends Thread {
 
 			// magic 5 is a defender against the hot death wild card only
 			// (although it can be played on any card)
-            return (origCardId == Card.ID_WILD_HD) && (checkCardId == Card.ID_RED_5_MAGIC);
+            return (origCardId == Card.ID_WILD_HD) && m_penalty.getSecondaryVictim() == null && (checkCardId == Card.ID_RED_5_MAGIC);
         }
 		
 		m_lastCardCheckedIsDefender = false;
