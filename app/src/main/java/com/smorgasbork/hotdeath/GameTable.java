@@ -3,7 +3,6 @@ package com.smorgasbork.hotdeath;
 import static java.lang.Math.*;
 
 import android.os.Handler;
-import android.os.VibrationEffect;
 import android.util.Log;
 import java.util.List;
 
@@ -41,8 +40,10 @@ public class GameTable extends View
 	private final Point[] m_ptSeat;
 	private final Point[] m_ptEmoticon;
 	private final Point[] m_ptPlayerIndicator;
-	private final Point[] m_ptUnrevealedBadge;
-	private final Point[] m_ptRevealedBadge;
+	private final Point[] m_ptUnrevealedOffsetBadge;
+	private final Point[] m_ptRevealedOffsetBadge;
+	private final Point[] m_ptUnrevealedOverflowBadge;
+	private final Point[] m_ptRevealedOverflowBadge;
 	private final Point[] m_ptScoreText;
 	private Point m_ptDirColor;
 	private Point m_ptWinningMessage;	
@@ -206,8 +207,10 @@ public class GameTable extends View
 		m_ptSeat = new Point[4];
 		m_ptEmoticon = new Point[4];
 		m_ptPlayerIndicator = new Point[4];
-		m_ptUnrevealedBadge = new Point[4];
-		m_ptRevealedBadge = new Point[4];
+		m_ptUnrevealedOffsetBadge = new Point[4];
+		m_ptRevealedOffsetBadge = new Point[4];
+		m_ptUnrevealedOverflowBadge = new Point[4];
+		m_ptRevealedOverflowBadge = new Point[4];
 		m_ptScoreText = new Point[4];
 		
 		m_unrevealedBoundingRect = new Rect[4];
@@ -318,30 +321,54 @@ public class GameTable extends View
 		m_ptEmoticon[Game.SEAT_SOUTH - 1] = new Point (m_ptSeat[Game.SEAT_SOUTH - 1].x - m_emoticonWidth / 2, m_ptSeat[Game.SEAT_SOUTH - 1].y - m_emoticonHeight - m_cardHeight / 10);
 		m_ptEmoticon[Game.SEAT_WEST - 1] = new Point (m_ptSeat[Game.SEAT_WEST - 1].x + m_cardWidth * 11 / 10, m_ptSeat[Game.SEAT_WEST - 1].y - m_emoticonHeight / 2);
 
-		int x = m_ptSeat[Game.SEAT_NORTH - 1].x + maxWidthHand / 2 - m_bmpCardBadge.getWidth() / 2;
+		int x = m_ptSeat[Game.SEAT_NORTH - 1].x - maxWidthHand / 2 - m_bmpCardBadge.getWidth() / 2;
 		int y = m_ptSeat[Game.SEAT_NORTH - 1].y - m_bmpCardBadge.getHeight()  / 2;
-		m_ptUnrevealedBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
+		m_ptUnrevealedOffsetBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
 		y += m_cardHeight * 3 / 2;
-		m_ptRevealedBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
+		m_ptRevealedOffsetBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
+
+		x = m_ptSeat[Game.SEAT_NORTH - 1].x + maxWidthHand / 2 - m_bmpCardBadge.getWidth() / 2;
+		y = m_ptSeat[Game.SEAT_NORTH - 1].y - m_bmpCardBadge.getHeight()  / 2;
+		m_ptUnrevealedOverflowBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
+		y += m_cardHeight * 3 / 2;
+		m_ptRevealedOverflowBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
+
+		x = m_ptSeat[Game.SEAT_EAST - 1].x + m_cardWidth - m_bmpCardBadge.getWidth() / 2;
+		y = m_ptSeat[Game.SEAT_EAST - 1].y - maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
+		m_ptUnrevealedOffsetBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		x -= m_cardWidth * 3 / 2;
+		m_ptRevealedOffsetBadge[Game.SEAT_EAST - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_EAST - 1].x + m_cardWidth - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_EAST - 1].y + maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		m_ptUnrevealedOverflowBadge[Game.SEAT_EAST - 1] = new Point (x, y);
 		x -= m_cardWidth * 3 / 2;
-		m_ptRevealedBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		m_ptRevealedOverflowBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+
+		x = m_ptSeat[Game.SEAT_SOUTH - 1].x - maxWidthHandHuman / 2 - m_bmpCardBadge.getWidth() / 2;
+		y = m_ptSeat[Game.SEAT_SOUTH - 1].y + m_cardHeight - m_bmpCardBadge.getHeight() / 2;
+		m_ptUnrevealedOffsetBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		y -= m_cardHeight * 5 / 3;
+		m_ptRevealedOffsetBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_SOUTH - 1].x + maxWidthHandHuman / 2 - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_SOUTH - 1].y + m_cardHeight - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		m_ptUnrevealedOverflowBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
 		y -= m_cardHeight * 5 / 3;
-		m_ptRevealedBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		m_ptRevealedOverflowBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+
+		x = m_ptSeat[Game.SEAT_WEST - 1].x - m_bmpCardBadge.getWidth() / 2;
+		y = m_ptSeat[Game.SEAT_WEST - 1].y - maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
+		m_ptUnrevealedOffsetBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+		x += m_cardWidth * 3 / 2;
+		m_ptRevealedOffsetBadge[Game.SEAT_WEST - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_WEST - 1].x - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_WEST - 1].y + maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+		m_ptUnrevealedOverflowBadge[Game.SEAT_WEST - 1] = new Point (x, y);
 		x += m_cardWidth * 3 / 2;
-		m_ptRevealedBadge[Game.SEAT_WEST - 1] = new Point (x, y);
-		
+		m_ptRevealedOverflowBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+
 		m_ptScoreText[Game.SEAT_NORTH - 1] = new Point (m_ptSeat[Game.SEAT_NORTH - 1].x,
 				m_ptSeat[Game.SEAT_NORTH - 1].y - (int)(textBounds.height() * 1.1));
 		m_ptScoreText[Game.SEAT_EAST - 1] = new Point (m_ptSeat[Game.SEAT_EAST - 1].x + m_cardWidth,
@@ -1233,9 +1260,9 @@ public class GameTable extends View
 		}
 
 		// draw the badges if necessary
-		if (numRevealedCards > m_maxCardsDisplay)
+		if (revealedOffset > 0)
 		{
-			Point pt = m_ptRevealedBadge[seat - 1];
+			Point pt = m_ptRevealedOffsetBadge[seat - 1];
 
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
@@ -1245,7 +1272,7 @@ public class GameTable extends View
 
 			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numstr = "" + numRevealedCards;
+			String numstr = "" + revealedOffset;
 
 			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
 			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
@@ -1253,9 +1280,9 @@ public class GameTable extends View
 			cv.drawText(numstr, fx, fy, m_paintCardBadgeText);
 		}
 
-		if (numUnrevealedCards > m_maxCardsDisplay)
+		if (unrevealedOffset > 0)
 		{
-			Point pt = m_ptUnrevealedBadge[seat - 1];
+			Point pt = m_ptUnrevealedOffsetBadge[seat - 1];
 
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
@@ -1265,7 +1292,47 @@ public class GameTable extends View
 
 			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numstr = "" + numUnrevealedCards;
+			String numstr = "" + unrevealedOffset;
+
+			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
+			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
+
+			cv.drawText(numstr, fx, fy, m_paintCardBadgeText);
+		}
+
+		if (numRevealedCards > m_maxCardsDisplay + revealedOffset)
+		{
+			Point pt = m_ptRevealedOverflowBadge[seat - 1];
+
+			m_drawMatrix.reset();
+			m_drawMatrix.setScale(1, 1);
+			m_drawMatrix.setTranslate(pt.x, pt.y);
+
+			cv.drawBitmap(m_bmpCardBadge, m_drawMatrix, null);
+
+			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
+			Rect textBounds = new Rect();
+			String numstr = "" + (numRevealedCards - revealedOffset - m_maxCardsDisplay);
+
+			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
+			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
+
+			cv.drawText(numstr, fx, fy, m_paintCardBadgeText);
+		}
+
+		if (numUnrevealedCards > m_maxCardsDisplay + unrevealedOffset)
+		{
+			Point pt = m_ptUnrevealedOverflowBadge[seat - 1];
+
+			m_drawMatrix.reset();
+			m_drawMatrix.setScale(1, 1);
+			m_drawMatrix.setTranslate(pt.x, pt.y);
+
+			cv.drawBitmap(m_bmpCardBadge, m_drawMatrix, null);
+
+			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
+			Rect textBounds = new Rect();
+			String numstr = "" + (numUnrevealedCards - unrevealedOffset - m_maxCardsDisplay);
 
 			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
 			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
