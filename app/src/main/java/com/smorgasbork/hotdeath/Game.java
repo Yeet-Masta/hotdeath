@@ -1134,7 +1134,7 @@ public class Game extends Thread {
 			// draw four, we can stack drawfours (except on the harvester
 			// of sorrows and mystery)
 			if (!(m_go.getStandardRules())) {
-                if (m_penalty.getSecondaryVictim() != null
+                if (m_penalty.getSecondaryVictim() == null
                         && origCardValue == Card.VAL_WILD_DRAW
                         && origCardId != Card.ID_WILD_HOS
 						&& origCardId != Card.ID_WILD_MYSTERY
@@ -1481,7 +1481,7 @@ public class Game extends Thread {
 
 				// no stacking on AIDS -- it gets too messy because it would
 				// throw the penalty back against the direction of play
-				if (m_penalty.getSecondaryVictim() != null) {
+				if (m_penalty.getSecondaryVictim() == null) {
 					// all draw fours can stack, except for mystery draw
 					if ((val == Card.VAL_WILD_DRAW) && (prevID != Card.ID_WILD_MYSTERY) && (id != Card.ID_WILD_MYSTERY)) 
 					{
