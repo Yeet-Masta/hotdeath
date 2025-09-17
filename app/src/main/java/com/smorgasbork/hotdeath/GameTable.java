@@ -2,6 +2,7 @@ package com.smorgasbork.hotdeath;
 
 import static java.lang.Math.*;
 
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.Log;
 import java.util.List;
@@ -39,13 +40,13 @@ public class GameTable extends View
 		
 	private final Point[] m_ptSeat;
 	private final Point[] m_ptEmoticon;
-	private final Point[] m_ptPlayerIndicator;
+	//private final Point[] m_ptPlayerIndicator;
 	private final Point[] m_ptUnrevealedOffsetBadge;
 	private final Point[] m_ptRevealedOffsetBadge;
 	private final Point[] m_ptUnrevealedOverflowBadge;
 	private final Point[] m_ptRevealedOverflowBadge;
 	private final Point[] m_ptScoreText;
-	private Point m_ptDirColor;
+	private Point m_ptPointer;
 	private Point m_ptWinningMessage;	
 	private Point m_ptMessages;
 	
@@ -86,11 +87,12 @@ public class GameTable extends View
 	private HashMap<Integer, Integer> m_cardHelpLookup;
 	
 	private Bitmap m_bmpCardBack;
+	private Bitmap m_bmpPointer;
 	
-	private Bitmap m_bmpDirColorCCW, m_bmpDirColorCCWRed, m_bmpDirColorCCWGreen, m_bmpDirColorCCWBlue, m_bmpDirColorCCWYellow;
-	private Bitmap m_bmpDirColorCW, m_bmpDirColorCWRed, m_bmpDirColorCWGreen, m_bmpDirColorCWBlue, m_bmpDirColorCWYellow;
+//	private Bitmap m_bmpDirColorCCW, m_bmpDirColorCCWRed, m_bmpDirColorCCWGreen, m_bmpDirColorCCWBlue, m_bmpDirColorCCWYellow;
+//	private Bitmap m_bmpDirColorCW, m_bmpDirColorCWRed, m_bmpDirColorCWGreen, m_bmpDirColorCWBlue, m_bmpDirColorCWYellow;
 	private Bitmap m_bmpEmoticonAggressor, m_bmpEmoticonVictim;
-	private final Bitmap[][] m_bmpPlayerIndicator;
+//	private final Bitmap[][] m_bmpPlayerIndicator;
 	private final Bitmap[] m_bmpWinningMessage;
 	private Bitmap m_bmpCardBadge;
 
@@ -206,7 +208,7 @@ public class GameTable extends View
 
 		m_ptSeat = new Point[4];
 		m_ptEmoticon = new Point[4];
-		m_ptPlayerIndicator = new Point[4];
+		//m_ptPlayerIndicator = new Point[4];
 		m_ptUnrevealedOffsetBadge = new Point[4];
 		m_ptRevealedOffsetBadge = new Point[4];
 		m_ptUnrevealedOverflowBadge = new Point[4];
@@ -216,7 +218,7 @@ public class GameTable extends View
 		m_unrevealedBoundingRect = new Rect[4];
 		m_revealedBoundingRect = new Rect[4];
 
-		m_bmpPlayerIndicator = new Bitmap[5][4];
+//		m_bmpPlayerIndicator = new Bitmap[5][4];
 		m_bmpWinningMessage = new Bitmap[4];
 		
 		initCards();
@@ -249,24 +251,24 @@ public class GameTable extends View
 			// probably landscape on a small device...
 			topMargin = m_cardHeight / 4;
 			bottomMargin = m_cardHeight / 4 + m_bottomMarginExternal;
-			m_ptDrawPile = new Point (w / 2 - 5 * m_cardWidth / 4, h / 2 - m_cardHeight / 2);
-			m_ptDiscardPile = new Point (w / 2 + m_cardWidth / 4, h / 2 - m_cardHeight / 2);
-			m_ptDirColor = new Point (m_ptDiscardPile.x + 2 * m_cardWidth + m_bmpDirColorCCW.getWidth() / 4 - m_bmpPlayerIndicator[0][0].getWidth(), h / 2 - m_bmpDirColorCCW.getWidth() / 2);
+//			m_ptDrawPile = new Point (w / 2 - 5 * m_cardWidth / 4, h / 2 - m_cardHeight / 2);
+//			m_ptDiscardPile = new Point (w / 2 + m_cardWidth / 4, h / 2 - m_cardHeight / 2);
+//			m_ptDirColor = new Point (m_ptDiscardPile.x + 2 * m_cardWidth + m_bmpDirColorCCW.getWidth() / 4 - m_bmpPlayerIndicator[0][0].getWidth(), h / 2 - m_bmpDirColorCCW.getWidth() / 2);
 		}
-		else
-		{
-			// portrait
-			m_ptDrawPile = new Point (w / 2 - 5 * m_cardWidth / 4, h / 2 - m_cardHeight);
-			m_ptDiscardPile = new Point (w / 2 + m_cardWidth / 4, h / 2 - m_cardHeight);
-			m_ptDirColor = new Point (w /2 - m_bmpDirColorCCW.getWidth() / 2, h / 2 + m_cardHeight / 4);
-		}
+//		else
+//		{
+//			// portrait
+//			m_ptDrawPile = new Point (w / 2 - 5 * m_cardWidth / 4, h / 2 - m_cardHeight);
+//			m_ptDiscardPile = new Point (w / 2 + m_cardWidth / 4, h / 2 - m_cardHeight);
+//			m_ptDirColor = new Point (w /2 - m_bmpDirColorCCW.getWidth() / 2, h / 2 + m_cardHeight / 4);
+//		}
 
-		m_ptDiscardBadge = new Point (m_ptDiscardPile.x + m_cardWidth - m_bmpCardBadge.getWidth() / 2, m_ptDiscardPile.y + m_cardHeight - m_bmpCardBadge.getHeight() / 2);
-
-		m_ptPlayerIndicator[Game.SEAT_NORTH - 1] = new Point (m_ptDirColor.x + m_bmpDirColorCCW.getWidth() / 2 - m_bmpPlayerIndicator[0][0].getWidth() / 2, m_ptDirColor.y - m_bmpPlayerIndicator[0][0].getHeight());
-		m_ptPlayerIndicator[Game.SEAT_EAST - 1] = new Point (m_ptDirColor.x + m_bmpDirColorCCW.getWidth(), m_ptDirColor.y + m_bmpDirColorCCW.getHeight() / 2 -  m_bmpPlayerIndicator[0][0].getHeight() / 2);
-		m_ptPlayerIndicator[Game.SEAT_SOUTH - 1] = new Point (m_ptDirColor.x + m_bmpDirColorCCW.getWidth() / 2 - m_bmpPlayerIndicator[0][0].getWidth() / 2, m_ptDirColor.y + m_bmpDirColorCCW.getHeight());
-		m_ptPlayerIndicator[Game.SEAT_WEST - 1] = new Point (m_ptDirColor.x - m_bmpPlayerIndicator[0][0].getWidth(), m_ptDirColor.y + m_bmpDirColorCCW.getHeight() / 2 -  m_bmpPlayerIndicator[0][0].getHeight() / 2);
+//		m_ptDiscardBadge = new Point (m_ptDiscardPile.x + m_cardWidth - m_bmpCardBadge.getWidth() / 2, m_ptDiscardPile.y + m_cardHeight - m_bmpCardBadge.getHeight() / 2);
+//
+//		m_ptPlayerIndicator[Game.SEAT_NORTH - 1] = new Point (m_ptDirColor.x + m_bmpDirColorCCW.getWidth() / 2 - m_bmpPlayerIndicator[0][0].getWidth() / 2, m_ptDirColor.y - m_bmpPlayerIndicator[0][0].getHeight());
+//		m_ptPlayerIndicator[Game.SEAT_EAST - 1] = new Point (m_ptDirColor.x + m_bmpDirColorCCW.getWidth(), m_ptDirColor.y + m_bmpDirColorCCW.getHeight() / 2 -  m_bmpPlayerIndicator[0][0].getHeight() / 2);
+//		m_ptPlayerIndicator[Game.SEAT_SOUTH - 1] = new Point (m_ptDirColor.x + m_bmpDirColorCCW.getWidth() / 2 - m_bmpPlayerIndicator[0][0].getWidth() / 2, m_ptDirColor.y + m_bmpDirColorCCW.getHeight());
+//		m_ptPlayerIndicator[Game.SEAT_WEST - 1] = new Point (m_ptDirColor.x - m_bmpPlayerIndicator[0][0].getWidth(), m_ptDirColor.y + m_bmpDirColorCCW.getHeight() / 2 -  m_bmpPlayerIndicator[0][0].getHeight() / 2);
 
 		String numstr = "0";
 		Rect textBounds = new Rect();
@@ -310,11 +312,24 @@ public class GameTable extends View
         int maxWidthHandHuman = (m_maxCardsDisplay - 1) * m_cardSpacingSouth + m_cardWidth;
 		
 		m_ptSeat[Game.SEAT_NORTH - 1] = new Point (w / 2, topMargin);
-		m_ptSeat[Game.SEAT_EAST - 1] = new Point (w - (m_cardWidth + rightMargin), h / 2);
+		m_ptSeat[Game.SEAT_EAST - 1] = new Point (w - (m_cardWidth + rightMargin), (h - bottomMargin + topMargin) / 2);
 		m_ptSeat[Game.SEAT_SOUTH - 1] = new Point (w / 2, h - (m_cardHeight + bottomMargin));
-		m_ptSeat[Game.SEAT_WEST - 1] = new Point (leftMargin, h / 2);
+		m_ptSeat[Game.SEAT_WEST - 1] = new Point (leftMargin, (h - bottomMargin + topMargin) / 2);
+
+		int pointerSize = 4 * m_cardWidth;
+		Resources res = this.getContext().getResources();
+		Drawable drawable = res.getDrawable(R.drawable.pointer);
+		m_bmpPointer = Bitmap.createBitmap(pointerSize, pointerSize, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(m_bmpPointer);
+		drawable.setBounds(0, 0, pointerSize, pointerSize);
+		drawable.draw(canvas);
+
+		m_ptPointer = new Point((w - pointerSize) / 2, (h - bottomMargin + topMargin - pointerSize) / 2);
+		m_ptDrawPile = new Point(w / 2 - m_cardWidth * 5 / 4, (h - bottomMargin + topMargin - m_cardHeight) / 2);
+		m_ptDiscardPile = new Point(w / 2 + m_cardWidth / 4, (h - bottomMargin + topMargin - m_cardHeight) / 2);
+		m_ptDiscardBadge = new Point (m_ptDiscardPile.x + m_cardWidth - m_bmpCardBadge.getWidth() / 2, m_ptDiscardPile.y + m_cardHeight - m_bmpCardBadge.getHeight() / 2);
 		
-		m_ptWinningMessage = new Point (m_ptSeat[Game.SEAT_SOUTH - 1].x - m_bmpWinningMessage[0].getWidth() / 2, m_ptSeat[Game.SEAT_SOUTH - 1].y - m_bmpWinningMessage[0].getHeight() * 5 / 4);
+		m_ptWinningMessage = new Point (m_ptSeat[Game.SEAT_SOUTH - 1].x - m_bmpWinningMessage[0].getWidth() / 2, m_ptSeat[Game.SEAT_SOUTH - 1].y - m_cardHeight / 2 * 3 - m_bmpWinningMessage[0].getHeight() * 5 / 4);
 		
 		m_ptEmoticon[Game.SEAT_NORTH - 1] = new Point (m_ptSeat[Game.SEAT_NORTH - 1].x - m_emoticonWidth / 2, m_ptSeat[Game.SEAT_NORTH - 1].y + m_cardHeight * 11 / 10);
 		m_ptEmoticon[Game.SEAT_EAST - 1] = new Point (m_ptSeat[Game.SEAT_EAST - 1].x - m_emoticonWidth - m_cardWidth / 10, m_ptSeat[Game.SEAT_EAST - 1].y - m_emoticonHeight / 2);
@@ -899,7 +914,7 @@ public class GameTable extends View
 		// draw the color and direction indicator
 		
 		Bitmap bmp = null;
-		
+/*
 		int curr_color = m_game.getCurrColor();
 
 		if (!m_game.getRoundComplete())
@@ -952,12 +967,13 @@ public class GameTable extends View
 			{
 				return;
 			}
-		
+
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
 			m_drawMatrix.setTranslate(m_ptDirColor.x, m_ptDirColor.y);
 			canvas.drawBitmap(bmp, m_drawMatrix, null);
 		}
+*/
 
 		displayScore (canvas);
 				
@@ -967,13 +983,32 @@ public class GameTable extends View
 		Player p = m_game.getCurrPlayer();
 		if (p != null && !m_game.getRoundComplete())
 		{
-			Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
 
+//			//Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
+//
 			m_drawMatrix.reset();
-			m_drawMatrix.setScale(1, 1);
-			m_drawMatrix.setTranslate(pt.x, pt.y);
+			m_drawMatrix.postTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
+			if (m_game.getDirection() == Game.DIR_CCLOCKWISE)
+			{
+				m_drawMatrix.postScale(-1, 1);
+			}
+			m_drawMatrix.postRotate((p.getSeat()-1) * 90);
+			m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
+			Paint paint = new Paint();
+			int color = Color.WHITE;
+			switch (m_game.getCurrColor())
+			{
+				case Card.COLOR_RED: color = Color.RED; break;
+				case Card.COLOR_GREEN: color = Color.GREEN; break;
+				case Card.COLOR_BLUE: color = Color.BLUE; break;
+				case Card.COLOR_YELLOW: color = Color.YELLOW; break;
+			}
 
-			canvas.drawBitmap(m_bmpPlayerIndicator[curr_color - 1][p.getSeat() - 1], m_drawMatrix, null);
+
+			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
+			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, paint);
+
+//			canvas.drawBitmap(m_bmpPlayerIndicator[curr_color - 1][p.getSeat() - 1], m_drawMatrix, null);
 		}
 
 		if (m_game.getFastForward())
@@ -1818,41 +1853,41 @@ public class GameTable extends View
 		m_cardHelpLookup.put (Card.ID_YELLOW_R_SKIP, R.string.cardhelp_r_skip);
         m_cardLookup.put (Card.ID_YELLOW_R_SKIP, new Card(-1, Card.COLOR_YELLOW, Card.VAL_R_SKIP, Card.ID_YELLOW_R_SKIP, 40));		
 
-		m_bmpDirColorCCW = BitmapFactory.decodeResource(res, R.drawable.ccw, opt);
-		m_bmpDirColorCCWRed = BitmapFactory.decodeResource(res, R.drawable.ccw_red, opt);
-		m_bmpDirColorCCWBlue = BitmapFactory.decodeResource(res, R.drawable.ccw_blue, opt);
-		m_bmpDirColorCCWGreen = BitmapFactory.decodeResource(res, R.drawable.ccw_green, opt);
-		m_bmpDirColorCCWYellow = BitmapFactory.decodeResource(res, R.drawable.ccw_yellow, opt);
-
-		m_bmpDirColorCW = BitmapFactory.decodeResource(res, R.drawable.cw, opt);
-		m_bmpDirColorCWRed = BitmapFactory.decodeResource(res, R.drawable.cw_red, opt);
-		m_bmpDirColorCWBlue = BitmapFactory.decodeResource(res, R.drawable.cw_blue, opt);
-		m_bmpDirColorCWGreen = BitmapFactory.decodeResource(res, R.drawable.cw_green, opt);
-		m_bmpDirColorCWYellow = BitmapFactory.decodeResource(res, R.drawable.cw_yellow, opt);
-		
-		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_south, opt);
-		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_south, opt);
-		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_south, opt);
-		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_south, opt);
-		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_south, opt);
-
-		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_west, opt);
-		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_west, opt);
-		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_west, opt);
-		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_west, opt);
-		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_west, opt);
-		
-		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_north, opt);
-		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_north, opt);
-		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_north, opt);
-		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_north, opt);
-		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_north, opt);
-
-		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_east, opt);
-		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_east, opt);
-		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_east, opt);
-		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_east, opt);
-		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_east, opt);
+//		m_bmpDirColorCCW = BitmapFactory.decodeResource(res, R.drawable.ccw, opt);
+//		m_bmpDirColorCCWRed = BitmapFactory.decodeResource(res, R.drawable.ccw_red, opt);
+//		m_bmpDirColorCCWBlue = BitmapFactory.decodeResource(res, R.drawable.ccw_blue, opt);
+//		m_bmpDirColorCCWGreen = BitmapFactory.decodeResource(res, R.drawable.ccw_green, opt);
+//		m_bmpDirColorCCWYellow = BitmapFactory.decodeResource(res, R.drawable.ccw_yellow, opt);
+//
+//		m_bmpDirColorCW = BitmapFactory.decodeResource(res, R.drawable.cw, opt);
+//		m_bmpDirColorCWRed = BitmapFactory.decodeResource(res, R.drawable.cw_red, opt);
+//		m_bmpDirColorCWBlue = BitmapFactory.decodeResource(res, R.drawable.cw_blue, opt);
+//		m_bmpDirColorCWGreen = BitmapFactory.decodeResource(res, R.drawable.cw_green, opt);
+//		m_bmpDirColorCWYellow = BitmapFactory.decodeResource(res, R.drawable.cw_yellow, opt);
+//
+//		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_south, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_south, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_south, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_south, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_south, opt);
+//
+//		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_west, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_west, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_west, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_west, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_west, opt);
+//
+//		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_north, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_north, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_north, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_north, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_NORTH - 1] = BitmapFactory.decodeResource(res, R.drawable.player_north, opt);
+//
+//		m_bmpPlayerIndicator[Card.COLOR_RED - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_red_east, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_GREEN - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_green_east, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_BLUE - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_blue_east, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_YELLOW - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_yellow_east, opt);
+//		m_bmpPlayerIndicator[Card.COLOR_WILD - 1][Game.SEAT_EAST - 1] = BitmapFactory.decodeResource(res, R.drawable.player_east, opt);
 		
 		m_bmpWinningMessage[Game.SEAT_SOUTH - 1] = BitmapFactory.decodeResource(res, R.drawable.winner_south, opt);
 		m_bmpWinningMessage[Game.SEAT_WEST - 1] = BitmapFactory.decodeResource(res, R.drawable.winner_west, opt);
