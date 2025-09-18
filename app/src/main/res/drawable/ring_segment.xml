@@ -4,9 +4,9 @@
     android:viewportWidth="100"
     android:viewportHeight="100">
   <path
-      android:pathData="m41.64,87.05 l8.51,12.37 8.11,-12.35A38,38 0,0 1,50 88,38 38,0 0,1 41.64,87.05Z"
-      android:strokeLineJoin="round"
       android:strokeWidth="1"
+      android:pathData="M59.15,86.88A38,38 0,0 1,50 88,38 38,0 0,1 42.29,87.21l-2.43,2.01 1.05,2.81A43,43 0,0 0,50 93,43 43,0 0,0 60.43,91.71l-2.36,-1.94z"
+      android:strokeLineJoin="round"
       android:fillColor="#ffffff"
       android:strokeColor="#646464"
       android:strokeLineCap="round"/>

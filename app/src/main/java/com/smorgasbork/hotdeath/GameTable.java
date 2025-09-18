@@ -88,6 +88,8 @@ public class GameTable extends View
 	
 	private Bitmap m_bmpCardBack;
 	private Bitmap m_bmpPointer;
+
+	private Bitmap m_bmpDirection;
 	
 //	private Bitmap m_bmpDirColorCCW, m_bmpDirColorCCWRed, m_bmpDirColorCCWGreen, m_bmpDirColorCCWBlue, m_bmpDirColorCCWYellow;
 //	private Bitmap m_bmpDirColorCW, m_bmpDirColorCWRed, m_bmpDirColorCWGreen, m_bmpDirColorCWBlue, m_bmpDirColorCWYellow;
@@ -321,6 +323,12 @@ public class GameTable extends View
 		Drawable drawable = res.getDrawable(R.drawable.pointer);
 		m_bmpPointer = Bitmap.createBitmap(pointerSize, pointerSize, Bitmap.Config.ARGB_8888);
 		Canvas canvas = new Canvas(m_bmpPointer);
+		drawable.setBounds(0, 0, pointerSize, pointerSize);
+		drawable.draw(canvas);
+
+		drawable = res.getDrawable(R.drawable.ring_segment);
+		m_bmpDirection = Bitmap.createBitmap(pointerSize, pointerSize, Bitmap.Config.ARGB_8888);
+		canvas = new Canvas(m_bmpDirection);
 		drawable.setBounds(0, 0, pointerSize, pointerSize);
 		drawable.draw(canvas);
 
@@ -993,20 +1001,32 @@ public class GameTable extends View
 				m_drawMatrix.postScale(-1, 1);
 			}
 			m_drawMatrix.postRotate((p.getSeat()-1) * 90);
-			m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
+
 			Paint paint = new Paint();
-			int color = Color.WHITE;
+			int color = Color.rgb(221,220,215);
+
 			switch (m_game.getCurrColor())
 			{
-				case Card.COLOR_RED: color = Color.RED; break;
-				case Card.COLOR_GREEN: color = Color.GREEN; break;
-				case Card.COLOR_BLUE: color = Color.BLUE; break;
-				case Card.COLOR_YELLOW: color = Color.YELLOW; break;
+				case Card.COLOR_RED: color = Color.rgb(203, 13, 40); break;
+				case Card.COLOR_GREEN: color = Color.rgb(4,133,64); break;
+				case Card.COLOR_BLUE: color = Color.rgb(4, 86, 165); break;
+				case Card.COLOR_YELLOW: color = Color.rgb(233, 146, 6); break;
+			}
+			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
+
+			Matrix baseMatrix = new Matrix(m_drawMatrix);
+			for (i=1;i<=12;i++) {
+				m_drawMatrix.postRotate(i * 30);
+				m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
+				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, paint);
+				m_drawMatrix.set(baseMatrix);
 			}
 
-
+			color = Color.rgb(221,220,215);
 			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
+			m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
 			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, paint);
+
 
 //			canvas.drawBitmap(m_bmpPlayerIndicator[curr_color - 1][p.getSeat() - 1], m_drawMatrix, null);
 		}
