@@ -1,5 +1,6 @@
 package com.smorgasbork.hotdeath;
 
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -10,24 +11,25 @@ public class AnimationManager {
     private final GameTable gameTable;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable animRunnable;
-    private final List<Card> animatingCards = new ArrayList<>();
+    private final List<Animatable> animatables = new ArrayList<>();
 
     public AnimationManager(GameTable gameTable) {
         this.gameTable = gameTable;
     }
 
-    public void startCardAnimation(Card card) {
+    public void startAnimation(Animatable animatable, AnimationParams params) {
         handler.post(() -> {
-            animatingCards.add(card);
+            animatables.add(animatable);
+            animatable.startAnimation(params);
 
             if (animRunnable == null) {
                 animRunnable = new Runnable() {
                     @Override
                     public void run() {
                         boolean shouldContinue = false;
-                        for (Card card : animatingCards) {
-                            if (card.isAnimating()) {
-                                card.updatePosition();
+                        for (Animatable animatable : animatables) {
+                            if (animatable.isAnimating()) {
+                                animatable.update();
                                 shouldContinue = true;
                             }
     //                        else {
@@ -39,7 +41,7 @@ public class AnimationManager {
                         if (shouldContinue) {
                             handler.postDelayed(this, 16); // Aim for ~60fps
                         } else {
-                            animatingCards.clear(); // Clear finished animations
+                            animatables.clear(); // Clear finished animations
                             animRunnable = null; // allow future animations
                         }
                     }
@@ -49,7 +51,7 @@ public class AnimationManager {
         });
     }
 
-    public List<Card> getAnimatingCards() {
-        return animatingCards;
+    public List<Animatable> getAnimatables() {
+        return animatables;
     }
 }

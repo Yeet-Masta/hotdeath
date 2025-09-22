@@ -4,7 +4,7 @@ import org.json.*;
 
 import android.content.Context;
 
-public class Card {
+public class Card implements Animatable{
 
 	public static final int COLOR_RED    = 1;
 	public static final int COLOR_GREEN  = 2;
@@ -311,20 +311,20 @@ public class Card {
 		return o;
 	}
 
-	public void setAnimation(float toX, float toY, float toRot, boolean toFaceUp, long duration) {
+	public void startAnimation(AnimationParams params) {
 		this.startX = this.x;
 		this.startY = this.y;
-		this.targetX = toX;
-		this.targetY = toY;
+		this.targetX = params.toX;
+		this.targetY = params.toY;
 		this.startRot = this.rot;
-		this.targetRot = toRot;
-		this.targetFaceUp = toFaceUp;
-		this.startTime = System.currentTimeMillis();
-		this.duration = duration;
+		this.targetRot = params.toRot;
+		this.targetFaceUp = params.toFaceUp;
+		this.startTime = params.startTime;
+		this.duration = params.duration;
 		this.isAnimating = true;
 	}
 
-	public void updatePosition() {
+	public void update() {
 		if (!isAnimating) return;
 
 		long elapsedTime = System.currentTimeMillis() - startTime;

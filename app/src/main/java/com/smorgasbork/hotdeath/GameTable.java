@@ -432,8 +432,11 @@ public class GameTable extends View
 	}
 
 	public void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
-		card.setAnimation(toX, toY, toRot, faceUp, duration);
-		animationManager.startCardAnimation(card);
+		animationManager.startAnimation(card, new AnimationParams().setCardParams(toX, toY, toRot, faceUp, 0, duration));
+	}
+
+	public void startDirPointerAnimation(float toRot, boolean toDirection, int toColor, long startTime, long duration) 	{
+		animationManager.startAnimation(DirectionAndPlayerIndicator.getInstance(), new AnimationParams().setPointerParams(toRot, toDirection, getColorRgb(toColor), startTime, duration));
 	}
 
 	public void startGameWhenReady ()
@@ -1000,29 +1003,21 @@ public class GameTable extends View
 			{
 				m_drawMatrix.postScale(-1, 1);
 			}
-			m_drawMatrix.postRotate((p.getSeat()-1) * 90);
+			m_drawMatrix.postRotate(DirectionAndPlayerIndicator.getInstance().getCircleRot());
 
 			Paint paint = new Paint();
-			int color = Color.rgb(221,220,215);
-
-			switch (m_game.getCurrColor())
-			{
-				case Card.COLOR_RED: color = Color.rgb(203, 13, 40); break;
-				case Card.COLOR_GREEN: color = Color.rgb(4,133,64); break;
-				case Card.COLOR_BLUE: color = Color.rgb(4, 86, 165); break;
-				case Card.COLOR_YELLOW: color = Color.rgb(233, 146, 6); break;
-			}
-			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
 
 			Matrix baseMatrix = new Matrix(m_drawMatrix);
 			for (i=1;i<=12;i++) {
 				m_drawMatrix.postRotate(i * 30);
 				m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
+				paint.setColorFilter(new PorterDuffColorFilter(DirectionAndPlayerIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
 				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, paint);
 				m_drawMatrix.set(baseMatrix);
 			}
 
-			color = Color.rgb(221,220,215);
+			int color = getColorRgb(Card.COLOR_WILD);
+			m_drawMatrix.postRotate(DirectionAndPlayerIndicator.getInstance().getPointerRot());
 			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
 			m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
 			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, paint);
@@ -2156,7 +2151,18 @@ public class GameTable extends View
 
 
 	}
-	
+
+	private int getColorRgb(int gameColor)
+	{
+		switch (gameColor)
+		{
+			case Card.COLOR_RED: return Color.rgb(203, 13, 40);
+			case Card.COLOR_GREEN: return Color.rgb(4,133,64);
+			case Card.COLOR_BLUE: return Color.rgb(4, 86, 165);
+			case Card.COLOR_YELLOW: return Color.rgb(233, 146, 6);
+		}
+		return Color.rgb(221,220,215);
+	}
 	
 	public void ShowCardHelp (Card c)
 	{

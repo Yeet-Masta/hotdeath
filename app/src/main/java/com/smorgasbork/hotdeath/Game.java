@@ -1,6 +1,7 @@
 package com.smorgasbork.hotdeath;
 
 import java.util.Random;
+
 import android.util.Log;
 
 import org.json.*;
@@ -870,18 +871,21 @@ public class Game extends Thread {
 
 	public Player nextPlayer()
 	{
+		Player p;
 		m_currPlayer.resetLastDrawn();
 
 		if (m_nextPlayerPreset != null)
 		{
-			Player p = m_nextPlayerPreset;
+			p = m_nextPlayerPreset;
 			m_nextPlayerPreset = null;
-			return p;
 		}
 		else
 		{
-			return getNextPlayer();
+			p = getNextPlayer();
 		}
+		m_gt.startDirPointerAnimation((p.getSeat()-1)*90, m_direction == DIR_CLOCKWISE, m_currColor, 0, 100 );
+		waitABit();
+		return p;
 	}
 	
 	public boolean advanceRound()
