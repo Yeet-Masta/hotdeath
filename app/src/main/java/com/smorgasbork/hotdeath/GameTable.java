@@ -435,8 +435,12 @@ public class GameTable extends View
 		animationManager.startAnimation(card, new AnimationParams().setCardParams(toX, toY, toRot, faceUp, 0, duration));
 	}
 
-	public void startDirPointerAnimation(float toRot, boolean toDirection, int toColor, long startTime, long duration) 	{
-		animationManager.startAnimation(DirectionAndPlayerIndicator.getInstance(), new AnimationParams().setPointerParams(toRot, toDirection, getColorRgb(toColor), startTime, duration));
+	public void startPointerAnimation(float toRot, boolean direction, long startTime, long duration) 	{
+		animationManager.startAnimation(Pointer.getInstance(), new AnimationParams().setPointerParams(toRot, direction, startTime, duration));
+	}
+
+	public void startDirectionIndicatorAnimation(boolean toDirection, int toColor, long startTime, long duration) 	{
+		animationManager.startAnimation(DirectionIndicator.getInstance(), new AnimationParams().setDirectionIndicatorParams(toDirection, getColorRgb(toColor), startTime, duration));
 	}
 
 	public void startGameWhenReady ()
@@ -999,25 +1003,27 @@ public class GameTable extends View
 //
 			m_drawMatrix.reset();
 			m_drawMatrix.postTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
-			if (m_game.getDirection() == Game.DIR_CCLOCKWISE)
-			{
-				m_drawMatrix.postScale(-1, 1);
-			}
-			m_drawMatrix.postRotate(DirectionAndPlayerIndicator.getInstance().getCircleRot());
+			m_drawMatrix.postRotate((p.getSeat() -1) * 90);
 
 			Paint paint = new Paint();
 
 			Matrix baseMatrix = new Matrix(m_drawMatrix);
 			for (i=1;i<=12;i++) {
-				m_drawMatrix.postRotate(i * 30);
-				m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
-				paint.setColorFilter(new PorterDuffColorFilter(DirectionAndPlayerIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
+				m_drawMatrix.postRotate((i-1) * 30);
+				if (!DirectionIndicator.getInstance().getDirection())
+				{
+					m_drawMatrix.postScale(-1, 1);
+				}
+				m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpDirection.getWidth() / 2f, m_ptPointer.y + m_bmpDirection.getHeight() / 2f);
+				paint.setColorFilter(new PorterDuffColorFilter(DirectionIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
 				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, paint);
 				m_drawMatrix.set(baseMatrix);
 			}
 
 			int color = getColorRgb(Card.COLOR_WILD);
-			m_drawMatrix.postRotate(DirectionAndPlayerIndicator.getInstance().getPointerRot());
+			m_drawMatrix.reset();
+			m_drawMatrix.postTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
+			m_drawMatrix.postRotate(Pointer.getInstance().getRot());
 			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
 			m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
 			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, paint);

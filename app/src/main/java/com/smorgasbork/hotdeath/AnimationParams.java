@@ -23,9 +23,17 @@ public class AnimationParams {
         this.duration = duration;
         return this;
     }
-    public AnimationParams setPointerParams(float toRot, boolean toDirection, int toColor, long startTime, long duration)
+    public AnimationParams setPointerParams(float toRot, boolean toDirection, long startTime, long duration)
     {
         this.toRot = toRot;
+        this.toDirection = toDirection;
+        this.startTime = startTime != 0 ? startTime: System.currentTimeMillis();
+        this.duration = duration;
+        return this;
+    }
+
+    public AnimationParams setDirectionIndicatorParams(boolean toDirection, int toColor, long startTime, long duration)
+    {
         this.toDirection = toDirection;
         this.toColor = toColor;
         this.startTime = startTime != 0 ? startTime: System.currentTimeMillis();

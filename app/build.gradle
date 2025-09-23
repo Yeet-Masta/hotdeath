@@ -2,7 +2,7 @@ plugins {
     id 'com.android.application'
 }
 
-def appVersionName = "2.0.18"
+def appVersionName = "2.0.20"
 
 import javax.inject.Inject
 // --- Git helper for versionCode and short hash ---

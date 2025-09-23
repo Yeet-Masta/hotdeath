@@ -883,7 +883,9 @@ public class Game extends Thread {
 		{
 			p = getNextPlayer();
 		}
-		m_gt.startDirPointerAnimation((p.getSeat()-1)*90, m_direction == DIR_CLOCKWISE, m_currColor, 0, 100 );
+		m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor, 0, getDelay() / 4);
+		waitABit();
+		m_gt.startPointerAnimation((p.getSeat()-1)*90, m_direction == DIR_CLOCKWISE, 0, getDelay() / 4 );
 		waitABit();
 		return p;
 	}
@@ -1611,8 +1613,7 @@ public class Game extends Thread {
 
 		if (currVal == Card.VAL_R) 
 		{
-			m_direction = (m_direction == DIR_CLOCKWISE) ? DIR_CCLOCKWISE : DIR_CLOCKWISE;
-			Log.d("HDU", "direction change: " + directionToString(m_direction));
+			changeDirection();
 
 			if (getActivePlayerCount() == 2) 
 			{
@@ -1622,8 +1623,7 @@ public class Game extends Thread {
 
 		if (currVal == Card.VAL_R_SKIP) 
 		{
-			m_direction = (m_direction == DIR_CLOCKWISE) ? DIR_CCLOCKWISE : DIR_CLOCKWISE;
-			Log.d("HDU", "direction change: " + directionToString(m_direction));
+			changeDirection();
 
 			m_currPlayer = nextPlayer();
 		}
@@ -1642,7 +1642,7 @@ public class Game extends Thread {
 
 		if (currVal == Card.VAL_D) 
 		{
-			Player victim = nextPlayer();
+			Player victim = getNextPlayer();
 
 			forceDraw(victim, 2);
 			if (!(m_go.getStandardRules()))
@@ -1849,8 +1849,7 @@ public class Game extends Thread {
 			m_penalty.setSecondaryVictim(null);
 			m_penalty.setGeneratingPlayer(m_currPlayer);
 
-			m_direction = (m_direction == DIR_CLOCKWISE) ? DIR_CCLOCKWISE : DIR_CLOCKWISE;
-			redrawTable();
+			changeDirection();
 
 			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
 			{
@@ -1858,8 +1857,6 @@ public class Game extends Thread {
 			}
 
 			String msg = String.format(getString(R.string.msg_sending_penalty), seatToString(m_penalty.getVictim().getSeat()));
-
-			Log.d("HDU", "direction change: " + directionToString(m_direction));
 			promptUser (msg);
 		}
 
@@ -1879,6 +1876,13 @@ public class Game extends Thread {
 				m_penalty.setSecondaryVictim(m_currPlayer);
 			}
 		}
+	}
+
+	private void changeDirection() {
+		m_direction = (m_direction == DIR_CLOCKWISE) ? DIR_CCLOCKWISE : DIR_CLOCKWISE;
+		Log.d("HDU", "direction change: " + directionToString(m_direction));
+//		m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor, 0, getDelay() / 4);
+//		waitABit();
 	}
 
 	public void assessPenalty()
@@ -2099,11 +2103,11 @@ public class Game extends Thread {
                 {
                     c.setFaceUp(true);
                 }
-                if (p.getSeat() == SEAT_SOUTH || m_go.getFaceUp())
+				if (p.getSeat() == SEAT_SOUTH || m_go.getFaceUp())
                 {
                     p.getHand().sort();
                 }
-              m_gt.moveCardToPlayer(c, p.getSeat());
+              	m_gt.moveCardToPlayer(c, p.getSeat());
                 try
                 {
                     Thread.sleep(50);

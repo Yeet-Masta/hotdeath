@@ -1,41 +1,42 @@
 package com.smorgasbork.hotdeath;
 
-public class DirectionAndPlayerIndicator implements Animatable{
-    private static DirectionAndPlayerIndicator instance;
+import android.graphics.Color;
+
+public class DirectionIndicator implements Animatable{
+    private static DirectionIndicator instance;
 
     // Animation related properties
-    private float circleRot = 0;  // current Rotation about the X-axis
-    private float pointerRot = 0;
-    private float startPointerRot; // Starting rotation about the X-axis
-    private float targetPointerRot; // Target rotation about the X-axis
     private int [] segmentColors;
     private long startTime;  // Start time of the animation
     private long duration; // Animation duration in milliseconds
     private int color;
+    private int startColor;
     private int targetColor;
     private boolean direction;
     private boolean startDirection;
     private boolean targetDirection;
     private boolean isAnimating;  // Animation status
 
-    private DirectionAndPlayerIndicator() {} // Private constructor
+    private DirectionIndicator() {} // Private constructor
 
-    public static synchronized DirectionAndPlayerIndicator getInstance() {
+    public static synchronized DirectionIndicator getInstance() {
         if (instance == null) {
-            instance = new DirectionAndPlayerIndicator();
+            instance = new DirectionIndicator();
+            instance.segmentColors = new int[12];
         }
-        instance.segmentColors = new int[12];
         return instance;
     }
 
     public void startAnimation(AnimationParams params) {
-        this.startPointerRot = this.pointerRot;
-        this.targetPointerRot = params.toRot;
+        this.startColor = this.color;
         this.targetColor = params.toColor;
         this.startDirection = this.direction;
         this.targetDirection = params.toDirection;
         this.startTime = params.startTime;
         this.duration = params.duration;
+        if (targetDirection != startDirection) {
+            this.duration *= 2;
+        }
         this.isAnimating = true;
     }
 
@@ -45,18 +46,17 @@ public class DirectionAndPlayerIndicator implements Animatable{
         long elapsedTime = System.currentTimeMillis() - startTime;
         if (elapsedTime >= duration) {
             elapsedTime = duration;
-            circleRot = targetPointerRot;
-            color = targetColor;
+            this.color = this.targetColor;
+            this.direction = this.targetDirection;
             isAnimating = false;
         }
 
         float progress = (float) elapsedTime / duration;
-        this.pointerRot = startPointerRot + progress * (targetPointerRot - startPointerRot);
         if (targetDirection != startDirection) {
             if (targetDirection != direction) {
                 if (progress <= 0.5) {
-                    for (int i = 0; i < 11; i++) {
-                        this.segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 12 - i - 24 * progress))) << 24) | (color & 0x00FFFFFF);
+                    for (int i = 0; i < 12; i++) {
+                        segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 12 - i - 24 * progress))) << 24) | (color & 0x00FFFFFF);
                     }
                 } else {
                     direction = targetDirection;
@@ -64,20 +64,26 @@ public class DirectionAndPlayerIndicator implements Animatable{
                 }
             }
             if (startDirection != direction) {
-                for (int i = 0; i < 11; i++) {
-                    this.segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 24 * progress - 12 - i))) << 24) | (color & 0x00FFFFFF);
+                for (int i = 0; i < 12; i++) {
+                    segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 24 * progress - 12 - i))) << 24) | (color & 0x00FFFFFF);
                 }
             }
         }
+        else if (targetColor != startColor){
+            for (int i = 0; i < 12; i++) {
+                segmentColors[i] = progress * 12 >= i + 1 ? this.targetColor : startColor;
+            }
+        }
+//        this.color = this.targetColor & 0x00FFFFFF | ((int) (progress * 255) << 24);
     }
 
     public boolean isAnimating() {
         return isAnimating;
     }
 
-    public float getPointerRot() { return pointerRot;}
+    public boolean getDirection() {
+            return direction;
+    }
 
-    public float getCircleRot() { return circleRot;}
-
-    public int getSegmentColor(int i) {return this.color;}//segmentColors[i];}
+    public int getSegmentColor(int i) {return segmentColors[i];}
 }
