@@ -28,7 +28,7 @@ public class GameTable extends View
 	private final int[] m_revealedOffset;
 	private final int[] m_unrevealedDrag;
 	private final int[] m_revealedDrag;
-	
+
 	private int m_maxCardsDisplay = 7;
 	
 	private final Matrix m_drawMatrix;
@@ -100,7 +100,8 @@ public class GameTable extends View
 
     private final Paint m_paintScoreText;
 	private final Paint m_paintCardBadgeText;
-	
+	private final Paint m_paintPointer;
+
 	private boolean m_readyToStartGame = false;
 	private boolean m_waitingToStartGame = false;
 	
@@ -207,6 +208,8 @@ public class GameTable extends View
 		m_paintCardBadgeText.setTextAlign(Paint.Align.CENTER);
 		m_paintCardBadgeText.setTextSize(14 * scale);
 		m_paintCardBadgeText.setTypeface(Typeface.DEFAULT_BOLD);
+
+		m_paintPointer = new Paint(Paint.ANTI_ALIAS_FLAG);
 
 		m_ptSeat = new Point[4];
 		m_ptEmoticon = new Point[4];
@@ -332,7 +335,7 @@ public class GameTable extends View
 		drawable.setBounds(0, 0, pointerSize, pointerSize);
 		drawable.draw(canvas);
 
-		m_ptPointer = new Point((w - pointerSize) / 2, (h - bottomMargin + topMargin - pointerSize) / 2);
+		m_ptPointer = new Point(w / 2, (h - bottomMargin + topMargin) / 2);
 		m_ptDrawPile = new Point(w / 2 - m_cardWidth * 5 / 4, (h - bottomMargin + topMargin - m_cardHeight) / 2);
 		m_ptDiscardPile = new Point(w / 2 + m_cardWidth / 4, (h - bottomMargin + topMargin - m_cardHeight) / 2);
 		m_ptDiscardBadge = new Point (m_ptDiscardPile.x + m_cardWidth - m_bmpCardBadge.getWidth() / 2, m_ptDiscardPile.y + m_cardHeight - m_bmpCardBadge.getHeight() / 2);
@@ -417,30 +420,43 @@ public class GameTable extends View
 		m_bottomMarginExternal = m;
 	}
 
-	public void moveCardToPlayer(Card card, int seat)
+	public void moveCardToPlayer(Card card, int seat, boolean moreToCome)
 	{
 		m_discardPileOnTop = false;
 		card.setX(m_ptDrawPile.x);
 		card.setY(m_ptDrawPile.y);
 		startCardAnimation(card, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
+		if (moreToCome) {
+			m_game.waitABit(15);
+		}
+		else {
+			m_game.waitABit(2);
+		}
 	}
 
 	public void moveCardToDiscardPile(Card card)
 	{
 		m_discardPileOnTop = true;
 		startCardAnimation(card, m_ptDiscardPile.x, m_ptDiscardPile.y, 0, true, m_game.getDelay() / 4);
+		m_game.waitABit(2);
+		startDirectionIndicatorAnimation(m_game.getDirection() == Game.DIR_CLOCKWISE, m_game.getCurrColor());
 	}
 
-	public void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
+	private void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
+		card.setAnimating();
 		animationManager.startAnimation(card, new AnimationParams().setCardParams(toX, toY, toRot, faceUp, 0, duration));
 	}
 
-	public void startPointerAnimation(float toRot, boolean direction, long startTime, long duration) 	{
-		animationManager.startAnimation(Pointer.getInstance(), new AnimationParams().setPointerParams(toRot, direction, startTime, duration));
+	public void startPointerAnimation(float toRot, boolean direction) 	{
+		animationManager.startAnimation(Pointer.getInstance(), new AnimationParams().setPointerParams(toRot, direction, 0, m_game.getDelay() / 4 ));
+		m_game.waitABit(2);
 	}
 
-	public void startDirectionIndicatorAnimation(boolean toDirection, int toColor, long startTime, long duration) 	{
-		animationManager.startAnimation(DirectionIndicator.getInstance(), new AnimationParams().setDirectionIndicatorParams(toDirection, getColorRgb(toColor), startTime, duration));
+	public void startDirectionIndicatorAnimation(boolean toDirection, int toColor) 	{
+		if (toDirection != DirectionIndicator.getInstance().getDirection() || getColorRgb(toColor) != DirectionIndicator.getInstance().getSegmentColor(0)) {
+			animationManager.startAnimation(DirectionIndicator.getInstance(), new AnimationParams().setDirectionIndicatorParams(toDirection, getColorRgb(toColor), 0, m_game.getDelay() / 4 ));
+			m_game.waitABit(2);
+		}
 	}
 
 	public void startGameWhenReady ()
@@ -923,72 +939,6 @@ public class GameTable extends View
 	protected void onDraw(Canvas canvas)
 	{	
 		int i;
-	
-		// canvas.drawRect(0, 0, getWidth(), getHeight(), m_paintTable);
-						
-		// draw the color and direction indicator
-		
-		Bitmap bmp = null;
-/*
-		int curr_color = m_game.getCurrColor();
-
-		if (!m_game.getRoundComplete())
-		{
-			if (m_game.getDirection() == Game.DIR_CCLOCKWISE)
-			{
-				switch (curr_color)
-				{
-				case Card.COLOR_WILD:
-					bmp = m_bmpDirColorCCW;
-					break;
-				case Card.COLOR_RED:
-					bmp = m_bmpDirColorCCWRed;
-					break;
-				case Card.COLOR_GREEN:
-					bmp = m_bmpDirColorCCWGreen;
-					break;
-				case Card.COLOR_BLUE:
-					bmp = m_bmpDirColorCCWBlue;
-					break;
-				case Card.COLOR_YELLOW:
-					bmp = m_bmpDirColorCCWYellow;
-					break;
-				}
-			}
-			else
-			{
-				switch (curr_color)
-				{
-				case Card.COLOR_WILD:
-					bmp = m_bmpDirColorCW;
-					break;
-				case Card.COLOR_RED:
-					bmp = m_bmpDirColorCWRed;
-					break;
-				case Card.COLOR_GREEN:
-					bmp = m_bmpDirColorCWGreen;
-					break;
-				case Card.COLOR_BLUE:
-					bmp = m_bmpDirColorCWBlue;
-					break;
-				case Card.COLOR_YELLOW:
-					bmp = m_bmpDirColorCWYellow;
-					break;
-				}
-			}
-
-			// before the deal, we don't have a direction
-			if (bmp == null)
-			{
-				return;
-			}
-
-			m_drawMatrix.reset();
-			m_drawMatrix.setScale(1, 1);
-			m_drawMatrix.setTranslate(m_ptDirColor.x, m_ptDirColor.y);
-			canvas.drawBitmap(bmp, m_drawMatrix, null);
-		}
-*/
 
 		displayScore (canvas);
 				
@@ -1000,33 +950,32 @@ public class GameTable extends View
 		{
 
 //			//Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
-//
-			m_drawMatrix.reset();
-			m_drawMatrix.postTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
-			m_drawMatrix.postRotate((p.getSeat() -1) * 90);
-
-			Paint paint = new Paint();
-
-			Matrix baseMatrix = new Matrix(m_drawMatrix);
 			for (i=1;i<=12;i++) {
-				m_drawMatrix.postRotate((i-1) * 30);
+
+				m_drawMatrix.setTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
+				m_drawMatrix.postRotate((p.getSeat() -1) * 90);
 				if (!DirectionIndicator.getInstance().getDirection())
 				{
-					m_drawMatrix.postScale(-1, 1);
+					if (p.getSeat() % 2 == 0) {
+						m_drawMatrix.postScale(1, -1);
+					}
+					else {
+						m_drawMatrix.postScale(-1, 1);
+					}
 				}
-				m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpDirection.getWidth() / 2f, m_ptPointer.y + m_bmpDirection.getHeight() / 2f);
-				paint.setColorFilter(new PorterDuffColorFilter(DirectionIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
-				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, paint);
-				m_drawMatrix.set(baseMatrix);
+				m_drawMatrix.postRotate((i-1) * 30 * (DirectionIndicator.getInstance().getDirection()?1:-1));
+				m_drawMatrix.postTranslate(m_ptPointer.x, m_ptPointer.y);
+				m_paintPointer.setColorFilter(new PorterDuffColorFilter(DirectionIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
+				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, m_paintPointer);;
 			}
 
 			int color = getColorRgb(Card.COLOR_WILD);
 			m_drawMatrix.reset();
 			m_drawMatrix.postTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
 			m_drawMatrix.postRotate(Pointer.getInstance().getRot());
-			paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
-			m_drawMatrix.postTranslate(m_ptPointer.x + m_bmpPointer.getWidth() / 2f, m_ptPointer.y + m_bmpPointer.getHeight() / 2f);
-			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, paint);
+			m_paintPointer.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
+			m_drawMatrix.postTranslate(m_ptPointer.x, m_ptPointer.y);
+			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, m_paintPointer);
 
 
 //			canvas.drawBitmap(m_bmpPlayerIndicator[curr_color - 1][p.getSeat() - 1], m_drawMatrix, null);
@@ -2166,8 +2115,9 @@ public class GameTable extends View
 			case Card.COLOR_GREEN: return Color.rgb(4,133,64);
 			case Card.COLOR_BLUE: return Color.rgb(4, 86, 165);
 			case Card.COLOR_YELLOW: return Color.rgb(233, 146, 6);
+			case Card.COLOR_WILD: return Color.rgb(221,220,215);
 		}
-		return Color.rgb(221,220,215);
+		return Color.TRANSPARENT;
 	}
 	
 	public void ShowCardHelp (Card c)

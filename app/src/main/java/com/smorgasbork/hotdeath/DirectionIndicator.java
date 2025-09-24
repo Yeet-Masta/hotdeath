@@ -2,6 +2,8 @@ package com.smorgasbork.hotdeath;
 
 import android.graphics.Color;
 
+import java.util.Arrays;
+
 public class DirectionIndicator implements Animatable{
     private static DirectionIndicator instance;
 
@@ -25,6 +27,11 @@ public class DirectionIndicator implements Animatable{
             instance.segmentColors = new int[12];
         }
         return instance;
+    }
+
+    public void reset() {
+        this.color = Color.TRANSPARENT;
+        this.direction = true;
     }
 
     public void startAnimation(AnimationParams params) {

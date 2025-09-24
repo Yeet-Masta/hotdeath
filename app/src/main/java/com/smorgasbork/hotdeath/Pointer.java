@@ -55,4 +55,8 @@ public class Pointer implements Animatable{
     }
 
     public float getRot() { return rot;}
+
+    public void setRot(float rot) {
+        this.rot = rot;
+    }
 }

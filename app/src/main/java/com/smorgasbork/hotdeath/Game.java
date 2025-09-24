@@ -2,6 +2,7 @@ package com.smorgasbork.hotdeath;
 
 import java.util.Random;
 
+import android.graphics.Color;
 import android.util.Log;
 
 import org.json.*;
@@ -29,7 +30,6 @@ public class Game extends Thread {
 	private GameActivity m_ga;
 	private final Player[]	m_players;
 
-	private Player		m_startPlayer;
 	private Player		m_currPlayer;
 	private Player      m_nextPlayerPreset;
 	private Player		m_dealer;
@@ -277,6 +277,9 @@ public class Game extends Thread {
 			m_currPlayer = m_players[nCurrPlayer];
 			m_dealer = m_players[nDealer];
 
+			DirectionIndicator.getInstance().reset();
+			m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor);
+
 			m_resumingSavedGame = true;
 		}
 		catch (JSONException e)
@@ -379,6 +382,7 @@ public class Game extends Thread {
 		m_discardPile = null;
 
 		m_direction = DIR_CLOCKWISE;
+		DirectionIndicator.getInstance().reset();
 
 		if (m_go.getComputer4th())
 		{
@@ -418,6 +422,7 @@ public class Game extends Thread {
 		m_discardPile = new CardPile ();
 		m_cardsPlayed = 0;
 		m_roundComplete = false;
+		DirectionIndicator.getInstance().reset();
 
 		for (int i = 0; i < 4; i++) 
 		{
@@ -701,7 +706,8 @@ public class Game extends Thread {
 
 		showNextRoundButton(false);
 		resetRound();
-		m_startPlayer = m_dealer.getLeftOpp();
+		m_currPlayer = m_dealer;
+		Pointer.getInstance().setRot((m_currPlayer.getSeat() -1) * 90);
 
 		m_penalty = new Penalty ();
 
@@ -735,6 +741,7 @@ public class Game extends Thread {
 		dealHands();
 		postDealHands();
 		waitABit();
+		m_currPlayer = nextPlayer();
 	}
 	
 	private void postDealHands ()
@@ -750,11 +757,7 @@ public class Game extends Thread {
 			}
 		} while (m_currColor == Card.COLOR_WILD);
 
-		m_startPlayer = m_dealer.getLeftOpp();
-
-		m_currPlayer = m_startPlayer;
-
-		redrawTable();
+		m_gt.moveCardToDiscardPile(m_currCard);
 
 		for (int i = 0; i < 4; i++) 
 		{
@@ -883,10 +886,7 @@ public class Game extends Thread {
 		{
 			p = getNextPlayer();
 		}
-		m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor, 0, getDelay() / 4);
-		waitABit();
-		m_gt.startPointerAnimation((p.getSeat()-1)*90, m_direction == DIR_CLOCKWISE, 0, getDelay() / 4 );
-		waitABit();
+		m_gt.startPointerAnimation((p.getSeat()-1)*90, m_direction == DIR_CLOCKWISE);
 		return p;
 	}
 	
@@ -931,24 +931,21 @@ public class Game extends Thread {
 				m_currCard.setFaceUp(true);
 				m_discardPile.addCard(m_currCard);
 
-				m_gt.moveCardToDiscardPile(m_currCard);
-				waitABit();
-
 				m_currColor = m_currCard.getColor();
-				if (m_currColor == Card.COLOR_WILD) 
+
+				if (m_currColor == Card.COLOR_WILD)
 				{
+					m_gt.moveCardToDiscardPile(m_currCard);
 					m_currColor = m_currPlayer.chooseColor();
-					
+
 					if (m_stopping)
 					{
 						return false;
 					}
-					
+
 					String msg = String.format(getString (R.string.msg_color_chosen), seatToString(m_currPlayer.getSeat()), colorToString(m_currColor));
-					redrawTable ();
 					Log.d("HDU", msg);
-					//PromptUser(msg);
-					//waitABit();
+					m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor);
 				}
 
 				handleSpecialCards();
@@ -1010,8 +1007,7 @@ public class Game extends Thread {
 					return true;
 				}
 
-				m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
-				waitABit();
+				m_gt.moveCardToPlayer(card, m_currPlayer.getSeat(), false);
 
 				if (m_currPlayer instanceof HumanPlayer)
 				{
@@ -1055,8 +1051,7 @@ public class Game extends Thread {
 						return true;
 					}
 
-					m_gt.moveCardToPlayer(card, m_currPlayer.getSeat());
-					waitABit();
+					m_gt.moveCardToPlayer(card, m_currPlayer.getSeat(), false);
 		
 					//m_currPlayer.getHand().sort(); //redundant
 					//redrawTable();
@@ -1213,10 +1208,14 @@ public class Game extends Thread {
 		showFastForwardButton(false);
 		showMenuButton(false);
 
+		m_gt.startDirectionIndicatorAnimation(m_direction != DIR_CLOCKWISE, Color.TRANSPARENT);
+
 		m_dealer = p;
 
 		calculateScore(p);
 		m_roundComplete = true;
+
+
 
 		for (Player player : m_players) {
 			player.setActive(true);
@@ -1611,9 +1610,17 @@ public class Game extends Thread {
 		int currID  = m_currCard.getID();
 		m_nextPlayerPreset = null;
 
+		if (currVal == Card.VAL_R || currVal == Card.VAL_R_SKIP ||
+				(currID == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
+			changeDirection();
+		}
+
+		if (m_currCard.getColor() != Card.COLOR_WILD) {
+			m_gt.moveCardToDiscardPile(m_currCard);
+		}
+
 		if (currVal == Card.VAL_R) 
 		{
-			changeDirection();
 
 			if (getActivePlayerCount() == 2) 
 			{
@@ -1623,8 +1630,6 @@ public class Game extends Thread {
 
 		if (currVal == Card.VAL_R_SKIP) 
 		{
-			changeDirection();
-
 			m_currPlayer = nextPlayer();
 		}
 
@@ -1843,13 +1848,11 @@ public class Game extends Thread {
 		}
 
 		if ((currID == Card.ID_BLUE_0_FUCK_YOU)
-			&& ((m_penalty.getVictim() == m_currPlayer) || (m_penalty.getSecondaryVictim() == m_currPlayer))) 
+			&& (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer))
 		{
 			m_penalty.setVictim(m_penalty.getGeneratingPlayer());
 			m_penalty.setSecondaryVictim(null);
 			m_penalty.setGeneratingPlayer(m_currPlayer);
-
-			changeDirection();
 
 			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
 			{
@@ -2031,9 +2034,13 @@ public class Game extends Thread {
 		}
 	}
 
-	public void waitABit()
+	public void waitABit() {
+		this.waitABit(1);
+	}
+
+	public void waitABit(int div)
 	{
-		int delay = this.getDelay();
+		int delay = this.getDelay() / div;
 		
 		if (delay == 0)
 		{
@@ -2090,9 +2097,11 @@ public class Game extends Thread {
 			rolloverDiscardPile();
 		}
 		m_forceDrawing = true;
+		Card c = null;
+		Card lastCard = null;
 		for (i = 0; i < numcards; i++)
 		{
-			Card c = drawCard();
+			c = drawCard();
 
             if (c == null) {
                 notEnoughCards = true;
@@ -2107,15 +2116,14 @@ public class Game extends Thread {
                 {
                     p.getHand().sort();
                 }
-              	m_gt.moveCardToPlayer(c, p.getSeat());
-                try
-                {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+				if (lastCard != null)
+				{
+					m_gt.moveCardToPlayer(lastCard, p.getSeat(), true);
+				}
+              	lastCard = c;
             }
         }
+		m_gt.moveCardToPlayer(lastCard, p.getSeat(), false);
 		m_forceDrawing = false;
 		
 		if (notEnoughCards)
@@ -2123,8 +2131,6 @@ public class Game extends Thread {
 			promptUser (getString(R.string.msg_discard_empty));
 		}
 
-		//redrawTable();
-		waitABit();
 		m_currPlayer = realCurrPlayer;
 	}
 	

@@ -356,6 +356,10 @@ public class Card implements Animatable{
 		return isAnimating;
 	}
 
+	public void setAnimating() {
+		isAnimating = true;
+	}
+
 	public float getX() {
 		return x;
 	}
