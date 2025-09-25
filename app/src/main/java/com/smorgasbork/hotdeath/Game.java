@@ -278,7 +278,7 @@ public class Game extends Thread {
 			m_dealer = m_players[nDealer];
 
 			DirectionIndicator.getInstance().reset();
-			m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor);
+			//m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor);
 
 			m_resumingSavedGame = true;
 		}
