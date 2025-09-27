@@ -1840,12 +1840,16 @@ public class Game extends Thread {
 		if ((currID == Card.ID_BLUE_0_FUCK_YOU)
 			&& (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer))
 		{
-			m_penalty.setVictim(m_penalty.getGeneratingPlayer());
+			Player p = m_penalty.getGeneratingPlayer();
+			m_penalty.setVictim(p);
 			m_penalty.setSecondaryVictim(null);
 			m_penalty.setGeneratingPlayer(m_currPlayer);
 
 			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
 			{
+				m_currPlayer = nextPlayer();
+			} else if (m_penalty.getOrigCard().getID() == Card.ID_RED_2_GLASNOST) {
+				m_nextPlayerPreset = p;
 				m_currPlayer = nextPlayer();
 			}
 
