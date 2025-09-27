@@ -931,11 +931,17 @@ public class Game extends Thread {
 				m_currCard.setFaceUp(true);
 				m_discardPile.addCard(m_currCard);
 
+				if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
+						(m_currCard.getID() == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
+					changeDirection();
+				}
+
 				m_currColor = m_currCard.getColor();
+
+				m_gt.moveCardToDiscardPile(m_currCard);
 
 				if (m_currColor == Card.COLOR_WILD)
 				{
-					m_gt.moveCardToDiscardPile(m_currCard);
 					m_currColor = m_currPlayer.chooseColor();
 
 					if (m_stopping)
@@ -956,44 +962,44 @@ public class Game extends Thread {
 
 				// if previous player set us up, and we did not throw something
 				// that would negate the penalty, then we get penalized now
-//				if ((m_penalty.getType() != Penalty.PENTYPE_NONE)
-//					&& ((m_penalty.getVictim() == m_currPlayer)
-//							|| m_penalty.getSecondaryVictim() == m_currPlayer))
-//				{
-//					assessPenalty();
-//				}
+				if ((m_penalty.getType() != Penalty.PENTYPE_NONE)
+					&& ((m_penalty.getVictim() == m_currPlayer)
+							|| m_penalty.getSecondaryVictim() == m_currPlayer))
+				{
+					assessPenalty();
+				}
 
 
 				// if we just threw something that set up the next player, and he has
 				// no defender, hit him now
-				if (m_penalty.getType() != Penalty.PENTYPE_NONE) 
-				{
-					if (m_go.getStandardRules()) 
-					{
-						assessPenalty();
-					}
-					else 
-					{
-						Player victim = m_penalty.getVictim();
-						int ndef = checkForDefender(victim.getHand());
-                        if (ndef == 0) {
-                            assessPenalty();
-                        } else {
-							m_nextPlayerPreset = victim;
-                            if (victim instanceof HumanPlayer)
-                            {
-                                if (ndef == 1)
-                                {
-                                    promptUser(getString (R.string.msg_you_have_defender));
-                                }
-                                else
-                                {
-                                    promptUser (String.format(getString (R.string.msg_you_have_defenders), ndef));
-                                }
-                            }
-                        }
-                    }
-				}
+//				if (m_penalty.getType() != Penalty.PENTYPE_NONE)
+//				{
+//					if (m_go.getStandardRules())
+//					{
+//						assessPenalty();
+//					}
+//					else
+//					{
+//						Player victim = m_penalty.getVictim();
+//						int ndef = checkForDefender(victim.getHand());
+//                        if (ndef == 0) {
+//                            assessPenalty();
+//                        } else {
+//							m_nextPlayerPreset = victim;
+//                            if (victim instanceof HumanPlayer)
+//                            {
+//                                if (ndef == 1)
+//                                {
+//                                    promptUser(getString (R.string.msg_you_have_defender));
+//                                }
+//                                else
+//                                {
+//                                    promptUser (String.format(getString (R.string.msg_you_have_defenders), ndef));
+//                                }
+//                            }
+//                        }
+//                    }
+//				}
 				//waitABit();
 				m_currPlayer = nextPlayer();
 				redrawTable();
@@ -1610,15 +1616,6 @@ public class Game extends Thread {
 		int currID  = m_currCard.getID();
 		m_nextPlayerPreset = null;
 
-		if (currVal == Card.VAL_R || currVal == Card.VAL_R_SKIP ||
-				(currID == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
-			changeDirection();
-		}
-
-		if (m_currCard.getColor() != Card.COLOR_WILD) {
-			m_gt.moveCardToDiscardPile(m_currCard);
-		}
-
 		if (currVal == Card.VAL_R) 
 		{
 
@@ -1647,13 +1644,13 @@ public class Game extends Thread {
 
 		if (currVal == Card.VAL_D) 
 		{
-			Player victim = getNextPlayer();
+			m_currPlayer = nextPlayer();
 
-			forceDraw(victim, 2);
-			if (!(m_go.getStandardRules()))
-			{
-				m_currPlayer = nextPlayer();
-			}
+			forceDraw(m_currPlayer, 2);
+//			if (!(m_go.getStandardRules()))
+//			{
+//				m_currPlayer = nextPlayer();
+//			}
 		}
 
 		// spreaders
@@ -1661,40 +1658,32 @@ public class Game extends Thread {
 		{
 			// we're going to manipulate the m_currPlayer just so that 
 			// the drawing engine will point at each player as he draws
-			Player realCurrPlayer = m_currPlayer;
-			
+			// Player realCurrPlayer = m_currPlayer;
+
 			// by default, the player who threw the spreader will play
 			// again, unless somebody's got the shield
-			Player victim = m_currPlayer;
-			m_nextPlayerPreset = m_currPlayer;
-			for (int i = 0; i < 3; i++) 
-			{
-				victim = getNextPlayer(victim);
+			//Player offender = m_currPlayer;
+			//Player shieldHolder = null;
+			//m_nextPlayerPreset = m_currPlayer;
+			int i;
 
-				// once we've gone around the table, bail out
-				if (victim == realCurrPlayer) 
+			for (i = 0; i < 4; i++)
+			{
+				Player p = m_players[i];
+				if (p != m_currPlayer && p.getActive() && checkForShield(p.getHand()))
 				{
+					m_nextPlayerPreset = p;
+					String msg = String.format (getString(R.string.msg_has_blue_shield), seatToString(p.getSeat()));
+					promptUser (msg);
+					m_currPlayer = nextPlayer();
 					break;
 				}
-				if (!victim.getActive())
-				{
-					continue;
-				}
+			}
 
-				if (checkForShield(victim.getHand())) 
-				{
-					// somebody's got the shield
-					m_nextPlayerPreset = victim;
-
-					String msg = String.format (getString(R.string.msg_has_blue_shield), seatToString(victim.getSeat()));
-					promptUser (msg);
-
-					forceDraw(m_currPlayer, 2);
-
-					continue;
-				}
-
-				forceDraw(victim, 2);
+			for (i = 1; i < getActivePlayerCount(); i++)
+			{
+				m_currPlayer = nextPlayer();
+				forceDraw(m_currPlayer, 2);
 			}
 		}
 
@@ -1810,6 +1799,7 @@ public class Game extends Thread {
 			int victim = m_currPlayer.getChosenVictim();
 			// we'll set the victim after prompting the user for it
 			m_penalty.setFaceup(m_currCard, m_currPlayer, m_players[victim - 1]);
+			m_nextPlayerPreset = m_players[victim - 1];
 		}
 
 		// if the magic red 5 is played on the hot death wild, it nulls it
@@ -1918,14 +1908,14 @@ public class Game extends Thread {
 			}
 
 			forceDraw(pVictim, numcards);
-			m_nextPlayerPreset = pVictim;
-			m_currPlayer = nextPlayer();
+		//	m_nextPlayerPreset = pVictim;
+		//	m_currPlayer = nextPlayer();
 
 			if (pVictim2 != null) 
 			{
 				forceDraw(pVictim2, m_penalty.getNumCards() / 2);
-				m_nextPlayerPreset = pVictim2;
-				m_currPlayer = nextPlayer();
+		//		m_nextPlayerPreset = pVictim2;
+		//		m_currPlayer = nextPlayer();
 			}
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_FACEUP) 
@@ -2067,9 +2057,9 @@ public class Game extends Thread {
 		}
 		// manipulate the m_currPlayer so that the drawing engine will
 		// point at the player who is drawing; we'll put it back when done.
-		Player realCurrPlayer = m_currPlayer;
-		m_currPlayer = p;
-		redrawTable();
+//		Player realCurrPlayer = m_currPlayer;
+//		m_currPlayer = p;
+//		redrawTable();
 
 		Hand h = p.getHand();
 		for (i = 0; i < h.getNumCards(); i++)
@@ -2131,7 +2121,7 @@ public class Game extends Thread {
 			promptUser (getString(R.string.msg_discard_empty));
 		}
 
-		m_currPlayer = realCurrPlayer;
+		//m_currPlayer = realCurrPlayer;
 	}
 	
 	private void logCardPlay (Player p, Card c)

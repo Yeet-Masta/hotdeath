@@ -36,7 +36,7 @@ public class ComputerPlayer extends Player
 			// if we have no valid cards, we either pass or draw, depending on
 			// whether we've already drawn...
 			
-			if (this.m_hasTriedDrawing)
+			if (m_game.getPenalty() != null || this.m_hasTriedDrawing)
 			{
 				// if we just drew a card, then we have to pass
 				this.m_wantsToPass = true;

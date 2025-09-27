@@ -65,8 +65,14 @@ public class HumanPlayer extends Player
 		m_wantsToPass = false;
 		m_wantsToPlayCard = false;
 		m_wantsToDraw = false;
-		
 		m_turnDecision = false;
+
+		if (m_game.getPenalty() != null && !m_hand.hasValidCards(m_game))
+		{
+			m_wantsToPass = true;
+			return;
+		}
+
 		while (!m_turnDecision)
 		{
 			try
