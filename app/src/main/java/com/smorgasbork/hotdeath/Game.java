@@ -262,16 +262,6 @@ public class Game extends Thread {
 			(m_players[1]).setSeat (SEAT_WEST);
 			(m_players[2]).setSeat (SEAT_NORTH);
 			(m_players[3]).setSeat (SEAT_EAST);
-	
-			(m_players[0]).setLeftOpp (m_players[1]);
-			(m_players[1]).setLeftOpp (m_players[2]);
-			(m_players[2]).setLeftOpp (m_players[3]);
-			(m_players[3]).setLeftOpp (m_players[0]);
-	
-			(m_players[0]).setRightOpp (m_players[3]);
-			(m_players[2]).setRightOpp (m_players[1]);
-			(m_players[1]).setRightOpp (m_players[0]);
-			(m_players[3]).setRightOpp (m_players[2]);
 
 			m_penalty = new Penalty(gamestate.getJSONObject("penalty"), this, m_deck);
 			
@@ -401,16 +391,6 @@ public class Game extends Thread {
 		(m_players[1]).setSeat (SEAT_WEST);
 		(m_players[2]).setSeat (SEAT_NORTH);
 		(m_players[3]).setSeat (SEAT_EAST);
-
-		(m_players[0]).setLeftOpp (m_players[1]);
-		(m_players[1]).setLeftOpp (m_players[2]);
-		(m_players[2]).setLeftOpp (m_players[3]);
-		(m_players[3]).setLeftOpp (m_players[0]);
-
-		(m_players[0]).setRightOpp (m_players[3]);
-		(m_players[2]).setRightOpp (m_players[1]);
-		(m_players[1]).setRightOpp (m_players[0]);
-		(m_players[3]).setRightOpp (m_players[2]);
 	}
 
 
@@ -453,7 +433,7 @@ public class Game extends Thread {
 		
 		waitUntilUnpaused ();
 		
-		Player p = m_dealer.getLeftOpp();
+		Player p = getNextPlayer(m_dealer);
 		String msg = String.format (getString(R.string.msg_dealing), seatToString(m_dealer.getSeat()), m_numCardsToDeal);
 		promptUser(msg);
 		
@@ -573,7 +553,7 @@ public class Game extends Thread {
 	
 				p.addCardToHand (c);
 	
-				p = p.getLeftOpp();
+				p = getNextPlayer(p);
 			}
 		
 			int cheatlevel = m_go.getCheatLevel();
@@ -859,8 +839,8 @@ public class Game extends Thread {
 		while (notdone) 
 		{
 			p = (m_direction == DIR_CLOCKWISE)
-				? p.getLeftOpp()
-				: p.getRightOpp();
+				? m_players[p.getSeat() % 4]
+				: m_players[(p.getSeat() + 2) % 4];
 
 			if (p.getActive()) 
 			{

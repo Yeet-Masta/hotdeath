@@ -9,10 +9,10 @@ public class Player {
 	protected int		m_skill;
 	protected int       m_aggression;
 	protected Hand	    m_hand;
-	protected Player    m_leftOpp;
-	protected Player    m_rightOpp;
+//	protected Player    m_leftOpp;
+//	protected Player    m_rightOpp;
 	protected int		m_seat;
-	protected boolean   m_passing;
+//	protected boolean   m_passing;
 	protected final boolean[][]	m_othersVoids;
 	
 	protected boolean m_wantsToDraw = false;
@@ -56,36 +56,31 @@ public class Player {
 	{
 		return m_playingCard;
 	}
-
-	public int getChosenColor ()
-	{
-		return m_chosenColor;
-	}
 	
 	public int getChosenVictim ()
 	{
 		return m_chosenVictim;
 	}
-
-	public void setLeftOpp(Player p) 
-	{
-		m_leftOpp = p; 
-	}
-	
-	public Player getLeftOpp() 
-	{ 
-		return m_leftOpp; 
-	}
-	
-	public void setRightOpp(Player p)
-	{ 
-		m_rightOpp = p; 
-	}
-	
-	public Player getRightOpp() 
-	{ 
-		return m_rightOpp; 
-	}
+//
+//	public void setLeftOpp(Player p)
+//	{
+//		m_leftOpp = p;
+//	}
+//
+//	public Player getLeftOpp()
+//	{
+//		return m_leftOpp;
+//	}
+//
+//	public void setRightOpp(Player p)
+//	{
+//		m_rightOpp = p;
+//	}
+//
+//	public Player getRightOpp()
+//	{
+//		return m_rightOpp;
+//	}
 	
 	public int getSeat() 
 	{
@@ -212,7 +207,7 @@ public class Player {
 
 		m_hand = new Hand(this);
 		m_active = true;
-		m_passing = false;
+//		m_passing = false;
 	}
 
 
