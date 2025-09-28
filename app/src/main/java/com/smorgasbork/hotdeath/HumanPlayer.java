@@ -60,17 +60,13 @@ public class HumanPlayer extends Player
 	
 	// called to wait for the user to make a move -- either to play a
 	// card, draw, or pass
-	public void startTurn()
+	public boolean startTurn()
 	{
-		m_wantsToPass = false;
-		m_wantsToPlayCard = false;
-		m_wantsToDraw = false;
 		m_turnDecision = false;
 
-		if (m_game.getPenalty() != null && !m_hand.hasValidCards(m_game))
+		if (!super.startTurn())
 		{
-			m_wantsToPass = true;
-			return;
+			return false;
 		}
 
 		while (!m_turnDecision)
@@ -85,10 +81,10 @@ public class HumanPlayer extends Player
 			}
 			if (m_game.getStopping())
 			{
-				return;
+				return true;
 			}
 		}
-
+		return true;
     }
 
 	

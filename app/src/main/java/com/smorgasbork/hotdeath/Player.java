@@ -235,8 +235,23 @@ public class Player {
 	{
 	}
 	
-	public void startTurn()
+	public boolean startTurn()
 	{
+		this.m_wantsToDraw = false;
+		this.m_wantsToPass = false;
+		this.m_wantsToPlayCard = false;
+
+		if (m_game.getPenalty().getType() != Penalty.PENTYPE_NONE && !m_hand.hasValidCards(m_game))
+		{
+			m_game.waitABit();
+			// if we have no valid cards, we either pass or draw, depending on
+			// whether we've already drawn...
+
+			this.m_wantsToPass = true;
+			return false;
+		}
+
+		return true;
 	}
 	
 	public int chooseColor() 

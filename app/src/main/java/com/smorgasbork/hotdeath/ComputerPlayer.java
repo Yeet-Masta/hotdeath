@@ -23,32 +23,34 @@ public class ComputerPlayer extends Player
 		m_numCardsToDeal = rgen.nextInt(11) + 5;
 	}
 	
-	public void startTurn ()
+	public boolean startTurn ()
 	{
-		this.m_wantsToDraw = false;
-		this.m_wantsToPass = false;
-		this.m_wantsToPlayCard = false;
-				
+		if (!super.startTurn())
+		{
+			return false;
+		}
+
 		m_game.waitABit ();
-		
+
 		if (!m_hand.hasValidCards(m_game))
 		{
 			// if we have no valid cards, we either pass or draw, depending on
 			// whether we've already drawn...
-			
-			if (m_game.getPenalty() != null || this.m_hasTriedDrawing)
+
+			if (this.m_hasTriedDrawing)
 			{
 				// if we just drew a card, then we have to pass
 				this.m_wantsToPass = true;
-				return;
+				return false;
 			}
-			
+
 			// otherwise, we can draw
 			this.m_wantsToDraw = true;
-			return;
+			return false;
 		}
 
 		this.playCard();
+		return true;
 	}
 	
 	@Override
