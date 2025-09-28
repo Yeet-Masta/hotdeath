@@ -8,7 +8,7 @@ public class AnimationParams {
     public float toRot = Float.NaN;
     public Boolean toFaceUp = null;
     public int toColor = 0;
-    public boolean toDirection = false;
+    public int toDirection = 0;
     public Long duration = null;
     public Long startTime = null;
 
@@ -23,7 +23,7 @@ public class AnimationParams {
         this.duration = duration;
         return this;
     }
-    public AnimationParams setPointerParams(float toRot, boolean toDirection, long startTime, long duration)
+    public AnimationParams setPointerParams(float toRot, int toDirection, long startTime, long duration)
     {
         this.toRot = toRot;
         this.toDirection = toDirection;
@@ -32,7 +32,7 @@ public class AnimationParams {
         return this;
     }
 
-    public AnimationParams setDirectionIndicatorParams(boolean toDirection, int toColor, long startTime, long duration)
+    public AnimationParams setDirectionIndicatorParams(int toDirection, int toColor, long startTime, long duration)
     {
         this.toDirection = toDirection;
         this.toColor = toColor;

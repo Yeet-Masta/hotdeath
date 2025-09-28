@@ -16,7 +16,8 @@ public class Game extends Thread {
 	public static final int SEAT_WEST = 2;
 	public static final int SEAT_NORTH = 3;
 	public static final int SEAT_EAST = 4;
-	
+
+	public static final int DIR_NONE = 0;
 	public static final int DIR_CLOCKWISE = 1;
 	public static final int DIR_CCLOCKWISE = 2;
 
@@ -381,8 +382,7 @@ public class Game extends Thread {
 		m_drawPile = null;
 		m_discardPile = null;
 
-		m_direction = DIR_CLOCKWISE;
-		DirectionIndicator.getInstance().reset();
+		m_direction = DIR_NONE;
 
 		if (m_go.getComputer4th())
 		{
@@ -886,7 +886,7 @@ public class Game extends Thread {
 		{
 			p = getNextPlayer();
 		}
-		m_gt.startPointerAnimation((p.getSeat()-1)*90, m_direction == DIR_CLOCKWISE);
+		m_gt.startPointerAnimation((p.getSeat()-1)*90, m_direction);
 		return p;
 	}
 	
@@ -951,7 +951,7 @@ public class Game extends Thread {
 
 					String msg = String.format(getString (R.string.msg_color_chosen), seatToString(m_currPlayer.getSeat()), colorToString(m_currColor));
 					Log.d("HDU", msg);
-					m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor);
+					m_gt.startDirectionIndicatorAnimation(m_direction, m_currColor);
 				}
 
 				handleSpecialCards();
@@ -1214,7 +1214,7 @@ public class Game extends Thread {
 		showFastForwardButton(false);
 		showMenuButton(false);
 
-		m_gt.startDirectionIndicatorAnimation(m_direction != DIR_CLOCKWISE, Color.TRANSPARENT);
+		m_gt.startDirectionIndicatorAnimation(m_direction, Color.TRANSPARENT);
 
 		m_dealer = p;
 

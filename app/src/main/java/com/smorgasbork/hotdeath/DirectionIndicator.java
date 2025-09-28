@@ -14,9 +14,9 @@ public class DirectionIndicator implements Animatable{
     private int color;
     private int startColor;
     private int targetColor;
-    private boolean direction;
-    private boolean startDirection;
-    private boolean targetDirection;
+    private int direction;
+    private int startDirection;
+    private int targetDirection;
     private boolean isAnimating;  // Animation status
 
     private DirectionIndicator() {} // Private constructor
@@ -31,7 +31,7 @@ public class DirectionIndicator implements Animatable{
 
     public void reset() {
         this.color = Color.TRANSPARENT;
-        this.direction = true;
+        this.direction = Game.DIR_NONE;
     }
 
     public void startAnimation(AnimationParams params) {
@@ -88,7 +88,7 @@ public class DirectionIndicator implements Animatable{
         return isAnimating;
     }
 
-    public boolean getDirection() {
+    public int getDirection() {
             return direction;
     }
 

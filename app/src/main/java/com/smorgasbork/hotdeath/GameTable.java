@@ -439,7 +439,7 @@ public class GameTable extends View
 		m_discardPileOnTop = true;
 		startCardAnimation(card, m_ptDiscardPile.x, m_ptDiscardPile.y, 0, true, m_game.getDelay() / 4);
 		m_game.waitABit(2);
-		startDirectionIndicatorAnimation(m_game.getDirection() == Game.DIR_CLOCKWISE, m_game.getCurrColor());
+		startDirectionIndicatorAnimation(m_game.getDirection(), m_game.getCurrColor());
 	}
 
 	private void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
@@ -447,12 +447,12 @@ public class GameTable extends View
 		animationManager.startAnimation(card, new AnimationParams().setCardParams(toX, toY, toRot, faceUp, 0, duration));
 	}
 
-	public void startPointerAnimation(float toRot, boolean direction) 	{
+	public void startPointerAnimation(float toRot, int direction) 	{
 		animationManager.startAnimation(Pointer.getInstance(), new AnimationParams().setPointerParams(toRot, direction, 0, m_game.getDelay() / 4 ));
 		m_game.waitABit(2);
 	}
 
-	public void startDirectionIndicatorAnimation(boolean toDirection, int toColor) 	{
+	public void startDirectionIndicatorAnimation(int toDirection, int toColor) 	{
 		if (toDirection != DirectionIndicator.getInstance().getDirection() || getColorRgb(toColor) != DirectionIndicator.getInstance().getSegmentColor(0)) {
 			animationManager.startAnimation(DirectionIndicator.getInstance(), new AnimationParams().setDirectionIndicatorParams(toDirection, getColorRgb(toColor), 0, m_game.getDelay() / 4 ));
 			m_game.waitABit(2);
@@ -950,11 +950,11 @@ public class GameTable extends View
 		{
 
 //			//Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
-			for (i=1;i<=12;i++) {
+			for (i = 1; i <= 12; i++) {
 
 				m_drawMatrix.setTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
 				m_drawMatrix.postRotate((p.getSeat() -1) * 90);
-				if (!DirectionIndicator.getInstance().getDirection())
+				if (DirectionIndicator.getInstance().getDirection() == Game.DIR_CCLOCKWISE)
 				{
 					if (p.getSeat() % 2 == 0) {
 						m_drawMatrix.postScale(1, -1);
@@ -963,7 +963,7 @@ public class GameTable extends View
 						m_drawMatrix.postScale(-1, 1);
 					}
 				}
-				m_drawMatrix.postRotate((i-1) * 30 * (DirectionIndicator.getInstance().getDirection()?1:-1));
+				m_drawMatrix.postRotate((i - 1) * 30 * (DirectionIndicator.getInstance().getDirection() == Game.DIR_CLOCKWISE?1:-1));
 				m_drawMatrix.postTranslate(m_ptPointer.x, m_ptPointer.y);
 				m_paintPointer.setColorFilter(new PorterDuffColorFilter(DirectionIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
 				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, m_paintPointer);;

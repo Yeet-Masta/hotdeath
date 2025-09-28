@@ -25,10 +25,10 @@ public class Pointer implements Animatable{
     public void startAnimation(AnimationParams params) {
         this.startRot = this.rot;
         this.targetRot = params.toRot;
-        if (params.toDirection && this.targetRot <= this.startRot)
+        if (params.toDirection == Game.DIR_CLOCKWISE && this.targetRot <= this.startRot)
         {
             this.targetRot += 360;
-        } else if (!params.toDirection && this.targetRot >= this.startRot) {
+        } else if (params.toDirection == Game.DIR_CCLOCKWISE && this.targetRot >= this.startRot) {
             this.targetRot -= 360;
         }
         this.startTime = params.startTime;
