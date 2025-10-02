@@ -973,6 +973,7 @@ public class GameTable extends View
 			m_drawMatrix.reset();
 			m_drawMatrix.postTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
 			m_drawMatrix.postRotate(Pointer.getInstance().getRot());
+			m_drawMatrix.postScale(Pointer.getInstance().getScale(), Pointer.getInstance().getScale());
 			m_paintPointer.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
 			m_drawMatrix.postTranslate(m_ptPointer.x, m_ptPointer.y);
 			canvas.drawBitmap(m_bmpPointer, m_drawMatrix, m_paintPointer);

@@ -7,6 +7,9 @@ public class Pointer implements Animatable{
 
     // Animation related properties
     private float rot = 0;
+
+    private float scale = 1;
+    private boolean jump = false;
     private float startRot; // Starting rotation about the X-axis
     private float targetRot; // Target rotation about the X-axis
     private long startTime;  // Start time of the animation
@@ -23,16 +26,21 @@ public class Pointer implements Animatable{
     }
 
     public void startAnimation(AnimationParams params) {
+        this.startTime = params.startTime;
+        this.duration = params.duration;
         this.startRot = this.rot;
         this.targetRot = params.toRot;
-        if (params.toDirection == Game.DIR_CLOCKWISE && this.targetRot <= this.startRot)
+        this.scale = 1;
+        this.jump = false;
+        if (params.toDirection == Game.DIR_NONE) {
+          this.jump = true;
+        } else if (params.toDirection == Game.DIR_CLOCKWISE && this.targetRot <= this.startRot)
         {
             this.targetRot += 360;
         } else if (params.toDirection == Game.DIR_CCLOCKWISE && this.targetRot >= this.startRot) {
             this.targetRot -= 360;
         }
-        this.startTime = params.startTime;
-        this.duration = params.duration;
+
         this.isAnimating = true;
     }
 
@@ -42,12 +50,18 @@ public class Pointer implements Animatable{
         long elapsedTime = System.currentTimeMillis() - startTime;
         if (elapsedTime >= duration) {
             rot = (targetRot + 360) % 360;
+            scale = 1;
             isAnimating = false;
             return;
         }
 
         float progress = (float) elapsedTime / duration;
-        this.rot = startRot + progress * (targetRot - startRot);
+        if (jump) {
+            rot = progress < 0.5 ? startRot : targetRot;
+            this.scale = Math.abs(1 - 2 * progress);
+        } else {
+            this.rot = startRot + progress * (targetRot - startRot);
+        }
     }
 
     public boolean isAnimating() {
@@ -55,6 +69,8 @@ public class Pointer implements Animatable{
     }
 
     public float getRot() { return rot;}
+
+    public float getScale() {return scale;}
 
     public void setRot(float rot) {
         this.rot = rot;

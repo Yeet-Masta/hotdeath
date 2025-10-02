@@ -855,18 +855,22 @@ public class Game extends Thread {
 	public Player nextPlayer()
 	{
 		Player p;
+		int dir = m_direction;
 		m_currPlayer.resetLastDrawn();
 
 		if (m_nextPlayerPreset != null)
 		{
 			p = m_nextPlayerPreset;
 			m_nextPlayerPreset = null;
+			dir = Game.DIR_NONE;
 		}
 		else
 		{
 			p = getNextPlayer();
 		}
-		m_gt.startPointerAnimation((p.getSeat()-1)*90, m_direction);
+		if (p != m_currPlayer) {
+			m_gt.startPointerAnimation((p.getSeat()-1) * 90, dir);
+		}
 		return p;
 	}
 	
@@ -1807,11 +1811,11 @@ public class Game extends Thread {
 			m_penalty.setVictim(g);
 			m_penalty.setGeneratingPlayer(m_currPlayer);
 			m_penalty.setSecondaryVictim(m_currPlayer);
-
-			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
-			{
-				m_currPlayer = nextPlayer();
-			}
+			m_nextPlayerPreset = g;
+//			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
+//			{
+//				m_currPlayer = nextPlayer();
+//			}
 			
 			String msg = String.format(getString(R.string.msg_sharing_penalty), seatToString(m_penalty.getVictim().getSeat()));
 			promptUser (msg);
@@ -1897,9 +1901,9 @@ public class Game extends Thread {
 
 			if (pVictim2 != null) 
 			{
+				m_nextPlayerPreset = pVictim2;
+				m_currPlayer = nextPlayer();
 				forceDraw(pVictim2, m_penalty.getNumCards() / 2);
-		//		m_nextPlayerPreset = pVictim2;
-		//		m_currPlayer = nextPlayer();
 			}
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_FACEUP) 
@@ -1911,10 +1915,11 @@ public class Game extends Thread {
 				msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim.getSeat()));
 				promptUser (msg);
 			}
-			waitABit();
 
 			if (pVictim2 != null) 
 			{
+				m_nextPlayerPreset = pVictim2;
+				m_currPlayer = nextPlayer();
 				h = pVictim2.getHand();
 				h.reveal();
 				if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer) 
@@ -1922,19 +1927,15 @@ public class Game extends Thread {
 					msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim2.getSeat()));
 					promptUser (msg);
 				}
-				waitABit();
 			}
-			m_nextPlayerPreset = m_penalty.getGeneratingPlayer();
-			m_currPlayer = nextPlayer();
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_EJECT) 
 		{
 			pVictim.setActive(false);
 
 			msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim.getSeat()));
-			redrawTable();
 			promptUser (msg);
-			waitABit();
+
 
 			if (pVictim == m_players[SEAT_SOUTH - 1])
 			{
@@ -1943,12 +1944,12 @@ public class Game extends Thread {
 
 			if (pVictim2 != null) 
 			{
+				m_nextPlayerPreset = pVictim2;
+				m_currPlayer = nextPlayer();
 				pVictim2.setActive(false);
 
 				msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim2.getSeat()));
-				redrawTable();
 				promptUser (msg);
-				waitABit();
 
 				if (pVictim2 == m_players[SEAT_SOUTH - 1])
 				{
