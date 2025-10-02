@@ -952,6 +952,12 @@ public class Game extends Thread {
 					assessPenalty();
 				}
 
+				if (m_penalty.getType() == Penalty.PENTYPE_NONE && m_currPlayer.getHand().getNumCards() == 0)
+				{
+					finishRound(m_currPlayer);
+					return false;
+				}
+
 
 				// if we just threw something that set up the next player, and he has
 				// no defender, hit him now
