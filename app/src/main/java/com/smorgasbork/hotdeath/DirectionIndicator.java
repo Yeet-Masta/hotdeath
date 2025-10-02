@@ -25,12 +25,14 @@ public class DirectionIndicator implements Animatable{
         if (instance == null) {
             instance = new DirectionIndicator();
             instance.segmentColors = new int[12];
+            instance.reset();
         }
         return instance;
     }
 
     public void reset() {
         this.color = Color.TRANSPARENT;
+        Arrays.fill(segmentColors, Color.TRANSPARENT);
         this.direction = Game.DIR_NONE;
     }
 
@@ -63,7 +65,7 @@ public class DirectionIndicator implements Animatable{
             if (targetDirection != direction) {
                 if (progress <= 0.5) {
                     for (int i = 0; i < 12; i++) {
-                        segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 12 - i - 24 * progress))) << 24) | (color & 0x00FFFFFF);
+                        segmentColors[i] = (int) (((color >> 24) & 0xFF) * Math.min(1, Math.max(0, 12 - i - 24 * progress))) << 24 | (color & 0x00FFFFFF);
                     }
                 } else {
                     direction = targetDirection;

@@ -194,6 +194,7 @@ public class Game extends Thread {
     	{
     		m_gt.shutdown ();
     		m_go.shutdown ();
+			DirectionIndicator.getInstance().reset();
 
             for (Player mPlayer : m_players) {
                 mPlayer.shutdown();
@@ -268,8 +269,7 @@ public class Game extends Thread {
 			m_currPlayer = m_players[nCurrPlayer];
 			m_dealer = m_players[nDealer];
 
-			DirectionIndicator.getInstance().reset();
-			//m_gt.startDirectionIndicatorAnimation(m_direction == DIR_CLOCKWISE, m_currColor);
+			//m_gt.startDirectionIndicatorAnimation(m_direction, m_currColor);
 
 			m_resumingSavedGame = true;
 		}
@@ -781,9 +781,14 @@ public class Game extends Thread {
 				showNextRoundButton(true);
 				waitForNextRound ();
 				startRound ();
-			} else if (!(m_players[SEAT_SOUTH - 1]).getActive())
+			} else
 			{
-				showFastForwardButton(true);
+				m_gt.startPointerAnimation((m_currPlayer.getSeat()-1) * 90, DIR_NONE);
+				m_gt.startDirectionIndicatorAnimation(m_direction, m_currColor);
+				if (!(m_players[SEAT_SOUTH - 1]).getActive())
+				{
+					showFastForwardButton(true);
+				}
 			}
 		}
 		else
