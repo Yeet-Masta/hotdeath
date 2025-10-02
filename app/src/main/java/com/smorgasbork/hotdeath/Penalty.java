@@ -18,6 +18,8 @@ public class Penalty {
 
 	private int m_numcards;
 
+	private boolean m_hasHotDeath = false;
+
 	public Player getGeneratingPlayer () 
 	{
 		return m_generatingPlayer; 
@@ -67,6 +69,8 @@ public class Penalty {
 	{ 
 		return m_numcards; 
 	}
+
+	public boolean hasHotDeath() { return m_hasHotDeath; }
 	
 	
 	public Penalty()
@@ -80,6 +84,7 @@ public class Penalty {
 		m_origCard = null;
 		m_numcards = 0;
 		m_type = PENTYPE_NONE;
+		m_hasHotDeath = false;
 		m_generatingPlayer = null;
 		m_victim = null;
 		m_secondaryVictim = null;
@@ -92,6 +97,10 @@ public class Penalty {
 		if (c != null) 
 		{
 			m_origCard = c;
+			if (c.getID() == Card.ID_WILD_HD)
+			{
+				m_hasHotDeath = true;
+			}
 		}
 
 		m_numcards += n;
@@ -101,17 +110,10 @@ public class Penalty {
 	}
 
 
-	public void setNumCards(Card c, int n, Player p, Player pVictim)
+	public void removeHotDeath ()
 	{
-		if (c != null) 
-		{
-			m_origCard = c;
-		}
-
-		m_numcards = n;
-		m_type = PENTYPE_CARD;
-		m_generatingPlayer = p;
-		m_victim = pVictim;
+		m_numcards -= 8;
+		m_hasHotDeath = false;
 	}
 
 
@@ -146,6 +148,7 @@ public class Penalty {
 		
 		this.m_type = o.getInt("type");
 		this.m_numcards = o.getInt("numcards");
+		this.m_hasHotDeath = o.getBoolean("hasHotDeath");
 		
 		int n = o.getInt("generatingPlayer");
 		if (n == 0)
@@ -194,6 +197,7 @@ public class Penalty {
 		
 		o.put ("type", m_type);
 		o.put ("numcards", m_numcards);
+		o.put ("hasHotDeath", m_hasHotDeath);
 
 		if (m_generatingPlayer != null)
 		{

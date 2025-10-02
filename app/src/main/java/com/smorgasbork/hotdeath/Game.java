@@ -1064,7 +1064,6 @@ public class Game extends Thread {
 					}
 				}
 			}
-			redrawTable ();
 		}
 
 		for (int i = 0; i < 4; i++) 
@@ -1150,7 +1149,7 @@ public class Game extends Thread {
 
 			// magic 5 is a defender against the hot death wild card only
 			// (although it can be played on any card)
-			m_lastCardCheckedIsDefender = (origCardId == Card.ID_WILD_HD) && m_penalty.getSecondaryVictim() == null && (checkCardId == Card.ID_RED_5_MAGIC);
+			m_lastCardCheckedIsDefender = (checkCardId == Card.ID_RED_5_MAGIC && m_penalty.hasHotDeath());
 			return m_lastCardCheckedIsDefender;
         }
 		
@@ -1801,10 +1800,11 @@ public class Game extends Thread {
 		}
 
 		// if the magic red 5 is played on the hot death wild, it nulls it
-		if ((currID == Card.ID_RED_5_MAGIC) && (m_prevCard.getID() == Card.ID_WILD_HD)
-			 && (m_penalty.getVictim() == m_currPlayer)) 
+		if (currID == Card.ID_RED_5_MAGIC
+			 && m_penalty.getVictim() == m_currPlayer
+				&& m_penalty.hasHotDeath())
 		{
-			m_penalty.reset();
+			m_penalty.removeHotDeath();
 
 			String msg = getString(R.string.msg_magic_5);
 			promptUser (msg);
@@ -1838,8 +1838,8 @@ public class Game extends Thread {
 		if ((currID == Card.ID_BLUE_0_FUCK_YOU)
 			&& (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer))
 		{
-			Player p = m_penalty.getGeneratingPlayer();
-			m_penalty.setVictim(p);
+			Player g = m_penalty.getGeneratingPlayer();
+			m_penalty.setVictim(g);
 			m_penalty.setSecondaryVictim(null);
 			m_penalty.setGeneratingPlayer(m_currPlayer);
 
@@ -1847,7 +1847,7 @@ public class Game extends Thread {
 			{
 				m_currPlayer = nextPlayer();
 			} else if (m_penalty.getOrigCard().getID() == Card.ID_RED_2_GLASNOST) {
-				m_nextPlayerPreset = p;
+				m_nextPlayerPreset = g;
 				m_currPlayer = nextPlayer();
 			}
 
