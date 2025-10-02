@@ -1772,10 +1772,10 @@ public class Game extends Thread {
 		{
 			m_penalty.setGeneratingPlayer(m_currPlayer);
 			m_penalty.setVictim(getNextPlayer());
-			if (m_penalty.getVictim() == m_penalty.getSecondaryVictim())
-			{
-				m_penalty.setSecondaryVictim(null);
-			}
+//			if (m_penalty.getVictim() == m_penalty.getSecondaryVictim())
+//			{
+//				m_penalty.setSecondaryVictim(null);
+//			}
 
 			String msg = String.format (getString(R.string.msg_holy_defender), seatToString(m_penalty.getVictim().getSeat()));
 			promptUser (msg);
