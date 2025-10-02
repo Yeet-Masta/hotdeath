@@ -2002,7 +2002,7 @@ public class GameTable extends View
 	    // draw penalty!
 	    Penalty p = m_game.getPenalty();
 	    
-	    if (p.getType() == Penalty.PENTYPE_NONE)
+	    if (p == null || p.getType() == Penalty.PENTYPE_NONE)
 	    {
 	    	return;
 	    }
