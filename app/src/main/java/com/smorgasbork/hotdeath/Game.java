@@ -1936,6 +1936,10 @@ public class Game extends Thread {
 					promptUser (msg);
 				}
 			}
+			else {
+				m_nextPlayerPreset = m_penalty.getGeneratingPlayer();
+				m_currPlayer = nextPlayer();
+			}
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_EJECT) 
 		{
