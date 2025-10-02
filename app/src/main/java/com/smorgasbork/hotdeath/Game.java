@@ -1102,7 +1102,7 @@ public class Game extends Thread {
 
 		boolean bHasMatch = h.hasColorMatch (m_currColor);
 
-		m_lastCardCheckedIsDefender = true;
+		m_lastCardCheckedIsDefender = false;
 
 		if (m_penalty.getType() != Penalty.PENTYPE_NONE)
 		{
@@ -1123,6 +1123,7 @@ public class Game extends Thread {
 				   || (origCardId == Card.ID_GREEN_0_QUITTER)
 				   || (origCardId == Card.ID_RED_2_GLASNOST)))
 			{
+				m_lastCardCheckedIsDefender = true;
 				return true;
 			}
 
@@ -1136,13 +1137,15 @@ public class Game extends Thread {
 						&& origCardId != Card.ID_WILD_MYSTERY
 						&& checkCardValue == Card.VAL_WILD_DRAW
 						&& checkCardId != Card.ID_WILD_MYSTERY) {
-                    return true;
+					m_lastCardCheckedIsDefender = true;
+					return true;
                 }
 			}
 
 			// magic 5 is a defender against the hot death wild card only
 			// (although it can be played on any card)
-            return (origCardId == Card.ID_WILD_HD) && m_penalty.getSecondaryVictim() == null && (checkCardId == Card.ID_RED_5_MAGIC);
+			m_lastCardCheckedIsDefender = (origCardId == Card.ID_WILD_HD) && m_penalty.getSecondaryVictim() == null && (checkCardId == Card.ID_RED_5_MAGIC);
+			return m_lastCardCheckedIsDefender;
         }
 		
 		m_lastCardCheckedIsDefender = false;
