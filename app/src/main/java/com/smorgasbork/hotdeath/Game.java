@@ -946,9 +946,8 @@ public class Game extends Thread {
 
 				// if previous player set us up, and we did not throw something
 				// that would negate the penalty, then we get penalized now
-				if ((m_penalty.getType() != Penalty.PENTYPE_NONE)
-					&& ((m_penalty.getVictim() == m_currPlayer)
-							|| m_penalty.getSecondaryVictim() == m_currPlayer))
+				if (m_penalty.getType() != Penalty.PENTYPE_NONE
+					&& m_penalty.getVictim() == m_currPlayer)
 				{
 					assessPenalty();
 				}
@@ -1107,6 +1106,12 @@ public class Game extends Thread {
 
 		if (m_penalty.getType() != Penalty.PENTYPE_NONE)
 		{
+			// nothing can defend against AIDS
+			if (currCardID == Card.ID_GREEN_3_AIDS)
+			{
+				return false;
+			}
+
 			int origCardId = m_penalty.getOrigCard().getID();
 			int origCardValue = m_penalty.getOrigCard().getValue();
 
