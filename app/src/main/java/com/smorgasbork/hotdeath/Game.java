@@ -1960,8 +1960,6 @@ public class Game extends Thread {
 			// one player left, that player wins
 			if (getActivePlayerCount() == 1) 
 			{
-				Hand th = m_currPlayer.getHand();
-				th.reset();
 				m_penalty.reset();
 				Player pWinner = null;
 				for (i = 0; i < 4; i++) 
@@ -1969,12 +1967,13 @@ public class Game extends Thread {
 					if (m_players[i].getActive()) 
 					{
 						pWinner = m_players[i];
+						pWinner.getHand().reset();
+						break;
 					}
 				}
 				finishRound(pWinner);
 			}
 		}
-
 		m_penalty.reset();
 	}
 
