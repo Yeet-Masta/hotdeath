@@ -5,6 +5,7 @@ import android.graphics.Color;
 import java.util.Arrays;
 
 public class DirectionIndicator implements Animatable{
+    public static final int numSegments = 12;
     private static DirectionIndicator instance;
 
     // Animation related properties
@@ -24,7 +25,7 @@ public class DirectionIndicator implements Animatable{
     public static synchronized DirectionIndicator getInstance() {
         if (instance == null) {
             instance = new DirectionIndicator();
-            instance.segmentColors = new int[12];
+            instance.segmentColors = new int[numSegments];
             instance.reset();
         }
         return instance;
@@ -64,8 +65,8 @@ public class DirectionIndicator implements Animatable{
         if (targetDirection != startDirection) {
             if (targetDirection != direction) {
                 if (progress <= 0.5) {
-                    for (int i = 0; i < 12; i++) {
-                        segmentColors[i] = (int) (((color >> 24) & 0xFF) * Math.min(1, Math.max(0, 12 - i - 24 * progress))) << 24 | (color & 0x00FFFFFF);
+                    for (int i = 0; i < numSegments; i++) {
+                        segmentColors[i] = (int) (((color >> 24) & 0xFF) * Math.min(1, Math.max(0, numSegments - i - 2 * numSegments * progress))) << 24 | (color & 0x00FFFFFF);
                     }
                 } else {
                     direction = targetDirection;
@@ -73,14 +74,14 @@ public class DirectionIndicator implements Animatable{
                 }
             }
             if (startDirection != direction) {
-                for (int i = 0; i < 12; i++) {
-                    segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 24 * progress - 12 - i))) << 24) | (color & 0x00FFFFFF);
+                for (int i = 0; i < numSegments; i++) {
+                    segmentColors[i] = ((int) (255 * Math.min(1, Math.max(0, 24 * progress - numSegments - i))) << 24) | (color & 0x00FFFFFF);
                 }
             }
         }
         else if (targetColor != startColor){
-            for (int i = 0; i < 12; i++) {
-                segmentColors[i] = progress * 12 >= i + 1 ? this.targetColor : startColor;
+            for (int i = 0; i < numSegments; i++) {
+                segmentColors[i] = progress * numSegments >= i + 1 ? this.targetColor : startColor;
             }
         }
 //        this.color = this.targetColor & 0x00FFFFFF | ((int) (progress * 255) << 24);

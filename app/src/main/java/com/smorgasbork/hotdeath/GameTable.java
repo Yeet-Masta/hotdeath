@@ -950,7 +950,8 @@ public class GameTable extends View
 		{
 
 //			//Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
-			for (i = 1; i <= 12; i++) {
+			if (DirectionIndicator.getInstance().getDirection() == Game.DIR_CCLOCKWISE)
+			for (i = 1; i <= DirectionIndicator.numSegments; i++) {
 
 				m_drawMatrix.setTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
 				m_drawMatrix.postRotate((p.getSeat() -1) * 90);
