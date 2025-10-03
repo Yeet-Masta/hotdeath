@@ -88,8 +88,8 @@ public class GameTable extends View
 	
 	private Bitmap m_bmpCardBack;
 	private Bitmap m_bmpPointer;
-
 	private Bitmap m_bmpDirection;
+	private Bitmap m_bmpColorChooser;
 	
 //	private Bitmap m_bmpDirColorCCW, m_bmpDirColorCCWRed, m_bmpDirColorCCWGreen, m_bmpDirColorCCWBlue, m_bmpDirColorCCWYellow;
 //	private Bitmap m_bmpDirColorCW, m_bmpDirColorCWRed, m_bmpDirColorCWGreen, m_bmpDirColorCWBlue, m_bmpDirColorCWYellow;
@@ -335,6 +335,12 @@ public class GameTable extends View
 		drawable.setBounds(0, 0, pointerSize, pointerSize);
 		drawable.draw(canvas);
 
+		drawable = res.getDrawable(R.drawable.colorchooser);
+		m_bmpColorChooser = Bitmap.createBitmap(pointerSize, pointerSize, Bitmap.Config.ARGB_8888);
+		canvas = new Canvas(m_bmpColorChooser);
+		drawable.setBounds(0, 0, pointerSize, pointerSize);
+		drawable.draw(canvas);
+
 		m_ptPointer = new Point(w / 2, (h - bottomMargin + topMargin) / 2);
 		m_ptDrawPile = new Point(w / 2 - m_cardWidth * 5 / 4, (h - bottomMargin + topMargin - m_cardHeight) / 2);
 		m_ptDiscardPile = new Point(w / 2 + m_cardWidth / 4, (h - bottomMargin + topMargin - m_cardHeight) / 2);
@@ -457,6 +463,11 @@ public class GameTable extends View
 			animationManager.startAnimation(DirectionIndicator.getInstance(), new AnimationParams().setDirectionIndicatorParams(toDirection, getColorRgb(toColor), 0, m_game.getDelay() / 4 ));
 			m_game.waitABit(2);
 		}
+	}
+
+	public void startColorChooserAnimation(int toDirection, boolean show) 	{
+		animationManager.startAnimation(ColorChooser.getInstance(), new AnimationParams().setColorChooserParams(toDirection, show, 0, m_game.getDelay() / 4 ));
+		m_game.waitABit();
 	}
 
 	public void startGameWhenReady ()
@@ -950,7 +961,7 @@ public class GameTable extends View
 		{
 
 //			//Point pt = m_ptPlayerIndicator[p.getSeat() - 1];
-			if (DirectionIndicator.getInstance().getDirection() == Game.DIR_CCLOCKWISE)
+//			if (DirectionIndicator.getInstance().getDirection() == Game.DIR_CCLOCKWISE)
 			for (i = 1; i <= DirectionIndicator.numSegments; i++) {
 
 				m_drawMatrix.setTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
@@ -964,7 +975,7 @@ public class GameTable extends View
 						m_drawMatrix.postScale(-1, 1);
 					}
 				}
-				m_drawMatrix.postRotate((i - 1) * 30 * (DirectionIndicator.getInstance().getDirection() == Game.DIR_CLOCKWISE?1:-1));
+				m_drawMatrix.postRotate((i - 1) * (360f / DirectionIndicator.numSegments) * (DirectionIndicator.getInstance().getDirection() == Game.DIR_CLOCKWISE?1:-1));
 				m_drawMatrix.postTranslate(m_ptPointer.x, m_ptPointer.y);
 				m_paintPointer.setColorFilter(new PorterDuffColorFilter(DirectionIndicator.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
 				canvas.drawBitmap(m_bmpDirection, m_drawMatrix, m_paintPointer);;
@@ -1017,6 +1028,16 @@ public class GameTable extends View
 		if (m_discardPileOnTop)
 		{
 			m_discardPileBoundingRect = drawPile(m_game.getDiscardPile(), canvas,m_ptDiscardPile, true, false);
+		}
+
+		for (i = 1; i <= ColorChooser.numSegments; i++) {
+
+			m_drawMatrix.setTranslate(-m_bmpPointer.getWidth() / 2f, -m_bmpPointer.getHeight() / 2f);
+			m_drawMatrix.postRotate((i - 1) * (360f / ColorChooser.numSegments));
+			m_drawMatrix.postScale(ColorChooser.getInstance().getSegmentScale(i-1), ColorChooser.getInstance().getSegmentScale(i-1));
+			m_drawMatrix.postTranslate(m_ptPointer.x, m_ptPointer.y);
+			m_paintPointer.setColorFilter(new PorterDuffColorFilter(ColorChooser.getInstance().getSegmentColor(i-1), PorterDuff.Mode.MULTIPLY));
+			canvas.drawBitmap(m_bmpColorChooser, m_drawMatrix, m_paintPointer);;
 		}
 
 
@@ -2287,17 +2308,19 @@ public class GameTable extends View
 	
 	public void PromptForColor ()
 	{
-		new AlertDialog.Builder(this.getContext())
-			.setCancelable(false)
-			.setTitle(R.string.prompt_color)
-			.setItems(R.array.colors,
-                    (dialoginterface, i) -> {
-                        Player p = m_game.getCurrPlayer();
-                        if (p instanceof HumanPlayer)
-                        {
-                            ((HumanPlayer)p).setColor(i + 1);
-                        }
-                    })
-				.show();
+		startColorChooserAnimation(m_game.getDirection(), true);
+//		new AlertDialog.Builder(this.getContext())
+//			.setCancelable(false)
+//			.setTitle(R.string.prompt_color)
+//			.setItems(R.array.colors,
+//                    (dialoginterface, i) -> {
+                       Player p = m_game.getCurrPlayer();
+//                        if (p instanceof HumanPlayer)
+//                        {
+                            ((HumanPlayer)p).setColor((int) (round(random() * 3) + 1));
+//                        }
+//                    })
+//				.show();
+		startColorChooserAnimation(m_game.getDirection(), false);
 	}
 }

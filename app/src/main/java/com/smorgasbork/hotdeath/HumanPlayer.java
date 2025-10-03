@@ -122,9 +122,9 @@ public class HumanPlayer extends Player
 
 	public int chooseColor()
 	{
+		m_colorDecision = false;
 		m_game.promptForColor ();
 
-		m_colorDecision = false;
 		while (!m_colorDecision)
 		{
 			try

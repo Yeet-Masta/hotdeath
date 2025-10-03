@@ -1413,7 +1413,7 @@ public class Game extends Thread {
 	
 	public void promptForColor()
 	{
-		m_ga.runOnUiThread(() -> m_gt.PromptForColor());
+		m_gt.PromptForColor();
 	}
 
 

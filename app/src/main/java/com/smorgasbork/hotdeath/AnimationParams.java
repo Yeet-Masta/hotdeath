@@ -40,4 +40,13 @@ public class AnimationParams {
         this.duration = duration;
         return this;
     }
+
+    public AnimationParams setColorChooserParams(int toDirection, boolean show, long startTime, long duration)
+    {
+        this.toDirection = toDirection;
+        this.toFaceUp = show;
+        this.startTime = startTime != 0 ? startTime: System.currentTimeMillis();
+        this.duration = duration;
+        return this;
+    }
 }
