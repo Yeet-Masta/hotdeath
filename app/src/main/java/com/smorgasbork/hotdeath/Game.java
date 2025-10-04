@@ -195,6 +195,7 @@ public class Game extends Thread {
     		m_gt.shutdown ();
     		m_go.shutdown ();
 			DirectionIndicator.getInstance().reset();
+			ColorChooser.getInstance().reset();
 
             for (Player mPlayer : m_players) {
                 mPlayer.shutdown();
@@ -403,6 +404,7 @@ public class Game extends Thread {
 		m_cardsPlayed = 0;
 		m_roundComplete = false;
 		DirectionIndicator.getInstance().reset();
+		ColorChooser.getInstance().reset();
 
 		for (int i = 0; i < 4; i++) 
 		{

@@ -116,6 +116,7 @@ public class GameTable extends View
 
 	private final AnimationManager animationManager;
 	private boolean m_discardPileOnTop = false;
+	private boolean m_waitingForColor;
 
 	public void setHelpCardID (int id)
 	{
@@ -467,7 +468,6 @@ public class GameTable extends View
 
 	public void startColorChooserAnimation(int toDirection, boolean show) 	{
 		animationManager.startAnimation(ColorChooser.getInstance(), new AnimationParams().setColorChooserParams(toDirection, show, 0, m_game.getDelay() / 4 ));
-		m_game.waitABit();
 	}
 
 	public void startGameWhenReady ()
