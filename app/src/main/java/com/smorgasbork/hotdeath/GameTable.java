@@ -660,6 +660,11 @@ public class GameTable extends View
 				return true;
 			}
 
+			if (m_waitingForColor && Math.pow(x - m_ptSeat[0].x, 2) + Math.pow(y - m_ptSeat[1].y, 2) <= Math.pow(1.5 * m_cardWidth, 2))
+			{
+				colorChooserTapped(m_ptTouchDown);
+			}
+
 			if (m_drawPileBoundingRect != null && m_drawPileBoundingRect.contains (x, y))
 			{
 				m_waitingForTouchAndHold = true;
@@ -803,7 +808,28 @@ public class GameTable extends View
 		}
 		return super.onTouchEvent(event);
 	}
-	
+
+	private void colorChooserTapped(Point pt) {
+		int color;
+		if (pt.y < m_ptSeat[1].y) {
+			if  (pt.x < m_ptSeat[0].x) {
+				color = 1;
+			}
+			else {
+				color = 2;
+			}
+		} else {
+			if (pt.x > m_ptSeat[0].x) {
+				color = 3;
+			} else {
+				color = 4;
+			}
+		}
+		((HumanPlayer) m_game.getCurrPlayer()).setColor(color);
+		m_waitingForColor = false;
+		startColorChooserAnimation(m_game.getDirection(), false);
+	}
+
 	private void drawPileTapped ()
 	{
 		m_game.drawPileTapped();
@@ -2130,7 +2156,7 @@ public class GameTable extends View
 
 	}
 
-	private int getColorRgb(int gameColor)
+	public static int getColorRgb(int gameColor)
 	{
 		switch (gameColor)
 		{
@@ -2308,19 +2334,20 @@ public class GameTable extends View
 	
 	public void PromptForColor ()
 	{
+		m_waitingForColor = true;
 		startColorChooserAnimation(m_game.getDirection(), true);
 //		new AlertDialog.Builder(this.getContext())
 //			.setCancelable(false)
 //			.setTitle(R.string.prompt_color)
 //			.setItems(R.array.colors,
 //                    (dialoginterface, i) -> {
-                       Player p = m_game.getCurrPlayer();
+//                       Player p = m_game.getCurrPlayer();
 //                        if (p instanceof HumanPlayer)
 //                        {
-                            ((HumanPlayer)p).setColor((int) (round(random() * 3) + 1));
+//                            ((HumanPlayer)p).setColor((int) (round(random() * 3) + 1));
 //                        }
 //                    })
 //				.show();
-		startColorChooserAnimation(m_game.getDirection(), false);
+//		startColorChooserAnimation(m_game.getDirection(), false);
 	}
 }

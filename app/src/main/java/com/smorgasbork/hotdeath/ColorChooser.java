@@ -58,7 +58,7 @@ public class ColorChooser implements Animatable{
         for (int i = 0; i < numSegments; i++) {
             float segmentProgress = Math.min(1, Math.max(0, 2 * numSegments * progress - numSegments - i));
             segmentProgress = show ? segmentProgress : 1 - segmentProgress;
-            segmentColors[i] = ((int) (255 * segmentProgress) << 24) | Color.rgb(203 - 50 *i, 13 + 25 * i, 40 + 50 * i) & 0x00FFFFFF;
+            segmentColors[i] = ((int) (255 * segmentProgress) << 24) | GameTable.getColorRgb(i + 1) & 0x00FFFFFF;
             segmentScales[i] = segmentProgress;
         }
     }
