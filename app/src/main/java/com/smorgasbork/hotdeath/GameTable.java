@@ -656,7 +656,7 @@ public class GameTable extends View
 				m_waitingForTouchAndHold = true;
 				m_handler.postDelayed (m_touchAndHoldTask, 1000);
 
-				m_ptTouchDown = new Point (x, y);
+//				m_ptTouchDown = new Point (x, y);
 				return true;
 			}
 
