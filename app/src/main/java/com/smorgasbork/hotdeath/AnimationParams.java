@@ -3,6 +3,8 @@ package com.smorgasbork.hotdeath;
 import android.graphics.Color;
 
 public class AnimationParams {
+
+    public Card.CardState toState;
     public float toX = Float.NaN;
     public float toY = Float.NaN;
     public float toRot = Float.NaN;
@@ -13,7 +15,7 @@ public class AnimationParams {
     public Long startTime = null;
 
     // Setters for each parameter
-    public AnimationParams setCardParams(float toX, float toY, float toRot, boolean toFaceUp, long startTime, long duration)
+    public AnimationParams setCardParams(Card.CardState toState, float toX, float toY, float toRot, boolean toFaceUp, long startTime, long duration)
     {
         this.toX = toX;
         this.toY = toY;
@@ -21,6 +23,7 @@ public class AnimationParams {
         this.toFaceUp = toFaceUp;
         this.startTime = startTime != 0 ? startTime: System.currentTimeMillis();
         this.duration = duration;
+        this.toState = toState;
         return this;
     }
     public AnimationParams setPointerParams(float toRot, int toDirection, long startTime, long duration)

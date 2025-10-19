@@ -427,12 +427,12 @@ public class GameTable extends View
 		m_bottomMarginExternal = m;
 	}
 
-	public void moveCardToPlayer(Card card, int seat, boolean moreToCome)
+	public void moveCardToHand(Card card, int seat, boolean moreToCome)
 	{
 		m_discardPileOnTop = false;
 		card.setX(m_ptDrawPile.x);
 		card.setY(m_ptDrawPile.y);
-		startCardAnimation(card, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
+		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
 		if (moreToCome) {
 			m_game.waitABit(15);
 		}
@@ -444,14 +444,14 @@ public class GameTable extends View
 	public void moveCardToDiscardPile(Card card)
 	{
 		m_discardPileOnTop = true;
-		startCardAnimation(card, m_ptDiscardPile.x, m_ptDiscardPile.y, 0, true, m_game.getDelay() / 4);
+		startCardAnimation(card, Card.CardState.DISCARD_PILE, m_ptDiscardPile.x, m_ptDiscardPile.y, 0, true, m_game.getDelay() / 4);
 		m_game.waitABit(2);
 		startDirectionIndicatorAnimation(m_game.getDirection(), m_game.getCurrColor());
 	}
 
-	private void startCardAnimation(Card card, float toX, float toY, float toRot, boolean faceUp, long duration) {
-		card.setAnimating();
-		animationManager.startAnimation(card, new AnimationParams().setCardParams(toX, toY, toRot, faceUp, 0, duration));
+	private void startCardAnimation(Card card, Card.CardState toState, float toX, float toY, float toRot, boolean faceUp, long duration) {
+		card.setState(Card.CardState.MOVING);
+		animationManager.startAnimation(card, new AnimationParams().setCardParams(toState, toX, toY, toRot, faceUp, 0, duration));
 	}
 
 	public void startPointerAnimation(float toRot, int direction) 	{
@@ -1230,7 +1230,7 @@ public class GameTable extends View
 				continue;
 			}
 
-			if (c.isAnimating()) {
+			if (c.getState() != Card.CardState.HAND) {
 				c.setTargetX(x);
 				c.setTargetY(y);
 			} else {
@@ -1296,14 +1296,14 @@ public class GameTable extends View
 				continue;
 			}
 
-            if (c.isAnimating()) {
+            if (c.getState() != Card.CardState.HAND) {
                 c.setTargetX(x);
                 c.setTargetY(y);
             } else {
                 c.setX(x);
                 c.setY(y);
             }
-            if (unrevealedOffset <= j && j < stop || c.isAnimating()) {
+            if (unrevealedOffset <= j && j < stop || c.getState() != Card.CardState.HAND) {
 				this.drawCard(cv, c);
 				if (unrevealedOffset <= j && j < stop)
 				{

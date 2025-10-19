@@ -26,6 +26,7 @@ public class CardPile
 	public void addCard(Card c)
 	{
 		m_cards[m_numCards++] = c;
+		c.setState(Card.CardState.DRAW_PILE);
 	}
 
 

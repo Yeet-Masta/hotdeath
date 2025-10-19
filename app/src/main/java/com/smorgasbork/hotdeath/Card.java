@@ -6,6 +6,10 @@ import android.content.Context;
 
 public class Card implements Animatable{
 
+	public enum CardState {
+		DRAW_PILE, MOVING, HAND, DISCARD_PILE
+	}
+
 	public static final int COLOR_RED    = 1;
 	public static final int COLOR_GREEN  = 2;
 	public static final int COLOR_BLUE   = 3;
@@ -113,6 +117,7 @@ public class Card implements Animatable{
 	private boolean m_faceUp = false;
 
 	// Animation related properties
+	private CardState state = CardState.DRAW_PILE;
 	private float x, y;  // Current position
 	private float startX, startY;  // Target position for animation
 	private float targetX, targetY;  // Target position for animation
@@ -123,6 +128,8 @@ public class Card implements Animatable{
 	private long startTime;  // Start time of the animation
 	private long duration; // Animation duration in milliseconds
 	private boolean targetFaceUp;
+
+	private CardState targetState;
 	private boolean isAnimating;  // Animation status
 
 	
@@ -321,6 +328,7 @@ public class Card implements Animatable{
 		this.targetFaceUp = params.toFaceUp;
 		this.startTime = params.startTime;
 		this.duration = params.duration;
+		this.targetState = params.toState;
 		this.isAnimating = true;
 	}
 
@@ -330,6 +338,7 @@ public class Card implements Animatable{
 		long elapsedTime = System.currentTimeMillis() - startTime;
 		if (elapsedTime >= duration) {
 			elapsedTime = duration;
+			state = targetState;
 			isAnimating = false;
 		}
 
@@ -356,8 +365,12 @@ public class Card implements Animatable{
 		return isAnimating;
 	}
 
-	public void setAnimating() {
-		isAnimating = true;
+	public void setState(CardState state) {
+		this.state = state;
+	}
+
+	public CardState getState() {
+		return state;
 	}
 
 	public float getX() {
