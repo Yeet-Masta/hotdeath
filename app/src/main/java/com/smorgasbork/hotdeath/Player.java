@@ -191,7 +191,7 @@ public class Player {
 
 	public void addCardToHand (Card c)
 	{
-		m_hand.addCard (c);
+		m_hand.addCard(c);
 	}
 
 
@@ -283,16 +283,8 @@ public class Player {
 			return null;
 		}
 
-		m_hand.addCard (c);
+		addCardToHand(c);
 		m_lastDrawn = c;
-
-		if (m_seat == Game.SEAT_SOUTH) {
-			c.setFaceUp(true);
-		}
-		if (m_seat == Game.SEAT_SOUTH || m_go.getFaceUp())
-		{
-			m_hand.sort();
-		}
 
 		return c;
 	}

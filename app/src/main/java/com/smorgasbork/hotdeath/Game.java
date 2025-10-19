@@ -553,7 +553,9 @@ public class Game extends Thread {
 
 				c.setFaceUp(p.getSeat() == SEAT_SOUTH);
 	
-				p.addCardToHand (c);
+				p.addCardToHand(c);
+
+				m_gt.moveCardToHand(c, p.getSeat(), true);
 	
 				p = getNextPlayer(p);
 			}
@@ -590,14 +592,6 @@ public class Game extends Thread {
 	
 				m_drawPile.addCard(c);
 			}
-		}
-
-		if (m_go.getFaceUp()) {
-			for (Player player : m_players) {
-				player.getHand().sort();
-			}
-		} else {
-			m_players[SEAT_SOUTH -1].getHand().sort();
 		}
 	}	
 
@@ -1009,7 +1003,7 @@ public class Game extends Thread {
 					return true;
 				}
 
-				m_gt.moveCardToPlayer(card, m_currPlayer.getSeat(), false);
+				m_gt.moveCardToHand(card, m_currPlayer.getSeat(), false);
 
 				if (m_currPlayer instanceof HumanPlayer)
 				{
@@ -1053,7 +1047,7 @@ public class Game extends Thread {
 						return true;
 					}
 
-					m_gt.moveCardToPlayer(card, m_currPlayer.getSeat(), false);
+					m_gt.moveCardToHand(card, m_currPlayer.getSeat(), false);
 		
 					//m_currPlayer.getHand().sort(); //redundant
 					//redrawTable();
@@ -2097,7 +2091,7 @@ public class Game extends Thread {
 		}
 		m_forceDrawing = true;
 		Card c = null;
-		Card lastCard = null;
+		Card prevCard = null;
 		for (i = 0; i < numcards; i++)
 		{
 			c = drawCard();
@@ -2107,22 +2101,14 @@ public class Game extends Thread {
                 break;
             } else {
                 p.addCardToHand(c);
-                if (p.getSeat() == SEAT_SOUTH)
-                {
-                    c.setFaceUp(true);
-                }
-				if (p.getSeat() == SEAT_SOUTH || m_go.getFaceUp())
-                {
-                    p.getHand().sort();
-                }
-				if (lastCard != null)
+				if (prevCard != null)
 				{
-					m_gt.moveCardToPlayer(lastCard, p.getSeat(), true);
+					m_gt.moveCardToHand(prevCard, p.getSeat(), true);
 				}
-              	lastCard = c;
+              	prevCard = c;
             }
         }
-		m_gt.moveCardToPlayer(lastCard, p.getSeat(), false);
+		m_gt.moveCardToHand(prevCard, p.getSeat(), false);
 		m_forceDrawing = false;
 		
 		if (notEnoughCards)
