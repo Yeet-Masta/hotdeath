@@ -2090,8 +2090,7 @@ public class Game extends Thread {
 			rolloverDiscardPile();
 		}
 		m_forceDrawing = true;
-		Card c = null;
-		Card prevCard = null;
+		Card c;
 		for (i = 0; i < numcards; i++)
 		{
 			c = drawCard();
@@ -2101,14 +2100,9 @@ public class Game extends Thread {
                 break;
             } else {
                 p.addCardToHand(c);
-				if (prevCard != null)
-				{
-					m_gt.moveCardToHand(prevCard, p.getSeat(), true);
-				}
-              	prevCard = c;
+				m_gt.moveCardToHand(c, p.getSeat(), true);
             }
         }
-		m_gt.moveCardToHand(prevCard, p.getSeat(), false);
 		m_forceDrawing = false;
 		
 		if (notEnoughCards)
