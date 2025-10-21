@@ -1113,8 +1113,7 @@ public class GameTable extends View
 					// FIXME -- make resolution independent
 					x = pt.x + (int)((float)i / (float)skip) * 2;
 					y = pt.y + (int)((float)i / (float)skip) * 2;
-					//c.setFaceUp(faceUp);
-					this.drawCard (canvas, c, x, y, faceUp);
+					this.drawCard (canvas, c, x, y);
 				}
 			}
 			if (numCardsInPile > 0)
@@ -1124,7 +1123,7 @@ public class GameTable extends View
 				{
 					if (!c.isAnimating())
 					{
-						this.drawCard(canvas, c, x, y, faceUp);
+						this.drawCard(canvas, c, x, y);
 					}
 					else
 					{
@@ -2010,14 +2009,19 @@ public class GameTable extends View
 	
 	private void drawCard (Canvas cv, Card c)
 	{
-		drawCard(cv, c, (int) c.getX(), (int) c.getY(), c.getFaceUp());
+		drawCard(cv, c, (int) c.getX(), (int) c.getY(), c.getFlip(), c.getFaceUp());
 	}
 
-	private void drawCard (Canvas cv, Card c, int x, int y, boolean faceUp)
+	private void drawCard (Canvas cv, Card c, int x, int y)
+	{
+		drawCard(cv, c, x, y, c.getFlip(), c.getFaceUp());
+	}
+
+	private void drawCard (Canvas cv, Card c, int x, int y, float flip, boolean faceUp)
 	{
 		m_drawMatrix.reset();
-		m_drawMatrix.setScale(1, 1);
-		m_drawMatrix.setTranslate(x, y);
+		m_drawMatrix.setTranslate(x + m_cardWidth * 0.5f * (1f-flip), y);
+		m_drawMatrix.preScale(flip, 1);
 
 		Bitmap b;
 		if (faceUp || m_go.getFaceUp())

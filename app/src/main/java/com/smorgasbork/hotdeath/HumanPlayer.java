@@ -213,7 +213,6 @@ public class HumanPlayer extends Player
 	public void addCardToHand (Card c)
 	{
 		m_hand.addCard(c);
-		c.setFaceUp(true);
 		m_hand.sort();
 	}
 

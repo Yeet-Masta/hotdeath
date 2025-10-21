@@ -528,7 +528,6 @@ public class Game extends Thread {
 						Card c = m_deck.getCard(k);
 						if ((c.getHand() == null) && (c.getID() == hands[i][j]))
 						{
-							c.setFaceUp(p.getSeat() == SEAT_SOUTH);
 							p.addCardToHand(c);
 							break;
 						}
@@ -550,8 +549,6 @@ public class Game extends Thread {
 			for (i = 0; i < 4 * m_numCardsToDeal; i++) 
 			{
 				Card c = m_deck.getCard(i);
-
-				c.setFaceUp(p.getSeat() == SEAT_SOUTH);
 	
 				p.addCardToHand(c);
 
@@ -913,7 +910,7 @@ public class Game extends Thread {
 
 				m_cardsPlayed++;
 
-				m_currCard.setFaceUp(true);
+
 				m_discardPile.addCard(m_currCard);
 
 				if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
