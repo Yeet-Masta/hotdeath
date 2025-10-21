@@ -568,6 +568,7 @@ public class Hand {
 		{
 			Card c = d.getCard(a.getInt(i));
 			this.addCard(c);
+			c.setState(Card.CardState.HAND);
 		}
 		m_firstUnrevealed = o.getInt("firstUnrevealed");
 		if (go.getFaceUp())
