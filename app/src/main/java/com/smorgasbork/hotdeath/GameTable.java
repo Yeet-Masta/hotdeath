@@ -441,6 +441,17 @@ public class GameTable extends View
 		}
 	}
 
+	public void moveCardToTable(Card card, int seat, boolean moreToCome)
+	{
+		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, true, m_game.getDelay() / 4);
+		if (moreToCome) {
+			m_game.waitABit(15);
+		}
+		else {
+			m_game.waitABit(2);
+		}
+	}
+
 	public void moveCardToDiscardPile(Card card)
 	{
 		m_discardPileOnTop = true;
