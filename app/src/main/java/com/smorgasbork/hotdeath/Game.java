@@ -552,10 +552,11 @@ public class Game extends Thread {
 	
 				p.addCardToHand(c);
 
-				m_gt.moveCardToHand(c, p.getSeat(), true);
+				m_gt.moveCardToHand(c, p.getSeat(), 60);
 	
 				p = getNextPlayer(p);
 			}
+			waitABit(2);
 		
 			int cheatlevel = m_go.getCheatLevel();
 	
@@ -1000,7 +1001,7 @@ public class Game extends Thread {
 					return true;
 				}
 
-				m_gt.moveCardToHand(card, m_currPlayer.getSeat(), false);
+				m_gt.moveCardToHand(card, m_currPlayer.getSeat(), 2);
 
 				if (m_currPlayer instanceof HumanPlayer)
 				{
@@ -1044,7 +1045,7 @@ public class Game extends Thread {
 						return true;
 					}
 
-					m_gt.moveCardToHand(card, m_currPlayer.getSeat(), false);
+					m_gt.moveCardToHand(card, m_currPlayer.getSeat(), 2);
 		
 					//m_currPlayer.getHand().sort(); //redundant
 					//redrawTable();
@@ -2097,9 +2098,10 @@ public class Game extends Thread {
                 break;
             } else {
                 p.addCardToHand(c);
-				m_gt.moveCardToHand(c, p.getSeat(), true);
+				m_gt.moveCardToHand(c, p.getSeat(), 15);
             }
         }
+		waitABit(2);
 		m_forceDrawing = false;
 		
 		if (notEnoughCards)

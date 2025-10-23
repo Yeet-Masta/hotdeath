@@ -427,29 +427,19 @@ public class GameTable extends View
 		m_bottomMarginExternal = m;
 	}
 
-	public void moveCardToHand(Card card, int seat, boolean moreToCome)
+	public void moveCardToHand(Card card, int seat, int speed)
 	{
 		m_discardPileOnTop = false;
 		card.setX(m_ptDrawPile.x);
 		card.setY(m_ptDrawPile.y);
 		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
-		if (moreToCome) {
-			m_game.waitABit(15);
-		}
-		else {
-			m_game.waitABit(2);
-		}
+		m_game.waitABit(speed);
 	}
 
-	public void moveCardToTable(Card card, int seat, boolean moreToCome)
+	public void moveCardToTable(Card card, int seat, int speed)
 	{
 		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, true, m_game.getDelay() / 4);
-		if (moreToCome) {
-			m_game.waitABit(15);
-		}
-		else {
-			m_game.waitABit(2);
-		}
+		m_game.waitABit(speed);
 	}
 
 	public void moveCardToDiscardPile(Card card)
