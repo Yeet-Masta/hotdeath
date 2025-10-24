@@ -90,6 +90,7 @@ public class Hand {
 		for (int i = m_firstUnrevealed; i < m_numCards; i++)
 		{
 			m_firstUnrevealed = i + 1;
+			sort();
 			m_player.m_game.getGameTable().moveCardToTable(m_cards[i], m_player.getSeat(), i == m_numCards - 1?2:120);
 		}
 	}
