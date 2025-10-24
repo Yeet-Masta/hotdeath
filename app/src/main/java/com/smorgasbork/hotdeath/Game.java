@@ -946,7 +946,8 @@ public class Game extends Thread {
 				// if previous player set us up, and we did not throw something
 				// that would negate the penalty, then we get penalized now
 				if (m_penalty.getType() != Penalty.PENTYPE_NONE
-					&& m_penalty.getVictim() == m_currPlayer)
+					&& (m_penalty.getVictim() == m_currPlayer
+					|| m_currCard.getID() == Card.ID_YELLOW_1_MAD))
 				{
 					assessPenalty();
 				}
@@ -1948,6 +1949,8 @@ public class Game extends Thread {
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_EJECT) 
 		{
+			m_nextPlayerPreset = pVictim;
+			m_currPlayer = nextPlayer();
 			pVictim.setActive(false);
 
 			msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim.getSeat()));
