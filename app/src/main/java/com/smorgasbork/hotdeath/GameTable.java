@@ -2020,9 +2020,15 @@ public class GameTable extends View
 
 	private void drawCard (Canvas cv, Card c, int x, int y, float flip, boolean faceUp)
 	{
+		Camera camera = new Camera();
 		m_drawMatrix.reset();
-		m_drawMatrix.setTranslate(x + m_cardWidth * 0.5f * (1f-flip), y);
-		m_drawMatrix.preScale(flip, 1);
+		camera.save();
+		camera.rotateY(flip); // e.g., 30 degrees
+		camera.getMatrix(m_drawMatrix);
+		camera.restore();
+		m_drawMatrix.preTranslate( - m_cardWidth / 2, - m_cardHeight / 2);
+		m_drawMatrix.postTranslate(x + m_cardWidth / 2, y + m_cardHeight / 2);
+		//m_drawMatrix.preScale(flip, 1);
 
 		Bitmap b;
 		if (faceUp || m_go.getFaceUp())

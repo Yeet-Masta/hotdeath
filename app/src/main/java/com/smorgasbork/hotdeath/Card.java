@@ -121,10 +121,10 @@ public class Card implements Animatable{
 	private float x, y;  // Current position
 	private float startX, startY;  // Target position for animation
 	private float targetX, targetY;  // Target position for animation
-	private float rot = 0;  // current Rotation about the X-axis
-	private float startRot; // Starting rotation about the X-axis
-	private float targetRot; // Target rotation about the X-axis
-	private float flip = 1;  // Rotation about the Z-axis
+	private float rot = 0;  // current Rotation about the Z-axis
+	private float startRot; // Starting rotation about the Z-axis
+	private float targetRot; // Target rotation about the Z-axis
+	private float flip = 0;  // Rotation about the Y-axis
 	private long startTime;  // Start time of the animation
 	private long duration; // Animation duration in milliseconds
 	private boolean targetFaceUp;
@@ -348,19 +348,19 @@ public class Card implements Animatable{
 		this.rot = startRot + progress * (targetRot - startRot);
 		if (targetFaceUp != m_faceUp) {
 			if (progress <= 0.25) {
-				this.flip = 1;
+				this.flip = 0;
 			}
 			else if (progress <= 0.5) {
-				this.flip = 1f - (progress - 0.25f) * 4f;
+				this.flip = 4 * (progress - 0.25f) * 90;
 			}
 			else
 			{
 				m_faceUp = targetFaceUp;
 			}
 		}
-		if (targetFaceUp == m_faceUp && this.flip != 1)
+		if (targetFaceUp == m_faceUp && this.flip != 0)
 		{
-			this.flip = Math.min(1, (progress - 0.5f) * 4);
+			this.flip = (1 - Math.min(1, (progress - 0.5f) * 4)) * -90;
 		}
 	}
 
