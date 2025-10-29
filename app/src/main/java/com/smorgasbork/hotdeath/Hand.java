@@ -319,8 +319,14 @@ public class Hand {
 	*/
 	public int calculateValue(boolean isfinal, Card withoutCard)
 	{
-		int highest = 0;
-		int highestNum = 0;
+		// if we don't have any cards, bail
+		if (m_numCards - (withoutCard != null ? 1 : 0) == 0)
+		{
+			return 0;
+		}
+
+		int highest = -5;
+		int highestNum = -5;
 		int total = 0;
 		int i;
 		
@@ -441,7 +447,6 @@ public class Hand {
 			if (id == Card.ID_RED_5_MAGIC) 
 			{
 				cMagic5 = c;
-				continue;
 			}
 
 			if (id == Card.ID_BLUE_0_FUCK_YOU)
@@ -460,8 +465,8 @@ public class Hand {
 			if (pv > highest) highest = pv;
 
 			if ((c.getValue() > 0) && (c.getValue() < 10)
-				&& (c.getValue() > highestNum)) 
-				highestNum = c.getValue();
+				&& (c.getPointValue() > highestNum))
+				highestNum = c.getPointValue();
 
 			c.setCurrentValue(pv);
 			total += pv;
@@ -477,7 +482,7 @@ public class Hand {
 		{
 			int pv;
 
-			if (highestNum > 0) 
+			if (highestNum != 0)
 			{
 				pv = 10 * highestNum;
 			}
@@ -510,14 +515,13 @@ public class Hand {
 		{
 			cSixtyNine.setCurrentValue(69 - total);
 			total = 69;
+			if (cMagic5 != null)
+			{
+				cMagic5.setCurrentValue(-5);
+				total -= 5;
+			}
 		}
 
-		// Step 7.  If M5 card exists, then set "total -= 5"
-		if (cMagic5 != null) 
-		{
-			cMagic5.setCurrentValue(-5);
-			total -= 5;
-		}
 
 		// Step 8.  (Assuming not skipped due to Step 2) If F.U.
 		// card exists, then set "total *= 2"
