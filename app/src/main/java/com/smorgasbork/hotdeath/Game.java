@@ -1788,6 +1788,10 @@ public class Game extends Thread {
 
 		if (currID == Card.ID_RED_2_GLASNOST) 
 		{
+			if (m_currPlayer.getHand().getNumCards() == 0)
+			{
+				return;
+			}
 			m_currPlayer.chooseVictim();
 			if (m_stopping)
 			{
@@ -1812,6 +1816,10 @@ public class Game extends Thread {
 
 		if (currID == Card.ID_GREEN_0_QUITTER) 
 		{
+			if (m_currPlayer.getHand().getNumCards() == 0)
+			{
+				return;
+			}
 			if (getActivePlayerCount() > 2) 
 			{
 				m_penalty.setEject(m_currCard, m_currPlayer, getNextPlayer());
@@ -1857,6 +1865,10 @@ public class Game extends Thread {
 
 		if (currID == Card.ID_YELLOW_1_MAD) 
 		{
+			if (m_currPlayer.getHand().getNumCards() == 0)
+			{
+				return;
+			}
 			if (getActivePlayerCount() > 3) 
 			{
 				m_currPlayer.chooseVictim();
