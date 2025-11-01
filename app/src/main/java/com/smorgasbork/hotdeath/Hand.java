@@ -464,7 +464,7 @@ public class Hand {
 			
 			if (pv > highest) highest = pv;
 
-			if ((c.getValue() > 0) && (c.getValue() < 10)
+			if (c.getPointValue() != 0 && c.getPointValue() < 10
 				&& (c.getPointValue() > highestNum))
 				highestNum = c.getPointValue();
 
