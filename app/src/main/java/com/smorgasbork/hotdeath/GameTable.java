@@ -436,6 +436,16 @@ public class GameTable extends View
 		m_game.waitABit(speed);
 	}
 
+	public void dealCard(Card card, int dealer, int seat, int speed)
+	{
+		m_discardPileOnTop = false;
+		dealer -= 1;
+		card.setX(m_ptSeat[dealer].x - m_cardWidth / 2 * (1 - dealer % 2) + m_cardWidth * 2 * (dealer % 2 == 1 ? dealer - 2 : 0));
+		card.setY(m_ptSeat[dealer].y - m_cardHeight / 2 * (dealer % 2) + m_cardHeight * 2 * (dealer % 2 == 0 ? 1 - dealer : 0));
+		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
+		m_game.waitABit(speed);
+	}
+
 	public void moveCardToTable(Card card, int seat, int speed)
 	{
 		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, true, m_game.getDelay() / 4);
@@ -1038,17 +1048,18 @@ public class GameTable extends View
 		}
 
 		// draw the hands
+		int seat = m_game.getCurrPlayer().getSeat()-1;
 
-		for (i = 0; i < 4; i++)
+		for (i = seat; i < seat + 4; i++)
 		{
-			p = m_game.getPlayer(i);
+			p = m_game.getPlayer(i % 4);
 
 
 			// don't draw ejected players' cards
 
 			if (p.getActive())
 			{
-				RedrawHand (canvas, i + 1);
+				RedrawHand (canvas, i % 4 + 1);
 			}
 		}
 

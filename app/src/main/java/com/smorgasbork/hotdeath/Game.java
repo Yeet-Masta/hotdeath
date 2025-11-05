@@ -552,7 +552,7 @@ public class Game extends Thread {
 	
 				p.addCardToHand(c);
 
-				m_gt.moveCardToHand(c, p.getSeat(), 60);
+				m_gt.dealCard(c, m_dealer.getSeat(), p.getSeat(), 60);
 	
 				p = getNextPlayer(p);
 			}
@@ -711,7 +711,8 @@ public class Game extends Thread {
 				return;
 			}
 		}
-		
+
+		waitABit(2);
 		dealHands();
 		postDealHands();
 		waitABit();
