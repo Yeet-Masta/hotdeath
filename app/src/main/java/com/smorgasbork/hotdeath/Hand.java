@@ -454,6 +454,11 @@ public class Hand {
 				continue;
 			}
 
+			if (id == Card.ID_YELLOW_0_SHITTER)
+			{
+				continue;
+			}
+
 			if (id == Card.ID_RED_0_HD) 
 			{
 				cHolyDefender = c;
@@ -464,9 +469,9 @@ public class Hand {
 			
 			if (pv > highest) highest = pv;
 
-			if (c.getPointValue() != 0 && c.getPointValue() < 10
-				&& (c.getPointValue() > highestNum))
-				highestNum = c.getPointValue();
+			if (pv != 0 && pv < 10 && pv > highestNum) {
+				highestNum = pv;
+			}
 
 			c.setCurrentValue(pv);
 			total += pv;
