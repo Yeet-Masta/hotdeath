@@ -32,10 +32,6 @@ public class AnimationManager {
                                 animatable.update();
                                 shouldContinue = true;
                             }
-    //                        else {
-    //                            Log.d("Animation", "removing card " + + card.getID());
-    //                            animatingCards.remove(card);
-    //                        }
                         }
                         gameTable.postInvalidate(); // Request redraw on GameTable
                         if (shouldContinue) {

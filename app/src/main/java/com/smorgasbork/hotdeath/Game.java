@@ -1935,7 +1935,7 @@ public class Game extends Thread {
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_FACEUP) 
 		{
-			h.reveal();
+			h.placeOnTable();
 
 			if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer) 
 			{
@@ -1948,7 +1948,7 @@ public class Game extends Thread {
 				m_nextPlayerPreset = pVictim2;
 				m_currPlayer = nextPlayer();
 				h = pVictim2.getHand();
-				h.reveal();
+				h.placeOnTable();
 				if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer) 
 				{
 					msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim2.getSeat()));

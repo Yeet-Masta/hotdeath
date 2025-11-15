@@ -13,17 +13,17 @@ public class Hand {
 	private Card[]	m_cards;
 	private int		m_numCards;
 
-	private int m_firstUnrevealed;
+	private int m_numCardsOnTable;
 	
 	Card[] getCards() { return m_cards; }
 	int getNumCards() { return m_numCards; }
 
-	public List<Card> getRevealedCards() {
-        return new ArrayList<>(Arrays.asList(m_cards).subList(0, m_firstUnrevealed));
+	public List<Card> getTableCards() {
+        return new ArrayList<>(Arrays.asList(m_cards).subList(0, m_numCardsOnTable));
 	}
 
-	public List<Card> getUnrevealedCards() {
-		return new ArrayList<>(Arrays.asList(m_cards).subList(m_firstUnrevealed, m_numCards));
+	public List<Card> getHeldCards() {
+		return new ArrayList<>(Arrays.asList(m_cards).subList(m_numCardsOnTable, m_numCards));
 	}
 	
 	Card getCard(int i)
@@ -41,7 +41,7 @@ public class Hand {
 		m_player = p;
 		m_numCards = 0;
 		m_cards = new Card[Game.MAX_NUM_CARDS];
-		m_firstUnrevealed = 0;
+		m_numCardsOnTable = 0;
 	}
 
 	public void reset()
@@ -52,7 +52,7 @@ public class Hand {
 		}
 		m_cards = new Card[Game.MAX_NUM_CARDS];
 		m_numCards = 0;
-		m_firstUnrevealed = 0;
+		m_numCardsOnTable = 0;
 	}
 
 
@@ -84,13 +84,13 @@ public class Hand {
 		}
 	}
 
-	public void reveal()
+	public void placeOnTable()
 	{
 		sort();
-		for (int i = m_firstUnrevealed; i < m_numCards; i++)
+		for (int i = m_numCardsOnTable; i < m_numCards; i++)
 		{
 			Card c = m_cards[i];
-			m_firstUnrevealed = i + 1;
+			m_numCardsOnTable = i + 1;
 			sort();
 			m_player.m_game.getGameTable().moveCardToTable(c, m_player.getSeat(), i == m_numCards - 1?2:120);
 		}
@@ -98,30 +98,30 @@ public class Hand {
 
 	public void removeCard (Card c)
 	{
-		boolean bRemoving = false;
-		boolean bRevealed = false;
+		boolean foundCard = false;
+		boolean fromTable = false;
 
 		for (int i = 0; i < m_numCards; i++) 
 		{
 			if (m_cards[i] == c)
 			{
-				bRemoving = true;
-				bRevealed = i < m_firstUnrevealed;
+				foundCard = true;
+				fromTable = i < m_numCardsOnTable;
 			}
-			if (bRemoving) 
+			if (foundCard)
 			{
 				Card cnew = (i == m_numCards - 1) ? null : m_cards[i+1];
 				m_cards[i] = cnew;
 			}
 		}
-		if (bRemoving)
+		if (foundCard)
 		{
 			c.setHand(null);
 			m_cards[m_numCards - 1] = null;
 			m_numCards--;
-			if (bRevealed)
+			if (fromTable)
 			{
-				m_firstUnrevealed--;
+				m_numCardsOnTable--;
 			}
 		}
 	}
@@ -263,15 +263,15 @@ public class Hand {
 
 	public void sort()
 	{
-		List<Card> revealed = this.getRevealedCards();
-		List<Card> unrevealed = this.getUnrevealedCards();
+		List<Card> tableCards = this.getTableCards();
+		List<Card> heldCards = this.getHeldCards();
 
-		sort(revealed);
-		Card [] sortedArray = revealed.toArray(new Card[0]);
+		sort(tableCards);
+		Card [] sortedArray = tableCards.toArray(new Card[0]);
 		System.arraycopy(sortedArray, 0, m_cards, 0, sortedArray.length);
-		sort(unrevealed);
-		sortedArray = unrevealed.toArray(new Card[0]);
-		System.arraycopy(sortedArray, 0, m_cards, m_firstUnrevealed, sortedArray.length);
+		sort(heldCards);
+		sortedArray = heldCards.toArray(new Card[0]);
+		System.arraycopy(sortedArray, 0, m_cards, m_numCardsOnTable, sortedArray.length);
 	}
 
 	private void sort(List<Card> cards)
@@ -584,7 +584,7 @@ public class Hand {
 			this.addCard(c);
 			c.setState(Card.CardState.HAND);
 		}
-		m_firstUnrevealed = o.getInt("firstUnrevealed");
+		m_numCardsOnTable = o.getInt("numCardsOnTable");
 		if (go.getFaceUp())
 		{
 			sort();
@@ -602,7 +602,7 @@ public class Hand {
 		
 		JSONObject o = new JSONObject ();
 		o.put("cards", a);
-		o.put("firstUnrevealed", m_firstUnrevealed);
+		o.put("numCardsOnTable", m_numCardsOnTable);
 		
 		return o;
 	}

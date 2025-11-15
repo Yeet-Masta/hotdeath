@@ -24,10 +24,10 @@ public class GameTable extends View
 {
 	private static final int ID = 42;  
 	
-	private final int[] m_unrevealedOffset;
-	private final int[] m_revealedOffset;
-	private final int[] m_unrevealedDrag;
-	private final int[] m_revealedDrag;
+	private final int[] m_heldCardsOffset;
+	private final int[] m_tableCardsOffset;
+	private final int[] m_heldCardsDrag;
+	private final int[] m_tableCardsDrag;
 
 	private int m_maxCardsDisplay = 7;
 	
@@ -41,17 +41,17 @@ public class GameTable extends View
 	private final Point[] m_ptSeat;
 	private final Point[] m_ptEmoticon;
 	//private final Point[] m_ptPlayerIndicator;
-	private final Point[] m_ptUnrevealedOffsetBadge;
-	private final Point[] m_ptRevealedOffsetBadge;
-	private final Point[] m_ptUnrevealedOverflowBadge;
-	private final Point[] m_ptRevealedOverflowBadge;
+	private final Point[] m_ptHeldCardsOffsetBadge;
+	private final Point[] m_ptTableCardsOffsetBadge;
+	private final Point[] m_ptHeldCardsOverflowBadge;
+	private final Point[] m_ptTableCardsOverflowBadge;
 	private final Point[] m_ptScoreText;
 	private Point m_ptPointer;
 	private Point m_ptWinningMessage;	
 	private Point m_ptMessages;
 	
-	private final Rect[] m_unrevealedBoundingRect;
-	private final Rect[] m_revealedBoundingRect;
+	private final Rect[] m_heldCardsBoundingRect;
+	private final Rect[] m_tableCardsBoundingRect;
 	private Rect m_drawPileBoundingRect;
 	private Rect m_discardPileBoundingRect;
 
@@ -77,8 +77,8 @@ public class GameTable extends View
 	private boolean m_touchAndHold = false;
 	private boolean m_touchDrawPile = false;
 	private boolean m_touchDiscardPile = false;
-	private int m_touchUnrevealedSeat = 0;
-	private int m_touchRevealedSeat = 0;
+	private int m_touchHeldCardsSeat = 0;
+	private int m_touchTableCardsSeat = 0;
 	
 	private Integer[] m_cardIDs;
 	private HashMap<Integer, Card> m_cardLookup;
@@ -172,16 +172,16 @@ public class GameTable extends View
 		m_game = g;
 		m_game.setGameTable (this);
 		
-		m_unrevealedOffset = new int[4];
-		m_revealedOffset = new int[4];
-		m_unrevealedDrag = new int[4];
-		m_revealedDrag = new int[4];
+		m_heldCardsOffset = new int[4];
+		m_tableCardsOffset = new int[4];
+		m_heldCardsDrag = new int[4];
+		m_tableCardsDrag = new int[4];
 		for (int i = 0; i < 4; i++)
 		{
-			m_unrevealedOffset[i] = 0;
-			m_revealedOffset[i] = 0;
-			m_unrevealedDrag[i] = 0;
-			m_revealedDrag[i] = 0;
+			m_heldCardsOffset[i] = 0;
+			m_tableCardsOffset[i] = 0;
+			m_heldCardsDrag[i] = 0;
+			m_tableCardsDrag[i] = 0;
 		}
 
 		final float scale = getContext().getResources().getDisplayMetrics().density;
@@ -215,14 +215,14 @@ public class GameTable extends View
 		m_ptSeat = new Point[4];
 		m_ptEmoticon = new Point[4];
 		//m_ptPlayerIndicator = new Point[4];
-		m_ptUnrevealedOffsetBadge = new Point[4];
-		m_ptRevealedOffsetBadge = new Point[4];
-		m_ptUnrevealedOverflowBadge = new Point[4];
-		m_ptRevealedOverflowBadge = new Point[4];
+		m_ptHeldCardsOffsetBadge = new Point[4];
+		m_ptTableCardsOffsetBadge = new Point[4];
+		m_ptHeldCardsOverflowBadge = new Point[4];
+		m_ptTableCardsOverflowBadge = new Point[4];
 		m_ptScoreText = new Point[4];
 		
-		m_unrevealedBoundingRect = new Rect[4];
-		m_revealedBoundingRect = new Rect[4];
+		m_heldCardsBoundingRect = new Rect[4];
+		m_tableCardsBoundingRect = new Rect[4];
 
 //		m_bmpPlayerIndicator = new Bitmap[5][4];
 		m_bmpWinningMessage = new Bitmap[4];
@@ -356,51 +356,51 @@ public class GameTable extends View
 
 		int x = m_ptSeat[Game.SEAT_NORTH - 1].x - maxWidthHand / 2 - m_bmpCardBadge.getWidth() / 2;
 		int y = m_ptSeat[Game.SEAT_NORTH - 1].y - m_bmpCardBadge.getHeight()  / 2;
-		m_ptUnrevealedOffsetBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
+		m_ptHeldCardsOffsetBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
 		y += m_cardHeight * 3 / 2;
-		m_ptRevealedOffsetBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
+		m_ptTableCardsOffsetBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_NORTH - 1].x + maxWidthHand / 2 - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_NORTH - 1].y - m_bmpCardBadge.getHeight()  / 2;
-		m_ptUnrevealedOverflowBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
+		m_ptHeldCardsOverflowBadge[Game.SEAT_NORTH - 1] = new Point (x,y);
 		y += m_cardHeight * 3 / 2;
-		m_ptRevealedOverflowBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
+		m_ptTableCardsOverflowBadge[Game.SEAT_NORTH - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_EAST - 1].x + m_cardWidth - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_EAST - 1].y - maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedOffsetBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		m_ptHeldCardsOffsetBadge[Game.SEAT_EAST - 1] = new Point (x, y);
 		x -= m_cardWidth * 3 / 2;
-		m_ptRevealedOffsetBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		m_ptTableCardsOffsetBadge[Game.SEAT_EAST - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_EAST - 1].x + m_cardWidth - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_EAST - 1].y + maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedOverflowBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		m_ptHeldCardsOverflowBadge[Game.SEAT_EAST - 1] = new Point (x, y);
 		x -= m_cardWidth * 3 / 2;
-		m_ptRevealedOverflowBadge[Game.SEAT_EAST - 1] = new Point (x, y);
+		m_ptTableCardsOverflowBadge[Game.SEAT_EAST - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_SOUTH - 1].x - maxWidthHandHuman / 2 - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_SOUTH - 1].y + m_cardHeight - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedOffsetBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		m_ptHeldCardsOffsetBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
 		y -= m_cardHeight * 5 / 3;
-		m_ptRevealedOffsetBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		m_ptTableCardsOffsetBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_SOUTH - 1].x + maxWidthHandHuman / 2 - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_SOUTH - 1].y + m_cardHeight - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedOverflowBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		m_ptHeldCardsOverflowBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
 		y -= m_cardHeight * 5 / 3;
-		m_ptRevealedOverflowBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
+		m_ptTableCardsOverflowBadge[Game.SEAT_SOUTH - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_WEST - 1].x - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_WEST - 1].y - maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedOffsetBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+		m_ptHeldCardsOffsetBadge[Game.SEAT_WEST - 1] = new Point (x, y);
 		x += m_cardWidth * 3 / 2;
-		m_ptRevealedOffsetBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+		m_ptTableCardsOffsetBadge[Game.SEAT_WEST - 1] = new Point (x, y);
 
 		x = m_ptSeat[Game.SEAT_WEST - 1].x - m_bmpCardBadge.getWidth() / 2;
 		y = m_ptSeat[Game.SEAT_WEST - 1].y + maxHeightHand / 2 - m_bmpCardBadge.getHeight() / 2;
-		m_ptUnrevealedOverflowBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+		m_ptHeldCardsOverflowBadge[Game.SEAT_WEST - 1] = new Point (x, y);
 		x += m_cardWidth * 3 / 2;
-		m_ptRevealedOverflowBadge[Game.SEAT_WEST - 1] = new Point (x, y);
+		m_ptTableCardsOverflowBadge[Game.SEAT_WEST - 1] = new Point (x, y);
 
 		m_ptScoreText[Game.SEAT_NORTH - 1] = new Point (m_ptSeat[Game.SEAT_NORTH - 1].x,
 				m_ptSeat[Game.SEAT_NORTH - 1].y - (int)(textBounds.height() * 1.1));
@@ -577,7 +577,7 @@ public class GameTable extends View
 		
 	private boolean heldSteadyHand()
 	{
-		if (m_touchUnrevealedSeat == 0 && m_touchRevealedSeat == 0)
+		if (m_touchHeldCardsSeat == 0 && m_touchTableCardsSeat == 0)
 		{
 			return false;
 		}
@@ -628,41 +628,41 @@ public class GameTable extends View
 
 			m_touchDiscardPile = false;
 			m_touchDrawPile = false;
-			m_touchUnrevealedSeat = 0;
-			m_touchRevealedSeat = 0;
-			if (m_unrevealedBoundingRect[Game.SEAT_SOUTH - 1] != null
-					&& m_unrevealedBoundingRect[Game.SEAT_SOUTH - 1].contains(x, y))
+			m_touchHeldCardsSeat = 0;
+			m_touchTableCardsSeat = 0;
+			if (m_heldCardsBoundingRect[Game.SEAT_SOUTH - 1] != null
+					&& m_heldCardsBoundingRect[Game.SEAT_SOUTH - 1].contains(x, y))
 			{
-				m_touchUnrevealedSeat = Game.SEAT_SOUTH;
-			} else if (m_revealedBoundingRect[Game.SEAT_SOUTH - 1] != null
-					&& m_revealedBoundingRect[Game.SEAT_SOUTH - 1].contains(x, y))
+				m_touchHeldCardsSeat = Game.SEAT_SOUTH;
+			} else if (m_tableCardsBoundingRect[Game.SEAT_SOUTH - 1] != null
+					&& m_tableCardsBoundingRect[Game.SEAT_SOUTH - 1].contains(x, y))
 			{
-				m_touchRevealedSeat = Game.SEAT_SOUTH;
-			} else if (m_unrevealedBoundingRect[Game.SEAT_WEST - 1] != null
-					&& m_unrevealedBoundingRect[Game.SEAT_WEST - 1].contains(x, y))
+				m_touchTableCardsSeat = Game.SEAT_SOUTH;
+			} else if (m_heldCardsBoundingRect[Game.SEAT_WEST - 1] != null
+					&& m_heldCardsBoundingRect[Game.SEAT_WEST - 1].contains(x, y))
 			{
-				m_touchUnrevealedSeat = Game.SEAT_WEST;			
-			} else if (m_revealedBoundingRect[Game.SEAT_WEST - 1] != null
-					&& m_revealedBoundingRect[Game.SEAT_WEST - 1].contains(x, y))
+				m_touchHeldCardsSeat = Game.SEAT_WEST;
+			} else if (m_tableCardsBoundingRect[Game.SEAT_WEST - 1] != null
+					&& m_tableCardsBoundingRect[Game.SEAT_WEST - 1].contains(x, y))
 			{
-				m_touchRevealedSeat = Game.SEAT_WEST;
-			} else if (m_unrevealedBoundingRect[Game.SEAT_NORTH - 1] != null
-					&& m_unrevealedBoundingRect[Game.SEAT_NORTH - 1].contains(x, y))
+				m_touchTableCardsSeat = Game.SEAT_WEST;
+			} else if (m_heldCardsBoundingRect[Game.SEAT_NORTH - 1] != null
+					&& m_heldCardsBoundingRect[Game.SEAT_NORTH - 1].contains(x, y))
 			{
-				m_touchUnrevealedSeat = Game.SEAT_NORTH;				
-			} else if (m_revealedBoundingRect[Game.SEAT_NORTH - 1] != null
-					&& m_revealedBoundingRect[Game.SEAT_NORTH - 1].contains(x, y)) {
-				m_touchRevealedSeat = Game.SEAT_NORTH;
-			} else if (m_unrevealedBoundingRect[Game.SEAT_EAST - 1] != null
-					&& m_unrevealedBoundingRect[Game.SEAT_EAST - 1].contains(x, y))
+				m_touchHeldCardsSeat = Game.SEAT_NORTH;
+			} else if (m_tableCardsBoundingRect[Game.SEAT_NORTH - 1] != null
+					&& m_tableCardsBoundingRect[Game.SEAT_NORTH - 1].contains(x, y)) {
+				m_touchTableCardsSeat = Game.SEAT_NORTH;
+			} else if (m_heldCardsBoundingRect[Game.SEAT_EAST - 1] != null
+					&& m_heldCardsBoundingRect[Game.SEAT_EAST - 1].contains(x, y))
 			{
-				m_touchUnrevealedSeat = Game.SEAT_EAST;			
-			} else if (m_revealedBoundingRect[Game.SEAT_EAST - 1] != null
-					&& m_revealedBoundingRect[Game.SEAT_EAST - 1].contains(x, y)) {
-				m_touchRevealedSeat = Game.SEAT_EAST;
+				m_touchHeldCardsSeat = Game.SEAT_EAST;
+			} else if (m_tableCardsBoundingRect[Game.SEAT_EAST - 1] != null
+					&& m_tableCardsBoundingRect[Game.SEAT_EAST - 1].contains(x, y)) {
+				m_touchTableCardsSeat = Game.SEAT_EAST;
 			}
 
-			if (m_touchUnrevealedSeat != 0 || m_touchRevealedSeat != 0)
+			if (m_touchHeldCardsSeat != 0 || m_touchTableCardsSeat != 0)
 			{
 				m_waitingForTouchAndHold = true;
 				m_handler.postDelayed (m_touchAndHoldTask, 1000);
@@ -707,7 +707,7 @@ public class GameTable extends View
 			// we'll play that card.
 			if (this.heldSteadyHand())
 			{
-				handCardTapped (max(m_touchUnrevealedSeat, m_touchRevealedSeat), m_ptTouchDown);
+				handCardTapped (max(m_touchHeldCardsSeat, m_touchTableCardsSeat), m_ptTouchDown);
 				return true;
 			}
 
@@ -724,51 +724,51 @@ public class GameTable extends View
 			}
 			
 			// if we're letting up on a drag, commit the drag value
-			if (m_touchUnrevealedSeat != 0 || m_touchRevealedSeat != 0)
+			if (m_touchHeldCardsSeat != 0 || m_touchTableCardsSeat != 0)
 			{
-				int idx = max(m_touchUnrevealedSeat, m_touchRevealedSeat) - 1;
-				if (m_unrevealedDrag[idx] != 0)
+				int idx = max(m_touchHeldCardsSeat, m_touchTableCardsSeat) - 1;
+				if (m_heldCardsDrag[idx] != 0)
 				{
-					m_unrevealedOffset[idx] += m_unrevealedDrag[idx];
+					m_heldCardsOffset[idx] += m_heldCardsDrag[idx];
 
 					// set bounds properly
 					Player p = m_game.getPlayer(idx);
-					int ncards = p.getHand().getUnrevealedCards().size();
+					int ncards = p.getHand().getHeldCards().size();
 					
-					if (m_unrevealedOffset[idx] >= ncards - m_maxCardsDisplay)
+					if (m_heldCardsOffset[idx] >= ncards - m_maxCardsDisplay)
 					{
-						m_unrevealedOffset[idx] = ncards - m_maxCardsDisplay;
+						m_heldCardsOffset[idx] = ncards - m_maxCardsDisplay;
 					}
 					
-					if (m_unrevealedOffset[idx] < 0)
+					if (m_heldCardsOffset[idx] < 0)
 					{
-						m_unrevealedOffset[idx] = 0;
+						m_heldCardsOffset[idx] = 0;
 					}
 					
-					m_unrevealedDrag[idx] = 0;
+					m_heldCardsDrag[idx] = 0;
 				}
-				if (m_revealedDrag[idx] != 0)
+				if (m_tableCardsDrag[idx] != 0)
 				{
-					m_revealedOffset[idx] += m_revealedDrag[idx];
+					m_tableCardsOffset[idx] += m_tableCardsDrag[idx];
 
 					// set bounds properly
 					Player p = m_game.getPlayer(idx);
-					int ncards = p.getHand().getRevealedCards().size();
+					int ncards = p.getHand().getTableCards().size();
 
-					if (m_revealedOffset[idx] >= ncards - m_maxCardsDisplay)
+					if (m_tableCardsOffset[idx] >= ncards - m_maxCardsDisplay)
 					{
-						m_revealedOffset[idx] = ncards - m_maxCardsDisplay;
+						m_tableCardsOffset[idx] = ncards - m_maxCardsDisplay;
 					}
 
-					if (m_revealedOffset[idx] < 0)
+					if (m_tableCardsOffset[idx] < 0)
 					{
-						m_revealedOffset[idx] = 0;
+						m_tableCardsOffset[idx] = 0;
 					}
 
-					m_revealedDrag[idx] = 0;
+					m_tableCardsDrag[idx] = 0;
 				}
-				m_touchUnrevealedSeat = 0;
-				m_touchRevealedSeat = 0;
+				m_touchHeldCardsSeat = 0;
+				m_touchTableCardsSeat = 0;
 				return true;
 			}
 			
@@ -776,7 +776,7 @@ public class GameTable extends View
 		}
 		else if (event.getAction() == MotionEvent.ACTION_MOVE)
 		{
-			int seat = max(m_touchUnrevealedSeat, m_touchRevealedSeat);
+			int seat = max(m_touchHeldCardsSeat, m_touchTableCardsSeat);
 			if (seat != 0)
 			{
 				int spacing = (seat == Game.SEAT_SOUTH) ? m_cardSpacingSouth : m_cardSpacing;
@@ -806,11 +806,11 @@ public class GameTable extends View
 				}
 				
 				// invert the offset, as a slide to the left means increase the offset
-				if (m_touchUnrevealedSeat == seat)
+				if (m_touchHeldCardsSeat == seat)
 				{
-					m_unrevealedDrag[m_touchUnrevealedSeat - 1] = -cardoffset;
-				} else if (m_touchRevealedSeat == seat) {
-					m_revealedDrag[m_touchRevealedSeat - 1] = -cardoffset;
+					m_heldCardsDrag[m_touchHeldCardsSeat - 1] = -cardoffset;
+				} else if (m_touchTableCardsSeat == seat) {
+					m_tableCardsDrag[m_touchTableCardsSeat - 1] = -cardoffset;
 				}
 				this.invalidate();
 				
@@ -858,8 +858,8 @@ public class GameTable extends View
 		Player p = m_game.getPlayer(seat - 1);
 		Hand h = p.getHand();
 
-		Rect ru = m_unrevealedBoundingRect[seat - 1];
-		Rect rr = m_revealedBoundingRect[seat - 1];
+		Rect ru = m_heldCardsBoundingRect[seat - 1];
+		Rect rr = m_tableCardsBoundingRect[seat - 1];
 
 		int idx = 0;
 
@@ -877,14 +877,14 @@ public class GameTable extends View
 					break;
 			}
 
-			int numcardsshowing = h.getUnrevealedCards().size() - m_unrevealedOffset[seat - 1];
+			int numcardsshowing = h.getHeldCards().size() - m_heldCardsOffset[seat - 1];
 			numcardsshowing = Math.min(numcardsshowing, m_maxCardsDisplay);
 
 			if (idx >= numcardsshowing) {
 				idx = numcardsshowing - 1;
 			}
-			idx += m_unrevealedOffset[seat - 1];
-            return h.getUnrevealedCards().get(idx);
+			idx += m_heldCardsOffset[seat - 1];
+            return h.getHeldCards().get(idx);
 
 		} else if (rr != null && rr.contains(pt.x, pt.y))
 		{
@@ -900,14 +900,14 @@ public class GameTable extends View
 					break;
 			}
 
-			int numcardsshowing = h.getRevealedCards().size() - m_revealedOffset[seat - 1];
+			int numcardsshowing = h.getTableCards().size() - m_tableCardsOffset[seat - 1];
 			numcardsshowing = Math.min(numcardsshowing, m_maxCardsDisplay);
 
 			if (idx >= numcardsshowing) {
 				idx = numcardsshowing - 1;
 			}
-			idx += m_revealedOffset[seat - 1];
-			return h.getRevealedCards().get(idx);
+			idx += m_tableCardsOffset[seat - 1];
+			return h.getTableCards().get(idx);
 		}
 		return null;
 	}
@@ -950,9 +950,9 @@ public class GameTable extends View
 		{
 			return findTouchedCardDrawPile (pt);
 		}
-		if (max(m_touchUnrevealedSeat, m_touchRevealedSeat) != 0)
+		if (max(m_touchHeldCardsSeat, m_touchTableCardsSeat) != 0)
 		{
-			return findTouchedCardHand (max(m_touchUnrevealedSeat, m_touchRevealedSeat), pt);
+			return findTouchedCardHand (max(m_touchHeldCardsSeat, m_touchTableCardsSeat), pt);
 		}
 		
 		return null;
@@ -1162,33 +1162,33 @@ public class GameTable extends View
 			return;
 		}
 
-		List<Card> revealedHand = h.getRevealedCards();
-		List<Card> unrevealedHand = h.getUnrevealedCards();
+		List<Card> tableCards = h.getTableCards();
+		List<Card> heldCards = h.getHeldCards();
 
 		int x = 0;
 		int y = 0;
 		int dx = 0;
 		int dy = 0;
-		int numRevealedCards = revealedHand.size();
-		int numUnrevealedCards = unrevealedHand.size();
+		int numTableCards = tableCards.size();
+		int numHeldCards = heldCards.size();
 
 		// keep the offsets sane
-		m_unrevealedOffset[seat-1] = max(0, min(m_unrevealedOffset[seat-1], numUnrevealedCards - m_maxCardsDisplay));
-		m_revealedOffset[seat-1] = max(0, min(m_revealedOffset[seat-1], numRevealedCards - m_maxCardsDisplay));
+		m_heldCardsOffset[seat-1] = max(0, min(m_heldCardsOffset[seat-1], numHeldCards - m_maxCardsDisplay));
+		m_tableCardsOffset[seat-1] = max(0, min(m_tableCardsOffset[seat-1], numTableCards - m_maxCardsDisplay));
 
 		// apply the current drag
-		int unrevealedOffset = m_unrevealedOffset[seat - 1] + m_unrevealedDrag[seat - 1];
-		int revealedOffset = m_revealedOffset[seat - 1] + m_revealedDrag[seat - 1];
-		unrevealedOffset = max(0, min(unrevealedOffset, numUnrevealedCards - m_maxCardsDisplay));
-		revealedOffset = max(0, min(revealedOffset, numRevealedCards - m_maxCardsDisplay));
+		int heldCardsOffset = m_heldCardsOffset[seat - 1] + m_heldCardsDrag[seat - 1];
+		int tableCardsOffset = m_tableCardsOffset[seat - 1] + m_tableCardsDrag[seat - 1];
+		heldCardsOffset = max(0, min(heldCardsOffset, numHeldCards - m_maxCardsDisplay));
+		tableCardsOffset = max(0, min(tableCardsOffset, numTableCards - m_maxCardsDisplay));
 
-		int numUnrevealedShowing = min(numUnrevealedCards - m_unrevealedOffset[seat - 1], m_maxCardsDisplay);
-		int numRevealedShowing = min(numRevealedCards - m_revealedOffset[seat - 1], m_maxCardsDisplay);
+		int numHeldCardsShowing = min(numHeldCards - m_heldCardsOffset[seat - 1], m_maxCardsDisplay);
+		int numTableCardsShowing = min(numTableCards - m_tableCardsOffset[seat - 1], m_maxCardsDisplay);
 
-		int unrevealedWidth;
-		int unrevealedHeight;
-		int revealedWidth;
-		int revealedHeight;
+		int heldCardsWidth;
+		int heldCardsHeight;
+		int tableCardsWidth;
+		int tableCardsHeight;
 
 
 		int spacing = (seat == Game.SEAT_SOUTH) ? m_cardSpacingSouth : m_cardSpacing;
@@ -1197,45 +1197,45 @@ public class GameTable extends View
 		case Game.SEAT_SOUTH:
 			dx = spacing;
 			dy = 0;
-			revealedWidth = (numRevealedShowing - 1) * spacing + m_cardWidth;
-			x = m_ptSeat[Game.SEAT_SOUTH - 1].x - revealedWidth / 2;
+			tableCardsWidth = (numTableCardsShowing - 1) * spacing + m_cardWidth;
+			x = m_ptSeat[Game.SEAT_SOUTH - 1].x - tableCardsWidth / 2;
 			y = m_ptSeat[Game.SEAT_SOUTH - 1].y - m_cardHeight * 2 / 3;
-			m_revealedBoundingRect[Game.SEAT_SOUTH - 1] = new Rect(x, y, x + revealedWidth, y + m_cardHeight);
+			m_tableCardsBoundingRect[Game.SEAT_SOUTH - 1] = new Rect(x, y, x + tableCardsWidth, y + m_cardHeight);
 			break;
 		case Game.SEAT_WEST:
 			dx = 0;
 			dy = spacing;
-			revealedHeight = (numRevealedShowing - 1) * spacing + m_cardHeight;
+			tableCardsHeight = (numTableCardsShowing - 1) * spacing + m_cardHeight;
 			x = m_ptSeat[Game.SEAT_WEST - 1].x + m_cardWidth / 2;
-			y = m_ptSeat[Game.SEAT_WEST - 1].y - revealedHeight / 2;
-			m_revealedBoundingRect[Game.SEAT_WEST - 1] = new Rect(x, y, x + m_cardWidth, y + revealedHeight);
+			y = m_ptSeat[Game.SEAT_WEST - 1].y - tableCardsHeight / 2;
+			m_tableCardsBoundingRect[Game.SEAT_WEST - 1] = new Rect(x, y, x + m_cardWidth, y + tableCardsHeight);
 			break;
 		case Game.SEAT_NORTH:
 			dx = spacing;
 			dy = 0;
-			revealedWidth = (numRevealedShowing - 1) * spacing + m_cardWidth;
-			x = m_ptSeat[Game.SEAT_NORTH - 1].x - revealedWidth / 2;
+			tableCardsWidth = (numTableCardsShowing - 1) * spacing + m_cardWidth;
+			x = m_ptSeat[Game.SEAT_NORTH - 1].x - tableCardsWidth / 2;
 			y = m_ptSeat[Game.SEAT_NORTH - 1].y + m_cardHeight / 2;
-			m_revealedBoundingRect[Game.SEAT_NORTH - 1] = new Rect(x, y, x + revealedWidth, y + m_cardHeight);
+			m_tableCardsBoundingRect[Game.SEAT_NORTH - 1] = new Rect(x, y, x + tableCardsWidth, y + m_cardHeight);
 			break;
 		case Game.SEAT_EAST:
 			dx = 0;
 			dy = spacing;
-			revealedHeight = (numRevealedShowing - 1) * spacing + m_cardHeight;
+			tableCardsHeight = (numTableCardsShowing - 1) * spacing + m_cardHeight;
 			x = m_ptSeat[Game.SEAT_EAST - 1].x - m_cardWidth / 2;
-			y = m_ptSeat[Game.SEAT_EAST - 1].y - revealedHeight / 2;
-			m_revealedBoundingRect[Game.SEAT_EAST - 1] = new Rect(x, y, x + m_cardWidth, y + revealedHeight);
+			y = m_ptSeat[Game.SEAT_EAST - 1].y - tableCardsHeight / 2;
+			m_tableCardsBoundingRect[Game.SEAT_EAST - 1] = new Rect(x, y, x + m_cardWidth, y + tableCardsHeight);
 			break;
 		}
 
 		// draw the cards that are on the table
 
-        int stop = Math.min(revealedOffset + m_maxCardsDisplay, numRevealedCards);
+        int stop = Math.min(tableCardsOffset + m_maxCardsDisplay, numTableCards);
 
 		int j;
-		for (j = 0; j < numRevealedCards; j++)
+		for (j = 0; j < numTableCards; j++)
 		{
-			Card c = revealedHand.get(j);
+			Card c = tableCards.get(j);
 			if (c == null) 
 			{
 				continue;
@@ -1248,7 +1248,7 @@ public class GameTable extends View
 				c.setX(x);
 				c.setY(y);
 			}
-			if (revealedOffset <= j && j < stop) {
+			if (tableCardsOffset <= j && j < stop) {
 				this.drawCard(cv, c);
 				x += dx;
 				y += dy;
@@ -1259,49 +1259,49 @@ public class GameTable extends View
 			case Game.SEAT_SOUTH:
 				dx = spacing;
 				dy = 0;
-				if (numUnrevealedShowing == 0)
+				if (numHeldCardsShowing == 0)
 				{
-					unrevealedWidth = 0;
+					heldCardsWidth = 0;
 				} else {
-					unrevealedWidth = (numUnrevealedShowing - 1) * spacing + m_cardWidth;
+					heldCardsWidth = (numHeldCardsShowing - 1) * spacing + m_cardWidth;
 				}
-				x = m_ptSeat[Game.SEAT_SOUTH - 1].x - unrevealedWidth / 2;
+				x = m_ptSeat[Game.SEAT_SOUTH - 1].x - heldCardsWidth / 2;
 				y = m_ptSeat[Game.SEAT_SOUTH - 1].y;
-				m_unrevealedBoundingRect[Game.SEAT_SOUTH - 1] = new Rect(x, y, x + unrevealedWidth, y + m_cardHeight);
+				m_heldCardsBoundingRect[Game.SEAT_SOUTH - 1] = new Rect(x, y, x + heldCardsWidth, y + m_cardHeight);
 				break;
 			case Game.SEAT_WEST:
 				dx = 0;
 				dy = spacing;
-				unrevealedHeight = (numUnrevealedShowing - 1) * spacing + m_cardHeight;
+				heldCardsHeight = (numHeldCardsShowing - 1) * spacing + m_cardHeight;
 				x = m_ptSeat[Game.SEAT_WEST - 1].x;
-				y = m_ptSeat[Game.SEAT_WEST - 1].y - unrevealedHeight / 2;
-				m_unrevealedBoundingRect[Game.SEAT_WEST - 1] = new Rect(x, y, x + m_cardWidth, y + unrevealedHeight);
+				y = m_ptSeat[Game.SEAT_WEST - 1].y - heldCardsHeight / 2;
+				m_heldCardsBoundingRect[Game.SEAT_WEST - 1] = new Rect(x, y, x + m_cardWidth, y + heldCardsHeight);
 				break;
 			case Game.SEAT_NORTH:
 				dx = spacing;
 				dy = 0;
-				unrevealedWidth = (numUnrevealedShowing - 1) * spacing + m_cardWidth;
-				x = m_ptSeat[Game.SEAT_NORTH - 1].x - unrevealedWidth / 2;
+				heldCardsWidth = (numHeldCardsShowing - 1) * spacing + m_cardWidth;
+				x = m_ptSeat[Game.SEAT_NORTH - 1].x - heldCardsWidth / 2;
 				y = m_ptSeat[Game.SEAT_NORTH - 1].y;
-				m_unrevealedBoundingRect[Game.SEAT_NORTH - 1] = new Rect(x, y, x + unrevealedWidth, y + m_cardHeight);
+				m_heldCardsBoundingRect[Game.SEAT_NORTH - 1] = new Rect(x, y, x + heldCardsWidth, y + m_cardHeight);
 				break;
 			case Game.SEAT_EAST:
 				dx = 0;
 				dy = spacing;
-				unrevealedHeight = (numUnrevealedShowing - 1) * spacing + m_cardHeight;
+				heldCardsHeight = (numHeldCardsShowing - 1) * spacing + m_cardHeight;
 				x = m_ptSeat[Game.SEAT_EAST - 1].x;
-				y = m_ptSeat[Game.SEAT_EAST - 1].y - unrevealedHeight / 2;
-				m_unrevealedBoundingRect[Game.SEAT_EAST - 1] = new Rect(x, y, x + m_cardWidth, y + unrevealedHeight);
+				y = m_ptSeat[Game.SEAT_EAST - 1].y - heldCardsHeight / 2;
+				m_heldCardsBoundingRect[Game.SEAT_EAST - 1] = new Rect(x, y, x + m_cardWidth, y + heldCardsHeight);
 				break;
 		}
 
 		// draw the cards that are in the Hand
 
-		stop = Math.min(unrevealedOffset + m_maxCardsDisplay, numUnrevealedCards);
+		stop = Math.min(heldCardsOffset + m_maxCardsDisplay, numHeldCards);
 
-		for (j = 0; j < numUnrevealedCards; j++)
+		for (j = 0; j < numHeldCards; j++)
 		{
-			Card c = unrevealedHand.get(j);
+			Card c = heldCards.get(j);
 			if (c == null)
 			{
 				continue;
@@ -1314,9 +1314,9 @@ public class GameTable extends View
                 c.setX(x);
                 c.setY(y);
             }
-            if (unrevealedOffset <= j && j < stop || c.getState() != Card.CardState.HAND) {
+            if (heldCardsOffset <= j && j < stop || c.getState() != Card.CardState.HAND) {
 				this.drawCard(cv, c);
-				if (unrevealedOffset <= j && j < stop)
+				if (heldCardsOffset <= j && j < stop)
 				{
 					x += dx;
 					y += dy;
@@ -1325,9 +1325,9 @@ public class GameTable extends View
 		}
 
 		// draw the badges if necessary
-		if (revealedOffset > 0)
+		if (tableCardsOffset > 0)
 		{
-			Point pt = m_ptRevealedOffsetBadge[seat - 1];
+			Point pt = m_ptTableCardsOffsetBadge[seat - 1];
 
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
@@ -1337,7 +1337,7 @@ public class GameTable extends View
 
 			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numstr = "" + revealedOffset;
+			String numstr = "" + tableCardsOffset;
 
 			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
 			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
@@ -1345,9 +1345,9 @@ public class GameTable extends View
 			cv.drawText(numstr, fx, fy, m_paintCardBadgeText);
 		}
 
-		if (unrevealedOffset > 0)
+		if (heldCardsOffset > 0)
 		{
-			Point pt = m_ptUnrevealedOffsetBadge[seat - 1];
+			Point pt = m_ptHeldCardsOffsetBadge[seat - 1];
 
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
@@ -1357,7 +1357,7 @@ public class GameTable extends View
 
 			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numstr = "" + unrevealedOffset;
+			String numstr = "" + heldCardsOffset;
 
 			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
 			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
@@ -1365,9 +1365,9 @@ public class GameTable extends View
 			cv.drawText(numstr, fx, fy, m_paintCardBadgeText);
 		}
 
-		if (numRevealedCards > m_maxCardsDisplay + revealedOffset)
+		if (numTableCards > m_maxCardsDisplay + tableCardsOffset)
 		{
-			Point pt = m_ptRevealedOverflowBadge[seat - 1];
+			Point pt = m_ptTableCardsOverflowBadge[seat - 1];
 
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
@@ -1377,7 +1377,7 @@ public class GameTable extends View
 
 			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numstr = "" + (numRevealedCards - revealedOffset - m_maxCardsDisplay);
+			String numstr = "" + (numTableCards - tableCardsOffset - m_maxCardsDisplay);
 
 			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
 			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
@@ -1385,9 +1385,9 @@ public class GameTable extends View
 			cv.drawText(numstr, fx, fy, m_paintCardBadgeText);
 		}
 
-		if (numUnrevealedCards > m_maxCardsDisplay + unrevealedOffset)
+		if (numHeldCards > m_maxCardsDisplay + heldCardsOffset)
 		{
-			Point pt = m_ptUnrevealedOverflowBadge[seat - 1];
+			Point pt = m_ptHeldCardsOverflowBadge[seat - 1];
 
 			m_drawMatrix.reset();
 			m_drawMatrix.setScale(1, 1);
@@ -1397,7 +1397,7 @@ public class GameTable extends View
 
 			float fx = (float)(pt.x + m_bmpCardBadge.getWidth() / 2);
 			Rect textBounds = new Rect();
-			String numstr = "" + (numUnrevealedCards - unrevealedOffset - m_maxCardsDisplay);
+			String numstr = "" + (numHeldCards - heldCardsOffset - m_maxCardsDisplay);
 
 			m_paintCardBadgeText.getTextBounds(numstr, 0, numstr.length(), textBounds);
 			float fy = (float)(pt.y + m_bmpCardBadge.getHeight() / 2 + (textBounds.height() / 2));
@@ -2114,8 +2114,8 @@ public class GameTable extends View
 			int dx = 0;
 			int dy = 0;
 
-			// adjust emoticon position for revealed cards offset
-			if (!pv.getHand().getRevealedCards().isEmpty())
+			// adjust emoticon position for table cards offset
+			if (!pv.getHand().getTableCards().isEmpty())
 			{
 				switch (pv.getSeat()) {
 					case Game.SEAT_SOUTH:
@@ -2148,8 +2148,8 @@ public class GameTable extends View
 			int dx = 0;
 			int dy = 0;
 
-			// adjust emoticon position for revealed cards offset
-			if (!pa.getHand().getRevealedCards().isEmpty())
+			// adjust emoticon position for table cards offset
+			if (!pa.getHand().getTableCards().isEmpty())
 			{
 				switch (pa.getSeat()) {
 					case Game.SEAT_SOUTH:
