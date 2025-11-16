@@ -6,6 +6,11 @@ import android.content.Context;
 
 public class Card implements Animatable{
 
+	public static final float flippingStart = 0f;
+	public static final float flippingEnd = 0.875f;
+	public static final float flippingMidPoint = (flippingStart + flippingEnd) / 2f;
+	public static final float flippingHalfSpan = (flippingEnd - flippingStart) / 2f;
+
 	public enum CardState {
 		DRAW_PILE, MOVING, HAND, DISCARD_PILE
 	}
@@ -347,11 +352,8 @@ public class Card implements Animatable{
 		this.y = startY + progress * (targetY - startY);
 		this.rot = startRot + progress * (targetRot - startRot);
 		if (targetFaceUp != m_faceUp) {
-			if (progress <= 0.25) {
-				this.flip = 0;
-			}
-			else if (progress <= 0.5) {
-				this.flip = 4 * (progress - 0.25f) * 90;
+			if (progress <= flippingMidPoint) {
+				this.flip = Math.max(0, (progress - flippingStart) / flippingHalfSpan) * 90f;
 			}
 			else
 			{
@@ -360,7 +362,7 @@ public class Card implements Animatable{
 		}
 		if (targetFaceUp == m_faceUp && this.flip != 0)
 		{
-			this.flip = (1 - Math.min(1, (progress - 0.5f) * 4)) * -90;
+			this.flip = (1 - Math.min(1, (progress - flippingMidPoint) / flippingHalfSpan)) * -90;
 		}
 	}
 
