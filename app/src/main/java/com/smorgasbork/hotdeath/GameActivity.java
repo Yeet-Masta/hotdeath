@@ -98,7 +98,7 @@ public class GameActivity extends Activity
 	    
 	    // we're here either because the user chose "New game" or because we couldn't
 	    // parse the game state JSON
-	    if (m_game == null)
+	    if (m_game == null || m_game.getDeck() == null)
 	    {
 			m_game = new Game (this, m_go);
 	    }

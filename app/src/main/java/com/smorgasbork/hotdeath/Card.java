@@ -294,34 +294,6 @@ public class Card implements Animatable{
 		msg = strColor + " " + strValue;
 		return msg;
 	}
-	
-	
-	public Card(JSONObject o) throws JSONException
-	{
-		m_deckIndex = o.getInt("deckIndex");
-		m_color = o.getInt("color");
-		m_value = o.getInt("value");
-		m_currentValue = o.getInt("currentValue");
-		m_pointValue = o.getInt("pointValue");
-		m_id = o.getInt("id");
-		m_faceUp = o.getBoolean("faceUp");
-	}
-
-
-	public JSONObject toJSON () throws JSONException
-	{
-		JSONObject o = new JSONObject();
-		
-		o.put("deckIndex", m_deckIndex);
-		o.put("color", m_color);
-		o.put("value", m_value);
-		o.put("currentValue", m_currentValue);
-		o.put("pointValue", m_pointValue);
-		o.put("id", m_id);
-		o.put("faceUp", m_faceUp);
-
-		return o;
-	}
 
 	public void startAnimation(AnimationParams params) {
 		this.startX = this.x;

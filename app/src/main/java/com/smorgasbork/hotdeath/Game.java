@@ -56,7 +56,9 @@ public class Game extends Thread {
 	private boolean m_resumingSavedGame = false;
 	
 	private JSONObject m_snapshot = null;
-	
+	private boolean m_standardRules;
+	private boolean m_oneDeck;
+
 	public boolean getStopping ()
 	{
 		return m_stopping;
@@ -219,11 +221,13 @@ public class Game extends Thread {
 		
 		try
 		{
+			m_standardRules = gamestate.getBoolean("standardRules");
+			m_oneDeck = gamestate.getBoolean("oneDeck");
 			o = gamestate.getJSONObject("state");
 			
 			m_snapshot = gamestate;
 			
-			m_deck = new CardDeck(gamestate.getJSONObject("deck"));
+			m_deck = new CardDeck(m_standardRules, m_oneDeck);
 			m_drawPile = new CardPile(gamestate.getJSONObject("drawPile"), m_deck, m_go.getFaceUp(), Card.CardState.DRAW_PILE);
 			m_discardPile = new CardPile(gamestate.getJSONObject("discardPile"), m_deck, true, Card.CardState.DISCARD_PILE);
 	
@@ -304,6 +308,9 @@ public class Game extends Thread {
 			
 			try
 			{
+				o.put("standardRules", m_standardRules);
+				o.put("oneDeck", m_oneDeck);
+
 				JSONObject o2 = new JSONObject ();
 				o2.put("dealer", m_dealer.getSeat());
 				o2.put("currPlayer", m_currPlayer.getSeat());
@@ -322,7 +329,6 @@ public class Game extends Thread {
 				}
 	
 				o.put("state", o2);
-				o.put("deck", m_deck.toJSON ());
 				o.put("drawPile", m_drawPile.toJSON ());
 				o.put("discardPile", m_discardPile.toJSON ());
 				o.put("penalty", m_penalty.toJSON());
@@ -367,6 +373,9 @@ public class Game extends Thread {
 		m_ga = ga;
 		m_penalty = null;
 
+		m_standardRules = m_go.getStandardRules();
+		m_oneDeck = m_go.getOneDeck();
+
 		m_players = new Player[4];
 		
 		m_deck = null;
@@ -398,7 +407,7 @@ public class Game extends Thread {
 	public void resetRound()
 	{
 		m_direction = DIR_CLOCKWISE;
-		m_deck =        new CardDeck ();
+		m_deck =        new CardDeck (m_standardRules, m_oneDeck);
 		m_drawPile =    new CardPile (m_go.getFaceUp(), Card.CardState.DRAW_PILE);
 		m_discardPile = new CardPile (true, Card.CardState.DISCARD_PILE);
 		m_cardsPlayed = 0;
@@ -689,8 +698,7 @@ public class Game extends Thread {
 		m_prevCard = null;
 
 		int i;
-		
-		m_deck.reset(m_go.getStandardRules(), m_go.getOneDeck());
+
 		m_deck.shuffle();
 
 		for (i = 0; i < 4; i++) 
@@ -698,7 +706,7 @@ public class Game extends Thread {
 			((m_players[i]).getHand()).reset();
 		}
 
-		if (m_go.getStandardRules())
+		if (m_standardRules)
 		{
 			m_numCardsToDeal = 7;
 		}
@@ -1105,7 +1113,7 @@ public class Game extends Thread {
 			// assuming we're not dealing with aids on top of the
 			// draw four, we can stack drawfours (except on the harvester
 			// of sorrows and mystery)
-			if (!(m_go.getStandardRules())) {
+			if (!m_standardRules) {
                 if (m_penalty.getSecondaryVictim() == null
                         && origCardValue == Card.VAL_WILD_DRAW
                         && origCardId != Card.ID_WILD_HOS
@@ -1160,7 +1168,7 @@ public class Game extends Thread {
 		if ((currCardValue == Card.VAL_S) && (checkCardValue == Card.VAL_S_DOUBLE)) return true;
 		if ((currCardValue == Card.VAL_S_DOUBLE) && (checkCardValue == Card.VAL_S)) return true;
 
-		if (m_go.getStandardRules()) 
+		if (m_standardRules)
 		{
 			// cannot play wild draw four if you've got a matching card
 			if (bHasMatch && (c.getValue() == Card.VAL_WILD_DRAW)) 
@@ -1201,7 +1209,7 @@ public class Game extends Thread {
 
 		int minScore = 1000000;
 		int minPlayer = 0;
-		int gameEndScore = (m_go.getStandardRules()) ? 500 : 1000;
+		int gameEndScore = (m_standardRules) ? 500 : 1000;
 
 		for (int i = 0; i < 4; i++) 
 		{

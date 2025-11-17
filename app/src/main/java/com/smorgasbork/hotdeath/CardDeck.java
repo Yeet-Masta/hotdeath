@@ -35,11 +35,7 @@ public class CardDeck {
 
 
 
-	public CardDeck()
-	{
-	}
-
-	public void reset(boolean standardRules, boolean oneDeck)
+	public CardDeck(boolean standardRules, boolean oneDeck)
 	{
 		for (int i = 0 ; i < m_numCards; i++) {
 			m_cards[i] = null;
@@ -801,36 +797,5 @@ public class CardDeck {
 		}
 		
 		return null;
-	}
-	
-	public CardDeck(JSONObject o) throws JSONException
-	{
-		this();
-		
-		JSONArray a = o.getJSONArray("cards");
-		m_numCards = a.length();
-		m_cards = new Card[m_numCards];
-		m_oCards = new Card[m_numCards];
-		for (int i = 0; i < m_numCards; i++)
-		{
-			m_cards[i] = new Card (a.getJSONObject(i));
-		}
-
-        if (m_numCards >= 0) System.arraycopy(m_cards, 0, m_oCards, 0, m_numCards);
-	}
-	
-	public JSONObject toJSON () throws JSONException
-	{
-		JSONArray a = new JSONArray ();
-		for (int i = 0; i < m_numCards; i++)
-		{
-			Card c = m_cards[i];
-			a.put(c.toJSON());
-		}
-		
-		JSONObject o = new JSONObject ();
-		o.put ("cards", a);
-		
-		return o;
 	}
 }
