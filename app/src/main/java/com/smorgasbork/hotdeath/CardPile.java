@@ -5,6 +5,9 @@ import org.json.*;
 
 public class CardPile 
 {
+	private final boolean faceUp;
+
+	private final Card.CardState cardState;
 	private int m_numCards = 0;
 	final private Card[] m_cards;
 		
@@ -18,15 +21,20 @@ public class CardPile
 		return m_cards[i]; 
 	}
 	
-	public CardPile ()
+	public CardPile (boolean faceUp, Card.CardState cardState)
 	{
 		m_cards = new Card[Game.MAX_NUM_CARDS];
+		this.faceUp = faceUp;
+		this.cardState = cardState;
 	}
 	
-	public void addCard(Card c)
+	public void addCard(Card c, boolean instant)
 	{
 		m_cards[m_numCards++] = c;
-		c.setState(Card.CardState.DRAW_PILE);
+		if (instant) {
+			c.setState(this.cardState);
+			c.setFaceUp(this.faceUp);
+		}
 	}
 
 
@@ -72,16 +80,20 @@ public class CardPile
 			}
 		}
     }
-	
-	public CardPile (JSONObject o, CardDeck d) throws JSONException
+
+	public boolean isFaceUp() {
+		return faceUp;
+	}
+
+	public CardPile (JSONObject o, CardDeck d, boolean faceUp, Card.CardState cardState) throws JSONException
 	{
-		this();
+		this(faceUp, cardState);
 		
 		JSONArray a = o.getJSONArray("cards");
-		m_numCards = a.length();
-		for (int i = 0; i < m_numCards; i++)
+		int numCards = a.length();
+		for (int i = 0; i < numCards; i++)
 		{
-			m_cards[i] = d.getCard(a.getInt(i));
+			this.addCard(d.getCard(a.getInt(i)), true);
 		}
 	}
 	

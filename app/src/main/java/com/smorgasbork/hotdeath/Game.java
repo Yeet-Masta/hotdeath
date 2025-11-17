@@ -224,8 +224,8 @@ public class Game extends Thread {
 			m_snapshot = gamestate;
 			
 			m_deck = new CardDeck(gamestate.getJSONObject("deck"));
-			m_drawPile = new CardPile(gamestate.getJSONObject("drawPile"), m_deck);
-			m_discardPile = new CardPile(gamestate.getJSONObject("discardPile"), m_deck);
+			m_drawPile = new CardPile(gamestate.getJSONObject("drawPile"), m_deck, m_go.getFaceUp(), Card.CardState.DRAW_PILE);
+			m_discardPile = new CardPile(gamestate.getJSONObject("discardPile"), m_deck, true, Card.CardState.DISCARD_PILE);
 	
 			m_currColor = o.getInt("currColor");
 			m_direction = o.getInt("direction");
@@ -399,8 +399,8 @@ public class Game extends Thread {
 	{
 		m_direction = DIR_CLOCKWISE;
 		m_deck =        new CardDeck ();
-		m_drawPile =    new CardPile ();
-		m_discardPile = new CardPile ();
+		m_drawPile =    new CardPile (m_go.getFaceUp(), Card.CardState.DRAW_PILE);
+		m_discardPile = new CardPile (true, Card.CardState.DISCARD_PILE);
 		m_cardsPlayed = 0;
 		m_roundComplete = false;
 		DirectionIndicator.getInstance().reset();
@@ -540,7 +540,7 @@ public class Game extends Thread {
 				Card c = m_deck.getCard(i);
 				if (c.getHand() == null)
 				{
-					m_drawPile.addCard(c);
+					m_drawPile.addCard(c, true);
 				}
 			}
 		}
@@ -588,7 +588,7 @@ public class Game extends Thread {
 					}
 				}
 	
-				m_drawPile.addCard(c);
+				m_drawPile.addCard(c, true);
 			}
 		}
 	}	
@@ -617,10 +617,10 @@ public class Game extends Thread {
 			for (int i = 1; i < numPlayedCards; i++) {
 				Card tc = m_discardPile.drawCard();
 				tc.setFaceUp(false);
-				m_drawPile.addCard(tc);
+				m_drawPile.addCard(tc, true);
 			}
 			m_drawPile.shuffle();
-			m_discardPile.addCard(topCard);
+			m_discardPile.addCard(topCard, true);
 
 			return numPlayedCards - 1;
 		}
@@ -721,14 +721,15 @@ public class Game extends Thread {
 	
 	private void postDealHands ()
 	{
+		m_players[SEAT_SOUTH -1].getHand().reveal();
+		waitABit();
 		do 
 		{
 			// FIXME!!! the dealer is supposed to eat penalties...
 			if ((m_currCard = m_drawPile.drawCard()) != null) 
 			{
 				m_currColor = m_currCard.getColor();
-				m_discardPile.addCard (m_currCard);
-				m_currCard.setFaceUp(true);
+				m_discardPile.addCard (m_currCard, false);
 			}
 		} while (m_currColor == Card.COLOR_WILD);
 
@@ -913,7 +914,7 @@ public class Game extends Thread {
 				m_cardsPlayed++;
 
 
-				m_discardPile.addCard(m_currCard);
+				m_discardPile.addCard(m_currCard, false);
 
 				if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
 						(m_currCard.getID() == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
@@ -959,38 +960,6 @@ public class Game extends Thread {
 					return false;
 				}
 
-
-				// if we just threw something that set up the next player, and he has
-				// no defender, hit him now
-//				if (m_penalty.getType() != Penalty.PENTYPE_NONE)
-//				{
-//					if (m_go.getStandardRules())
-//					{
-//						assessPenalty();
-//					}
-//					else
-//					{
-//						Player victim = m_penalty.getVictim();
-//						int ndef = checkForDefender(victim.getHand());
-//                        if (ndef == 0) {
-//                            assessPenalty();
-//                        } else {
-//							m_nextPlayerPreset = victim;
-//                            if (victim instanceof HumanPlayer)
-//                            {
-//                                if (ndef == 1)
-//                                {
-//                                    promptUser(getString (R.string.msg_you_have_defender));
-//                                }
-//                                else
-//                                {
-//                                    promptUser (String.format(getString (R.string.msg_you_have_defenders), ndef));
-//                                }
-//                            }
-//                        }
-//                    }
-//				}
-				//waitABit();
 				m_currPlayer = nextPlayer();
 				redrawTable();
 			}
@@ -1223,8 +1192,7 @@ public class Game extends Thread {
 
 		for (Player player : m_players) {
 			player.setActive(true);
-			player.getHand().setFaceUp(true);
-			player.getHand().sort();
+			player.getHand().reveal();
 		}
 
 		redrawTable();

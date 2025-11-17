@@ -150,7 +150,7 @@ public class Card implements Animatable{
     public void setCurrentValue(int cv) { m_currentValue = cv; }
     public  int getCurrentValue() { return m_currentValue; }
 
-    public boolean getFaceUp () { return m_faceUp; }
+    public boolean isFaceUp() { return m_faceUp; }
     public void setFaceUp (boolean f) { m_faceUp = f; }
 	
 	

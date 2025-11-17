@@ -210,11 +210,4 @@ public class HumanPlayer extends Player
 	}
 
 
-	public void addCardToHand (Card c)
-	{
-		m_hand.addCard(c);
-		m_hand.sort();
-	}
-
-
 }

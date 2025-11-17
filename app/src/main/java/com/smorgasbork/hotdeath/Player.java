@@ -205,7 +205,7 @@ public class Player {
 			}
 		}
 
-		m_hand = new Hand(this);
+		m_hand = new Hand(this, m_go.getFaceUp());
 		m_active = true;
 //		m_passing = false;
 	}

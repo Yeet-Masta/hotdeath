@@ -447,11 +447,6 @@ if (considerColorBalance)
 	public void addCardToHand(Card c)
 	{
 		super.addCardToHand(c);
-		if (m_go.getFaceUp())
-		{
-			m_hand.sort();
-		}
-
 		readAggressionAndSkill();
 	}
 

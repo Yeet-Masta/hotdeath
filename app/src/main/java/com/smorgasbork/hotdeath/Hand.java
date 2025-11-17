@@ -13,6 +13,8 @@ public class Hand {
 	private Card[]	m_cards;
 	private int		m_numCards;
 
+	private boolean faceUp;
+
 	private int m_numCardsOnTable;
 	
 	Card[] getCards() { return m_cards; }
@@ -36,12 +38,13 @@ public class Hand {
 	}
 	
 
-	public Hand(Player p)
+	public Hand(Player p, boolean faceUp)
 	{
 		m_player = p;
-		m_numCards = 0;
 		m_cards = new Card[Game.MAX_NUM_CARDS];
+		m_numCards = 0;
 		m_numCardsOnTable = 0;
+		this.faceUp = faceUp;
 	}
 
 	public void reset()
@@ -60,6 +63,12 @@ public class Hand {
 	{
 		m_cards[m_numCards++] = c;
 		c.setHand(this);
+		if (faceUp || m_numCards <= m_numCardsOnTable) {
+			c.setFaceUp(true);
+			sort();
+		} else {
+			c.setFaceUp(false);
+		}
 	}
 
 
@@ -76,11 +85,19 @@ public class Hand {
 		return oc;
 	}
 
-	public void setFaceUp(boolean f)
+	public boolean getFaceUp()
 	{
-		for (int i = 0; i < m_numCards; i++) 
+		return faceUp;
+	}
+
+	public void reveal()
+	{
+		if (faceUp) return;
+		faceUp = true;
+		sort();
+		for (int i = m_numCardsOnTable; i < m_numCards; i++)
 		{
-			m_cards[i].setFaceUp(f);
+			m_player.m_game.getGameTable().moveCardToTable(m_cards[i], i == m_numCards - 1?2:120);
 		}
 	}
 
@@ -92,7 +109,7 @@ public class Hand {
 			Card c = m_cards[i];
 			m_numCardsOnTable = i + 1;
 			sort();
-			m_player.m_game.getGameTable().moveCardToTable(c, m_player.getSeat(), i == m_numCards - 1?2:120);
+			m_player.m_game.getGameTable().moveCardToTable(c, i == m_numCards - 1?2:120);
 		}
 	}
 
@@ -573,21 +590,17 @@ public class Hand {
 	
 	public Hand(JSONObject o, Player p, CardDeck d, GameOptions go) throws JSONException
 	{
-		m_player = p;
-		m_cards = new Card[Game.MAX_NUM_CARDS];
-		
+		this(p, go.getFaceUp());
+		if (p instanceof HumanPlayer) faceUp = true;
 		JSONArray a = o.getJSONArray("cards");
 		int numCards = a.length();
+		int numCardsOnTable = o.getInt("numCardsOnTable");
 		for (int i = 0; i < numCards; i++)
 		{
 			Card c = d.getCard(a.getInt(i));
+			if (i < numCardsOnTable) m_numCardsOnTable++;
 			this.addCard(c);
 			c.setState(Card.CardState.HAND);
-		}
-		m_numCardsOnTable = o.getInt("numCardsOnTable");
-		if (go.getFaceUp())
-		{
-			sort();
 		}
 	}
 	

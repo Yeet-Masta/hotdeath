@@ -442,13 +442,13 @@ public class GameTable extends View
 		dealer -= 1;
 		card.setX(m_ptSeat[dealer].x - m_cardWidth / 2 * (1 - dealer % 2) + m_cardWidth * 2 * (dealer % 2 == 1 ? dealer - 2 : 0));
 		card.setY(m_ptSeat[dealer].y - m_cardHeight / 2 * (dealer % 2) + m_cardHeight * 2 * (dealer % 2 == 0 ? 1 - dealer : 0));
-		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
+		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, false, m_game.getDelay() / 4);
 		m_game.waitABit(speed);
 	}
 
-	public void moveCardToTable(Card card, int seat, int speed)
+	public void moveCardToTable(Card card, int speed)
 	{
-		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, true, m_game.getDelay() / 4);
+		startCardAnimation(card, Card.CardState.HAND, card.getX(), card.getY(), 0, true, m_game.getDelay() / 4);
 		m_game.waitABit(speed);
 	}
 
@@ -559,7 +559,7 @@ public class GameTable extends View
 			{
 				return;
 			}
-			if (!c.getFaceUp() && !m_go.getFaceUp())
+			if (!c.isFaceUp())
 			{
 				return;
 			}
@@ -2021,15 +2021,15 @@ public class GameTable extends View
 	
 	private void drawCard (Canvas cv, Card c)
 	{
-		drawCard(cv, c, (int) c.getX(), (int) c.getY(), c.getFlip(), c.getFaceUp());
+		drawCard(cv, c, (int) c.getX(), (int) c.getY(), c.getFlip());
 	}
 
 	private void drawCard (Canvas cv, Card c, int x, int y)
 	{
-		drawCard(cv, c, x, y, c.getFlip(), c.getFaceUp());
+		drawCard(cv, c, x, y, c.getFlip());
 	}
 
-	private void drawCard (Canvas cv, Card c, int x, int y, float flip, boolean faceUp)
+	private void drawCard (Canvas cv, Card c, int x, int y, float flip)
 	{
 		Camera camera = new Camera();
 		m_drawMatrix.reset();
@@ -2042,7 +2042,7 @@ public class GameTable extends View
 		//m_drawMatrix.preScale(flip, 1);
 
 		Bitmap b;
-		if (faceUp || m_go.getFaceUp())
+		if (c.isFaceUp())
 		{
 			b = m_imageLookup.get(c.getID());
 		}
