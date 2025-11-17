@@ -528,7 +528,7 @@ public class Game extends Thread {
 						Card c = m_deck.getCard(k);
 						if ((c.getHand() == null) && (c.getID() == hands[i][j]))
 						{
-							p.addCardToHand(c);
+							p.addCardToHand(c, true);
 							break;
 						}
 					}
@@ -550,9 +550,9 @@ public class Game extends Thread {
 			{
 				Card c = m_deck.getCard(i);
 	
-				p.addCardToHand(c);
+				p.addCardToHand(c, false);
 
-				m_gt.dealCard(c, m_dealer.getSeat(), p.getSeat(), 60);
+				m_gt.dealCard(c, m_dealer.getSeat(), p, 60);
 	
 				p = getNextPlayer(p);
 			}
@@ -972,7 +972,7 @@ public class Game extends Thread {
 					return true;
 				}
 
-				m_gt.moveCardToHand(card, m_currPlayer.getSeat(), 2);
+				m_gt.moveCardToPlayer(card, m_currPlayer, 2);
 
 				if (m_currPlayer instanceof HumanPlayer)
 				{
@@ -1016,7 +1016,7 @@ public class Game extends Thread {
 						return true;
 					}
 
-					m_gt.moveCardToHand(card, m_currPlayer.getSeat(), 2);
+					m_gt.moveCardToPlayer(card, m_currPlayer, 2);
 		
 					//m_currPlayer.getHand().sort(); //redundant
 					//redrawTable();
@@ -2081,8 +2081,8 @@ public class Game extends Thread {
                 notEnoughCards = true;
                 break;
             } else {
-                p.addCardToHand(c);
-				m_gt.moveCardToHand(c, p.getSeat(), 15);
+                p.addCardToHand(c, false);
+				m_gt.moveCardToPlayer(c, p, 15);
             }
         }
 		waitABit(2);

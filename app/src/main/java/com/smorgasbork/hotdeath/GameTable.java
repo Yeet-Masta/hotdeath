@@ -427,22 +427,22 @@ public class GameTable extends View
 		m_bottomMarginExternal = m;
 	}
 
-	public void moveCardToHand(Card card, int seat, int speed)
+	public void moveCardToPlayer(Card card, Player player, int speed)
 	{
 		m_discardPileOnTop = false;
 		card.setX(m_ptDrawPile.x);
 		card.setY(m_ptDrawPile.y);
-		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, (seat == 1), m_game.getDelay() / 4);
+		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[player.getSeat() -1].x, m_ptSeat[player.getSeat() -1].y, 0, player.getHand().isFaceUp(), m_game.getDelay() / 4);
 		m_game.waitABit(speed);
 	}
 
-	public void dealCard(Card card, int dealer, int seat, int speed)
+	public void dealCard(Card card, int dealer, Player player, int speed)
 	{
 		m_discardPileOnTop = false;
 		dealer -= 1;
 		card.setX(m_ptSeat[dealer].x - m_cardWidth / 2 * (1 - dealer % 2) + m_cardWidth * 2 * (dealer % 2 == 1 ? dealer - 2 : 0));
 		card.setY(m_ptSeat[dealer].y - m_cardHeight / 2 * (dealer % 2) + m_cardHeight * 2 * (dealer % 2 == 0 ? 1 - dealer : 0));
-		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[seat -1].x, m_ptSeat[seat -1].y, 0, false, m_game.getDelay() / 4);
+		startCardAnimation(card, Card.CardState.HAND, m_ptSeat[player.getSeat() -1].x, m_ptSeat[player.getSeat() -1].y, 0, player.getHand().isFaceUp(), m_game.getDelay() / 4);
 		m_game.waitABit(speed);
 	}
 

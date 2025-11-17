@@ -59,15 +59,13 @@ public class Hand {
 	}
 
 
-	public void addCard (Card c)
+	public void addCard (Card c, boolean instant)
 	{
 		m_cards[m_numCards++] = c;
 		c.setHand(this);
-		if (faceUp || m_numCards <= m_numCardsOnTable) {
-			c.setFaceUp(true);
-			sort();
-		} else {
-			c.setFaceUp(false);
+		if (faceUp) sort();
+		if (instant) {
+            c.setFaceUp(faceUp || m_numCards <= m_numCardsOnTable);
 		}
 	}
 
@@ -85,7 +83,7 @@ public class Hand {
 		return oc;
 	}
 
-	public boolean getFaceUp()
+	public boolean isFaceUp()
 	{
 		return faceUp;
 	}
@@ -599,7 +597,7 @@ public class Hand {
 		{
 			Card c = d.getCard(a.getInt(i));
 			if (i < numCardsOnTable) m_numCardsOnTable++;
-			this.addCard(c);
+			this.addCard(c, true);
 			c.setState(Card.CardState.HAND);
 		}
 	}

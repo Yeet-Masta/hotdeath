@@ -189,9 +189,9 @@ public class Player {
 	
 
 
-	public void addCardToHand (Card c)
+	public void addCardToHand (Card c, boolean instant)
 	{
-		m_hand.addCard(c);
+		m_hand.addCard(c, instant);
 	}
 
 
@@ -283,7 +283,7 @@ public class Player {
 			return null;
 		}
 
-		addCardToHand(c);
+		addCardToHand(c, false);
 		m_lastDrawn = c;
 
 		return c;

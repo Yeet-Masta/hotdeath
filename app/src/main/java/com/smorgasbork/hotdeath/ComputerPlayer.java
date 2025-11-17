@@ -52,13 +52,6 @@ public class ComputerPlayer extends Player
 		this.playCard();
 		return true;
 	}
-	
-	@Override
-	public Card drawCard ()
-	{
-		//m_game.waitABit ();
-		return super.drawCard();
-	}
 
 	public int chooseColor()
 	{
@@ -444,9 +437,9 @@ if (considerColorBalance)
 	}
 
 
-	public void addCardToHand(Card c)
+	public void addCardToHand(Card c, boolean instant)
 	{
-		super.addCardToHand(c);
+		super.addCardToHand(c, instant);
 		readAggressionAndSkill();
 	}
 
