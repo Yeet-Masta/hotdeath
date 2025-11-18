@@ -1031,7 +1031,7 @@ public class GameTable extends View
 //			canvas.drawBitmap(m_bmpPlayerIndicator[curr_color - 1][p.getSeat() - 1], m_drawMatrix, null);
 		}
 
-		if (m_game.getFastForward())
+		if (m_game.getCurrPlayer() == null || m_game.getFastForward())
 		{
 			return;
 		}
