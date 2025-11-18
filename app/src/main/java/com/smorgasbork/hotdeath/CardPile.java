@@ -51,6 +51,34 @@ public class CardPile
 		
 		return c;
 	}
+
+	public Card pullCard(int id)
+	{
+		if (m_numCards < 1)
+		{
+			return null;
+		}
+		Card foundCard = null;
+
+		for (int i = 0; i<m_numCards; i++) {
+			if (m_cards[i].getID() == id)
+			{
+				foundCard = m_cards[i];
+			}
+			if (foundCard != null)
+			{
+				Card cnew = (i == m_numCards - 1) ? null : m_cards[i+1];
+				m_cards[i] = cnew;
+			}
+		}
+		if (foundCard != null)
+		{
+			m_cards[m_numCards - 1] = null;
+			m_numCards--;
+		}
+
+		return foundCard;
+	}
 	
 	public void shuffle ()
 	{

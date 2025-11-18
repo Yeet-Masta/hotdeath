@@ -434,6 +434,7 @@ public class Game extends Thread {
 
 		Random rgen = new Random();
 		int dealer = rgen.nextInt(4);
+		//m_dealer = m_players[2];
 		m_dealer = m_players[dealer];
 	}
 
@@ -712,7 +713,8 @@ public class Game extends Thread {
 		}
 		else
 		{
-			m_numCardsToDeal = m_dealer.getNumCardsToDeal();
+			//m_numCardsToDeal = 3;
+			m_numCardsToDeal =  m_dealer.getNumCardsToDeal();
 			
 			if (m_stopping)
 			{
@@ -724,37 +726,31 @@ public class Game extends Thread {
 		dealHands();
 		postDealHands();
 		waitABit();
-		m_currPlayer = nextPlayer();
 	}
 	
 	private void postDealHands ()
 	{
-		m_players[SEAT_SOUTH -1].getHand().reveal();
-		waitABit();
-		do 
-		{
-			// FIXME!!! the dealer is supposed to eat penalties...
-			if ((m_currCard = m_drawPile.drawCard()) != null) 
-			{
-				m_currColor = m_currCard.getColor();
-				m_discardPile.addCard (m_currCard, false);
-			}
-		} while (m_currColor == Card.COLOR_WILD);
-
-		m_gt.moveCardToDiscardPile(m_currCard);
-
-		for (int i = 0; i < 4; i++) 
+		for (int i = 0; i < 4; i++)
 		{
 			Hand h = (m_players[i]).getHand();
-			if (checkForAllBastardCards(h)) 
+			if (checkForAllBastardCards(h))
 			{
-				redrawTable ();
+
 				gotAllBastardCards (m_players[i]);
 				finishRound(m_players[i]);
-				
+
 				return;
 			}
 		}
+
+		m_players[SEAT_SOUTH -1].getHand().reveal();
+		waitABit();
+
+		m_currCard = m_drawPile.drawCard();
+		m_currColor = m_currCard.getColor();
+		m_discardPile.addCard (m_currCard, false);
+
+		handleSpecialCards(true);
 	}
 	
 	private void runRound ()
@@ -924,30 +920,8 @@ public class Game extends Thread {
 
 				m_discardPile.addCard(m_currCard, false);
 
-				if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
-						(m_currCard.getID() == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
-					changeDirection();
-				}
 
-				m_currColor = m_currCard.getColor();
-
-				m_gt.moveCardToDiscardPile(m_currCard);
-
-				if (m_currColor == Card.COLOR_WILD)
-				{
-					m_currColor = m_currPlayer.chooseColor();
-
-					if (m_stopping)
-					{
-						return false;
-					}
-
-					String msg = String.format(getString (R.string.msg_color_chosen), seatToString(m_currPlayer.getSeat()), colorToString(m_currColor));
-					Log.d("HDU", msg);
-					m_gt.startDirectionIndicatorAnimation(m_direction, m_currColor);
-				}
-
-				handleSpecialCards();
+				handleSpecialCards(false);
 				if (m_stopping)
 				{
 					return false;
@@ -957,7 +931,8 @@ public class Game extends Thread {
 				// that would negate the penalty, then we get penalized now
 				if (m_penalty.getType() != Penalty.PENTYPE_NONE
 					&& (m_penalty.getVictim() == m_currPlayer
-					|| m_currCard.getID() == Card.ID_YELLOW_1_MAD))
+					|| m_currCard.getID() == Card.ID_YELLOW_1_MAD
+					|| m_penalty.getVictim() == null && m_penalty.getSecondaryVictim() == m_currPlayer))
 				{
 					assessPenalty();
 				}
@@ -1560,16 +1535,6 @@ public class Game extends Thread {
 		String msg;
 		msg = String.format (getString(R.string.msg_all_bastard_cards), seatToString(p.getSeat()));
 		promptUser (msg);
-
-		Hand h = p.getHand();
-		int numcards = h.getNumCards();
-		for (int i = 0; i < numcards; i++) 
-		{
-			Card c = h.getCard(i);
-			c.setFaceUp(true);
-		}
-
-		redrawTable();
 	}
 
 
@@ -1584,8 +1549,31 @@ public class Game extends Thread {
 		return count;
 	}
 
-	public void handleSpecialCards()
+	public void handleSpecialCards(boolean virtualPlayer)
 	{
+		if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
+				(m_currCard.getID() == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
+			changeDirection();
+		}
+
+		m_currColor = m_currCard.getColor();
+
+		m_gt.moveCardToDiscardPile(m_currCard);
+
+		if (m_currColor == Card.COLOR_WILD)
+		{
+			m_currColor = m_currPlayer.chooseColor();
+
+			if (m_stopping)
+			{
+				return;
+			}
+
+			String msg = String.format(getString (R.string.msg_color_chosen), seatToString(m_currPlayer.getSeat()), colorToString(m_currColor));
+			Log.d("HDU", msg);
+			m_gt.startDirectionIndicatorAnimation(m_direction, m_currColor);
+		}
+
 		int currVal = m_currCard.getValue();
 		int currID  = m_currCard.getID();
 		m_nextPlayerPreset = null;
@@ -1597,49 +1585,54 @@ public class Game extends Thread {
 			{
 				m_currPlayer = nextPlayer();
 			}
+			return;
 		}
 
 		if (currVal == Card.VAL_R_SKIP) 
 		{
+			if (virtualPlayer) {
+				waitABit(2);
+			}
 			m_currPlayer = nextPlayer();
+			return;
 		}
 
 		if ((currVal == Card.VAL_S)
 			|| (currVal == Card.VAL_S_DOUBLE)) 
 		{
+			if (virtualPlayer) {
+				waitABit(2);
+			}
 			m_currPlayer = nextPlayer();
-		}
 
-		// double skip (only if more than 2 players left in game)
-		if ((currVal == Card.VAL_S_DOUBLE) && (getActivePlayerCount() > 2)) 
-		{
-			m_currPlayer = nextPlayer();
+			// double skip (only if more than 2 players left in game)
+			if ((currVal == Card.VAL_S_DOUBLE) && (getActivePlayerCount() > 2)) {
+				m_currPlayer = nextPlayer();
+			}
+			return;
 		}
 
 		if (currVal == Card.VAL_D) 
 		{
-			m_currPlayer = nextPlayer();
+			if (virtualPlayer) {
+				waitABit(2);
+			} else {
+				m_currPlayer = nextPlayer();
+			}
 
 			forceDraw(m_currPlayer, 2);
-//			if (!(m_go.getStandardRules()))
-//			{
-//				m_currPlayer = nextPlayer();
-//			}
+
+			if (virtualPlayer) {
+				m_currPlayer = nextPlayer();
+			}
+			return;
 		}
 
 		// spreaders
 		if (currVal == Card.VAL_D_SPREAD) 
 		{
-			// we're going to manipulate the m_currPlayer just so that 
-			// the drawing engine will point at each player as he draws
-			// Player realCurrPlayer = m_currPlayer;
-
-			// by default, the player who threw the spreader will play
-			// again, unless somebody's got the shield
-			//Player offender = m_currPlayer;
-			//Player shieldHolder = null;
-			//m_nextPlayerPreset = m_currPlayer;
 			int i;
+			boolean everyone = virtualPlayer;
 
 			for (i = 0; i < 4; i++)
 			{
@@ -1650,8 +1643,14 @@ public class Game extends Thread {
 					String msg = String.format (getString(R.string.msg_has_blue_shield), seatToString(p.getSeat()));
 					promptUser (msg);
 					m_currPlayer = nextPlayer();
+					everyone = false;
 					break;
 				}
+			}
+
+			if (everyone) {
+				waitABit(2);
+				forceDraw(m_currPlayer, 2);
 			}
 
 			for (i = 1; i < getActivePlayerCount(); i++)
@@ -1659,70 +1658,101 @@ public class Game extends Thread {
 				m_currPlayer = nextPlayer();
 				forceDraw(m_currPlayer, 2);
 			}
+
+			if (everyone) {
+				m_currPlayer = nextPlayer();
+			}
+			return;
 		}
 
 		// check the wild draw fours
 		if (currID == Card.ID_WILD_DRAW_FOUR)
 		{
-			m_penalty.addCards (m_currCard, 4, m_currPlayer, getNextPlayer());
-			String msg;
-			msg = (m_penalty.getNumCards() > 4)
-				? String.format (getString(R.string.msg_penalty_stacked_drawfour), 
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
-				: String.format (getString(R.string.msg_penalty_first_drawfour),
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+			if (virtualPlayer) {
+				m_penalty.addCards (m_currCard, 4, null, m_currPlayer);
+			} else {
+				m_penalty.addCards (m_currCard, 4, m_currPlayer, getNextPlayer());
+			}
+
+//			String msg;
+//			msg = (m_penalty.getNumCards() > 4)
+//				? String.format (getString(R.string.msg_penalty_stacked_drawfour),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
+//				: String.format (getString(R.string.msg_penalty_first_drawfour),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
+//			promptUser (msg);
+			return;
 		}
 
 		else if (currID == Card.ID_WILD_HD) 
 		{
-			m_penalty.addCards (m_currCard, 8, m_currPlayer, getNextPlayer());
-			String msg;
-			msg = (m_penalty.getNumCards() > 8)
-				? String.format (getString(R.string.msg_penalty_stacked_wild_hd), 
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
-				: String.format (getString(R.string.msg_penalty_first_wild_hd),
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+			if (virtualPlayer) {
+				m_penalty.addCards (m_currCard, 8, null, m_currPlayer);
+			} else {
+				m_penalty.addCards(m_currCard, 8, m_currPlayer, getNextPlayer());
+			}
+//			String msg;
+//			msg = (m_penalty.getNumCards() > 8)
+//				? String.format (getString(R.string.msg_penalty_stacked_wild_hd),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
+//				: String.format (getString(R.string.msg_penalty_first_wild_hd),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
+//			promptUser (msg);
+			return;
 		}
 
 		else if (currID == Card.ID_WILD_DB) 
 		{
 			Player p = m_currPlayer;
 
-			if (getActivePlayerCount() > 2) 
+			if (getActivePlayerCount() > 2)
 			{
 				m_currPlayer = nextPlayer();
 			}
 
-			m_penalty.addCards (m_currCard, 4, p, getNextPlayer());
-			String msg;
-			msg = (m_penalty.getNumCards() > 4)
-				? String.format (getString(R.string.msg_penalty_stacked_wild_db), 
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
-				: String.format (getString(R.string.msg_penalty_first_wild_db),
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+			if (virtualPlayer) {
+				m_penalty.addCards (m_currCard, 4, null, m_currPlayer);
+			} else {
+				m_penalty.addCards(m_currCard, 4, p, getNextPlayer());
+			}
+//			String msg;
+//			msg = (m_penalty.getNumCards() > 4)
+//				? String.format (getString(R.string.msg_penalty_stacked_wild_db),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
+//				: String.format (getString(R.string.msg_penalty_first_wild_db),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
+//			promptUser (msg);
+			return;
 		}
 
 		else if (currID == Card.ID_WILD_HOS) 
 		{
-			m_penalty.addCards (m_currCard, 4, m_currPlayer, getNextPlayer());
-			String msg;
-			msg = (m_penalty.getNumCards() > 4)
-				? String.format (getString(R.string.msg_penalty_stacked_wild_hos), 
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
-				: String.format (getString(R.string.msg_penalty_first_wild_hos),
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+			if (virtualPlayer) {
+				m_penalty.addCards (m_currCard, 4, null, m_currPlayer);
+			} else {
+				m_penalty.addCards(m_currCard, 4, m_currPlayer, getNextPlayer());
+			}
+
+//			String msg;
+//			msg = (m_penalty.getNumCards() > 4)
+//				? String.format (getString(R.string.msg_penalty_stacked_wild_hos),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
+//				: String.format (getString(R.string.msg_penalty_first_wild_hos),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
+//			promptUser (msg);
+			return;
 		}
 
 		else if (currID == Card.ID_WILD_MYSTERY) 
 		{
+			if (virtualPlayer) {
+				return;
+			}
+
 			int prevVal = m_prevCard.getValue();
 			int prevID  = m_prevCard.getID();
 
-			int prevPenalty = m_penalty.getNumCards();
+			//int prevPenalty = m_penalty.getNumCards();
 			
 			if (prevID == Card.ID_YELLOW_69) 
 			{
@@ -1732,35 +1762,34 @@ public class Game extends Thread {
 			{
 				m_penalty.addCards(m_currCard, prevVal, m_currPlayer, getNextPlayer());
 			}
-			else
-			{
-				// mystery thrown on top of a non-numbered card -- just the same as a wild card
-				String msg = String.format (getString(R.string.msg_penalty_null_wild_mystery), 
-						seatToString(m_currPlayer.getSeat()));
-				promptUser (msg);
-				return;
-			}			
-			String msg;
-			msg = (prevPenalty > 0)
-				? String.format (getString(R.string.msg_penalty_stacked_wild_mystery), 
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
-				: String.format (getString(R.string.msg_penalty_first_wild_mystery),
-						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+//			else
+//			{
+//				// mystery thrown on top of a non-numbered card -- just the same as a wild card
+//				String msg = String.format (getString(R.string.msg_penalty_null_wild_mystery),
+//						seatToString(m_currPlayer.getSeat()));
+//				promptUser (msg);
+//				return;
+//			}
+//			String msg;
+//			msg = (prevPenalty > 0)
+//				? String.format (getString(R.string.msg_penalty_stacked_wild_mystery),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()))
+//				: String.format (getString(R.string.msg_penalty_first_wild_mystery),
+//						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
+//			promptUser (msg);
+			return;
 		}
 
 		// check other special cards
-		if ((currID == Card.ID_RED_0_HD) && (m_penalty.getVictim() == m_currPlayer)) 
-		{
-			m_penalty.setGeneratingPlayer(m_currPlayer);
-			m_penalty.setVictim(getNextPlayer());
-//			if (m_penalty.getVictim() == m_penalty.getSecondaryVictim())
-//			{
-//				m_penalty.setSecondaryVictim(null);
-//			}
+		if (currID == Card.ID_RED_0_HD) {
+			if (m_penalty.getVictim() == m_currPlayer) {
+				m_penalty.setGeneratingPlayer(m_currPlayer);
+				m_penalty.setVictim(getNextPlayer());
 
-			String msg = String.format (getString(R.string.msg_holy_defender), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+				String msg = String.format(getString(R.string.msg_holy_defender), seatToString(m_penalty.getVictim().getSeat()));
+				promptUser(msg);
+			}
+			return;
 		}
 
 		if (currID == Card.ID_RED_2_GLASNOST) 
@@ -1775,20 +1804,25 @@ public class Game extends Thread {
 				return;
 			}
 			int victim = m_currPlayer.getChosenVictim();
-			// we'll set the victim after prompting the user for it
-			m_penalty.setFaceup(m_currCard, m_currPlayer, m_players[victim - 1]);
+
+			if (virtualPlayer) {
+				m_penalty.setFaceup(m_currCard, null, m_players[victim - 1]);
+			} else {
+				m_penalty.setFaceup(m_currCard, m_currPlayer, m_players[victim - 1]);
+			}
 			m_nextPlayerPreset = m_players[victim - 1];
+			return;
 		}
 
 		// if the magic red 5 is played on the hot death wild, it nulls it
-		if (currID == Card.ID_RED_5_MAGIC
-			 && m_penalty.getVictim() == m_currPlayer
-				&& m_penalty.hasHotDeath())
-		{
-			m_penalty.removeHotDeath();
+		if (currID == Card.ID_RED_5_MAGIC) {
+			if (m_penalty.getVictim() == m_currPlayer && m_penalty.hasHotDeath()) {
+				m_penalty.removeHotDeath();
 
-			String msg = getString(R.string.msg_magic_5);
-			promptUser (msg);
+				String msg = getString(R.string.msg_magic_5);
+				promptUser(msg);
+			}
+			return;
 		}
 
 		if (currID == Card.ID_GREEN_0_QUITTER) 
@@ -1799,45 +1833,49 @@ public class Game extends Thread {
 			}
 			if (getActivePlayerCount() > 2) 
 			{
-				m_penalty.setEject(m_currCard, m_currPlayer, getNextPlayer());
+				if (virtualPlayer) {
+					m_penalty.setEject(m_currCard, null, m_currPlayer);
+				} else {
+					m_penalty.setEject(m_currCard, m_currPlayer, getNextPlayer());
+				}
 			}
+			return;
 		}
 
-		if ((currID == Card.ID_GREEN_3_AIDS)
-			&& (m_penalty.getVictim() == m_currPlayer)) 
-		{
-			Player g = m_penalty.getGeneratingPlayer();
-			m_penalty.setVictim(g);
-			m_penalty.setGeneratingPlayer(m_currPlayer);
-			m_penalty.setSecondaryVictim(m_currPlayer);
-			m_nextPlayerPreset = g;
-//			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
-//			{
-//				m_currPlayer = nextPlayer();
-//			}
-			
-			String msg = String.format(getString(R.string.msg_sharing_penalty), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
-		}
-
-		if ((currID == Card.ID_BLUE_0_FUCK_YOU)
-			&& (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer))
-		{
-			Player g = m_penalty.getGeneratingPlayer();
-			m_penalty.setVictim(g);
-			m_penalty.setSecondaryVictim(null);
-			m_penalty.setGeneratingPlayer(m_currPlayer);
-
-			if (getActivePlayerCount() > 2 && m_penalty.getOrigCard().getID() == Card.ID_WILD_DB)
-			{
-				m_currPlayer = nextPlayer();
-			} else if (m_penalty.getOrigCard().getID() == Card.ID_RED_2_GLASNOST) {
+		if (currID == Card.ID_GREEN_3_AIDS) {
+			if (m_penalty.getVictim() == m_currPlayer) {
+				Player g = m_penalty.getGeneratingPlayer();
+				m_penalty.setVictim(g);
+				m_penalty.setGeneratingPlayer(m_currPlayer);
+				m_penalty.setSecondaryVictim(m_currPlayer);
 				m_nextPlayerPreset = g;
-				m_currPlayer = nextPlayer();
 			}
+			
+//			String msg = String.format(getString(R.string.msg_sharing_penalty), seatToString(m_penalty.getVictim().getSeat()));
+//			promptUser (msg);
+			return;
+		}
 
-			String msg = String.format(getString(R.string.msg_sending_penalty), seatToString(m_penalty.getVictim().getSeat()));
-			promptUser (msg);
+		if (currID == Card.ID_BLUE_0_FUCK_YOU) {
+			if (m_penalty.getVictim() == m_currPlayer) {
+				Player g = m_penalty.getGeneratingPlayer();
+				if (g == null) {
+					g = getNextPlayer();
+				}
+				m_penalty.setVictim(g);
+				m_penalty.setGeneratingPlayer(m_currPlayer);
+
+				if (m_penalty.getOrigCard().getID() == Card.ID_WILD_DB && getActivePlayerCount() > 2 && g != getNextPlayer()) {
+					m_currPlayer = nextPlayer();
+				} else if (m_penalty.getOrigCard().getID() == Card.ID_RED_2_GLASNOST) {
+					m_nextPlayerPreset = g;
+					m_currPlayer = nextPlayer();
+				}
+
+				String msg = String.format(getString(R.string.msg_sending_penalty), seatToString(m_penalty.getVictim().getSeat()));
+				promptUser(msg);
+			}
+			return;
 		}
 
 		if (currID == Card.ID_YELLOW_1_MAD) 
