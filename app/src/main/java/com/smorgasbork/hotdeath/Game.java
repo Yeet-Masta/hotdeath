@@ -434,8 +434,8 @@ public class Game extends Thread {
 
 		Random rgen = new Random();
 		int dealer = rgen.nextInt(4);
-		//m_dealer = m_players[2];
 		m_dealer = m_players[dealer];
+		//m_dealer = m_players[2]; //DEBUG
 	}
 
 
@@ -713,8 +713,8 @@ public class Game extends Thread {
 		}
 		else
 		{
-			//m_numCardsToDeal = 3;
 			m_numCardsToDeal =  m_dealer.getNumCardsToDeal();
+			//m_numCardsToDeal = 3; //DEBUG
 			
 			if (m_stopping)
 			{
@@ -747,10 +747,21 @@ public class Game extends Thread {
 		waitABit();
 
 		m_currCard = m_drawPile.drawCard();
+		//m_currCard = m_drawPile.pullCard(Card.ID_WILD_HD); //DEBUG
 		m_currColor = m_currCard.getColor();
 		m_discardPile.addCard (m_currCard, false);
 
+		if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP) {
+			changeDirection();
+		}
+
+		m_gt.moveCardToDiscardPile(m_currCard);
+
 		handleSpecialCards(true);
+
+		if (m_nextPlayerPreset != null) {
+			m_currPlayer = nextPlayer();
+		}
 	}
 	
 	private void runRound ()
@@ -920,6 +931,14 @@ public class Game extends Thread {
 
 				m_discardPile.addCard(m_currCard, false);
 
+				if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
+						(m_currCard.getID() == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
+					changeDirection();
+				}
+
+				m_currColor = m_currCard.getColor();
+
+				m_gt.moveCardToDiscardPile(m_currCard);
 
 				handleSpecialCards(false);
 				if (m_stopping)
@@ -944,7 +963,6 @@ public class Game extends Thread {
 				}
 
 				m_currPlayer = nextPlayer();
-				redrawTable();
 			}
 			
 			else if (m_currPlayer.getWantsToDraw() && !getCurrPlayerDrawn())
@@ -973,7 +991,6 @@ public class Game extends Thread {
 				}
 				
 				m_currPlayer = nextPlayer();
-				redrawTable ();
 			}
 		}
 
@@ -982,6 +999,11 @@ public class Game extends Thread {
 			if (m_penalty.getType() != Penalty.PENTYPE_NONE) 
 			{
 				assessPenalty();
+				// this only happens if initial card from virtualPlayer was a WILD_DRAW
+				if (m_currColor == Card.COLOR_WILD) {
+					m_currColor = m_currPlayer.chooseColor();
+					m_gt.startDirectionIndicatorAnimation(m_direction, m_currColor);
+				}
 				m_currPlayer = nextPlayer();
 			}
 			
@@ -1153,7 +1175,7 @@ public class Game extends Thread {
 		}
 
 		// cards of same color, wild cards, or cards of equal value
-        return (c.getColor() == m_currColor) || (c.getColor() == Card.COLOR_WILD)
+        return (c.getColor() == m_currColor) || (c.getColor() == Card.COLOR_WILD || m_currColor == Card.COLOR_WILD)
                 || (checkCardValue == currCardValue);
     }
 
@@ -1178,7 +1200,6 @@ public class Game extends Thread {
 			player.getHand().reveal();
 		}
 
-		redrawTable();
 		String msg = String.format (getString(R.string.msg_declare_round_winner), seatToString(p.getSeat()));
 		promptUser(msg);
 
@@ -1551,16 +1572,7 @@ public class Game extends Thread {
 
 	public void handleSpecialCards(boolean virtualPlayer)
 	{
-		if (m_currCard.getValue() == Card.VAL_R || m_currCard.getValue() == Card.VAL_R_SKIP ||
-				(m_currCard.getID() == Card.ID_BLUE_0_FUCK_YOU) && (m_penalty.getVictim() == m_currPlayer || m_penalty.getSecondaryVictim() == m_currPlayer)) {
-			changeDirection();
-		}
-
-		m_currColor = m_currCard.getColor();
-
-		m_gt.moveCardToDiscardPile(m_currCard);
-
-		if (m_currColor == Card.COLOR_WILD)
+		if (m_currColor == Card.COLOR_WILD && !virtualPlayer)
 		{
 			m_currColor = m_currPlayer.chooseColor();
 
@@ -1681,6 +1693,7 @@ public class Game extends Thread {
 //				: String.format (getString(R.string.msg_penalty_first_drawfour),
 //						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
 //			promptUser (msg);
+			redrawTable();
 			return;
 		}
 
@@ -1698,6 +1711,7 @@ public class Game extends Thread {
 //				: String.format (getString(R.string.msg_penalty_first_wild_hd),
 //						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
 //			promptUser (msg);
+			redrawTable();
 			return;
 		}
 
@@ -1722,6 +1736,7 @@ public class Game extends Thread {
 //				: String.format (getString(R.string.msg_penalty_first_wild_db),
 //						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
 //			promptUser (msg);
+			redrawTable();
 			return;
 		}
 
@@ -1740,6 +1755,7 @@ public class Game extends Thread {
 //				: String.format (getString(R.string.msg_penalty_first_wild_hos),
 //						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
 //			promptUser (msg);
+			redrawTable();
 			return;
 		}
 
@@ -1777,6 +1793,7 @@ public class Game extends Thread {
 //				: String.format (getString(R.string.msg_penalty_first_wild_mystery),
 //						seatToString(m_penalty.getGeneratingPlayer().getSeat()), m_penalty.getNumCards(), seatToString(m_penalty.getVictim().getSeat()));
 //			promptUser (msg);
+			redrawTable();
 			return;
 		}
 
@@ -1811,6 +1828,7 @@ public class Game extends Thread {
 				m_penalty.setFaceup(m_currCard, m_currPlayer, m_players[victim - 1]);
 			}
 			m_nextPlayerPreset = m_players[victim - 1];
+			redrawTable();
 			return;
 		}
 
@@ -1838,6 +1856,7 @@ public class Game extends Thread {
 				} else {
 					m_penalty.setEject(m_currCard, m_currPlayer, getNextPlayer());
 				}
+				redrawTable();
 			}
 			return;
 		}
@@ -1896,6 +1915,7 @@ public class Game extends Thread {
 				// we'll set the victim after prompting the user for it
 				m_penalty.setEject(m_currCard, m_currPlayer, m_players[victim - 1]);
 				m_penalty.setSecondaryVictim(m_currPlayer);
+				redrawTable();
 			}
 		}
 	}
@@ -1919,12 +1939,11 @@ public class Game extends Thread {
 		Player pVictim = m_penalty.getVictim();
 		Player pVictim2 = m_penalty.getSecondaryVictim();
 
-		if (pVictim == null)
-		{
-			return;
+		if (pVictim == null) {
+			if (pVictim2 == null) {
+				return;
+			}
 		}
-
-		Hand h = pVictim.getHand();
 		String msg;
 
 		if (m_penalty.getType() == Penalty.PENTYPE_CARD) 
@@ -1932,38 +1951,51 @@ public class Game extends Thread {
 			int numcards = m_penalty.getNumCards();
 			if (pVictim2 != null)
 			{
-				// divide by 2 (and round up)
+				// divide by 2
 				numcards = (numcards + 1) / 2;
 			}
 
-			forceDraw(pVictim, numcards);
-		//	m_nextPlayerPreset = pVictim;
-		//	m_currPlayer = nextPlayer();
+			if (pVictim != null) {
+				forceDraw(pVictim, numcards);
+			} else {
+				waitABit(2);
+			}
 
-			if (pVictim2 != null) 
-			{
-				m_nextPlayerPreset = pVictim2;
-				m_currPlayer = nextPlayer();
+			if (pVictim2 != null) {
+				if (m_currPlayer != pVictim2) {
+					m_nextPlayerPreset = pVictim2;
+					m_currPlayer = nextPlayer();
+				}
 				forceDraw(pVictim2, m_penalty.getNumCards() / 2);
 			}
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_FACEUP) 
 		{
-			h.placeOnTable();
+			Hand h;
 
-			if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer) 
-			{
-				msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim.getSeat()));
-				promptUser (msg);
+			if (pVictim != null) {
+				h = pVictim.getHand();
+				h.placeOnTable();
+
+				if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer)
+				{
+					msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim.getSeat()));
+					promptUser (msg);
+				}
 			}
 
 			if (pVictim2 != null) 
 			{
-				m_nextPlayerPreset = pVictim2;
-				m_currPlayer = nextPlayer();
+
+				if (m_currPlayer != pVictim2) {
+					m_nextPlayerPreset = pVictim2;
+					m_currPlayer = nextPlayer();
+				}
+
 				h = pVictim2.getHand();
 				h.placeOnTable();
-				if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer) 
+
+				if (m_players[SEAT_SOUTH - 1] instanceof HumanPlayer)
 				{
 					msg = String.format (getString(R.string.msg_player_faceup), seatToString(pVictim2.getSeat()));
 					promptUser (msg);
@@ -1971,22 +2003,27 @@ public class Game extends Thread {
 			}
 			else {
 				m_nextPlayerPreset = m_penalty.getGeneratingPlayer();
+				if (m_nextPlayerPreset == null) {
+					m_nextPlayerPreset = m_dealer;
+				}
 				m_currPlayer = nextPlayer();
 			}
 		}
 		else if (m_penalty.getType() == Penalty.PENTYPE_EJECT) 
 		{
-			m_nextPlayerPreset = pVictim;
-			m_currPlayer = nextPlayer();
-			pVictim.setActive(false);
+			if (pVictim != null) {
+				m_nextPlayerPreset = pVictim;
+				m_currPlayer = nextPlayer();
+				pVictim.setActive(false);
 
-			msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim.getSeat()));
-			promptUser (msg);
+				msg = String.format (getString(R.string.msg_player_ejected), seatToString (pVictim.getSeat()));
+				promptUser (msg);
 
 
-			if (pVictim == m_players[SEAT_SOUTH - 1])
-			{
-				showFastForwardButton (true);
+				if (pVictim == m_players[SEAT_SOUTH - 1])
+				{
+					showFastForwardButton (true);
+				}
 			}
 
 			if (pVictim2 != null) 
