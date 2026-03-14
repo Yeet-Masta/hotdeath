@@ -246,8 +246,11 @@ public class Hand {
 	}
 
 	private static void sortByDeckIndex(List<Card> cards) {
-		Collections.sort(cards, Comparator.comparingInt(Card::getDeckIndex));
-    }
+		Collections.sort(cards, Comparator
+				.comparingInt(Card::getColor)
+				.thenComparingInt(Card::getValue)
+				.thenComparingInt(Card::getDeckIndex));
+	}
 
 	private void copyBack(List<Card> src, int offset) {
 		for (int i = 0; i < src.size(); i++) m_cards[offset + i] = src.get(i);

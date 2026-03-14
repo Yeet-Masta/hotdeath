@@ -1142,11 +1142,35 @@ public class Game extends Thread {
 	private void assessCardPenalty(Player victim, Player victim2) {
 		int numCards = m_penalty.getNumCards();
 		if (victim2 != null) numCards = (numCards + 1) / 2;
-		if (victim != null) forceDraw(victim, numCards); else waitABit(2);
-		if (victim2 != null) {
-			if (m_currPlayer != victim2) { m_nextPlayerPreset = victim2; m_currPlayer = nextPlayer(); }
-			forceDraw(victim2, m_penalty.getNumCards() / 2);
+
+		// Hoist reason so both the victim and victim2 blocks can reference it
+		String reason = getPenaltyReason();
+
+		if (victim != null) {
+			promptUser(String.format(
+					getString(R.string.msg_player_takes_penalty),
+					seatToString(victim.getSeat()), numCards, reason));
+			forceDraw(victim, numCards);
+		} else {
+			waitABit(2);
 		}
+
+		if (victim2 != null) {
+			if (m_currPlayer != victim2) {
+				m_nextPlayerPreset = victim2;
+				m_currPlayer = nextPlayer();
+			}
+			int numCards2 = m_penalty.getNumCards() / 2;
+			promptUser(String.format(
+					getString(R.string.msg_player_takes_penalty),
+					seatToString(victim2.getSeat()), numCards2, reason));
+			forceDraw(victim2, numCards2);
+		}
+	}
+
+	private String getPenaltyReason() {
+		if (m_penalty == null || m_penalty.getOrigCard() == null) return "";
+		return cardToString(m_penalty.getOrigCard());
 	}
 
 	private void assessFaceUpPenalty(Player victim, Player victim2) {
@@ -1170,8 +1194,17 @@ public class Game extends Thread {
 	}
 
 	private void assessEjectPenalty(Player victim, Player victim2) {
-		if (victim != null) ejectPlayer(victim);
-		if (victim2 != null) ejectPlayer(victim2);
+		if (victim != null) {
+			promptUser(String.format(
+					getString(R.string.msg_player_ejected_by),
+					seatToString(victim.getSeat()),
+					m_penalty.getGeneratingPlayer() != null
+							? seatToString(m_penalty.getGeneratingPlayer().getSeat()) : "?"));
+			ejectPlayer(victim);
+		}
+		if (victim2 != null) {
+			ejectPlayer(victim2);
+		}
 		if (getActivePlayerCount() == 1) {
 			m_penalty.reset();
 			for (int i = 0; i < 4; i++) {
@@ -1182,6 +1215,38 @@ public class Game extends Thread {
 				}
 			}
 		}
+	}
+
+	void forceDrawSilent(Player p, int numCards) {
+		if (numCards <= 0) return;
+
+		Hand h = p.getHand();
+		for (int i = 0; i < h.getNumCards(); i++) {
+			if (h.getCard(i).getID() == Card.ID_GREEN_4_IRISH) {
+				numCards--;
+				h.getCard(i).setFaceUp(true);
+				promptUser(getString(R.string.msg_luck_of_irish));
+				break;
+			}
+		}
+
+		Log.d(TAG, String.format(getString(R.string.msg_player_drawing),
+				seatToString(p.getSeat()), numCards));
+
+		if (numCards > m_drawPile.getNumCards()) rolloverDiscardPile();
+
+		m_forceDrawing = true;
+		boolean notEnough = false;
+		for (int i = 0; i < numCards; i++) {
+			Card c = drawCard();
+			if (c == null) { notEnough = true; break; }
+			p.addCardToHand(c, false);
+			m_gt.moveCardToPlayer(c, p, 15);
+		}
+		waitABit(2);
+		m_forceDrawing = false;
+
+		if (notEnough) promptUser(getString(R.string.msg_discard_empty));
 	}
 
 	private void ejectPlayer(Player p) {

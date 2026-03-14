@@ -65,7 +65,7 @@ public class GameOptions {
 	public boolean getFamilyFriendly ()
 	{
 		String s = Prefs.getCheatCode (m_ga);
-        return !s.contains("originalhotdeath");
+        return s.contains("familyfriendly");
     }
 
 	public boolean getFaceUp() 

@@ -99,6 +99,9 @@
 	<string name="msg_penalty_first_wild_mystery">%1$s threw Mystery Draw - %2$d to %3$s…</string>
 	<string name="msg_penalty_stacked_wild_mystery">%1$s stacked Mystery Draw - %2$d to %3$s…</string>
 	<string name="msg_penalty_null_wild_mystery">%1$s threw Mystery Draw on a non-number; same as Wild</string>
+
+	<string name="msg_player_takes_penalty">%1$s draws %2$d (%3$s)</string>
+	<string name="msg_player_ejected_by">%1$s ejected by %2$s</string>
 	
 	<string name="prompt_deal">How many cards do you want to deal?</string>
 	<string name="prompt_color">Pick a color</string>
@@ -147,7 +150,7 @@
 	<string name="cardhelp_yellow_69_ff">May be played on any 6 or any 9 (or, of course, on any yellow card). It also allows any player holding it to play a 6 on a 9 or a 9 on a 6 regardless of color. If any player challenges such a move, the player with the 69 card shows it, and the challenger must draw two cards. At the end of the hand, the player holding the 69 card takes a total of 69 points, regardless of what other cards he holds — though that score may be affected by the Retaliation, Holy Defender, Magic Red 5, or an earlier Virus card or overridden by the Big Brother.</string>
 
 	<string name="cardhelp_backstab">The player before you draws 2 cards and the turn order is reversed. Blockable and stackable with Draw 2s.</string>
-	<string name="cardhelp_clone">Copies the effect of the card currently on top of the pile and applies it to the next player. If played on a stack it copies that card\'s contribution. Does not apply to Field cards or Communism. Blockable and stackable if the copied card is stackable.</string>
+	<string name="cardhelp_clone">Copies the effect of the card currently on top of the pile and applies it to the next player. If played on a stack it copies that card\'s contribution. Does not apply to Field cards. Blockable and stackable if the copied card is stackable.</string>
 	<string name="cardhelp_ping">Choose any player — they draw exactly 1 card. Play continues normally. No card or rule in the game stops Ping or changes its 1-card pickup.</string>
 	<string name="cardhelp_swap">Swap your hand with the player before you (Field cards are not swapped). Turn order then reverses.</string>
 
