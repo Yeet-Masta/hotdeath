@@ -28,12 +28,19 @@ public class CardImageAdapter extends BaseAdapter {
     	Card[] cary = d.getCards();
     	
     	HashMap<Integer, Boolean> usedIDs = new HashMap<>();
+        /*
         for (Card card : cary) {
             if (usedIDs.containsKey(card.getID())) {
                 continue;
             }
 
             usedIDs.put(card.getID(), true);
+        }
+         */
+        for (Card card : cary) {
+            int catalogID = card.getCatalogID();
+            if (usedIDs.containsKey(catalogID)) continue;
+            usedIDs.put(catalogID, true);
         }
 
     	// go through all cards in order and add them to the array
