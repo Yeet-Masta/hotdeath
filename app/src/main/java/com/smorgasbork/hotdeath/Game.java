@@ -1057,29 +1057,73 @@ public class Game extends Thread {
 	 * Clone effect: re-apply m_prevCard's special effect targeting the next player.
 	 * Field cards and Communism are excluded per rules.
 	 */
+	/**
+	 * Clone effect: re-apply m_prevCard's special effect targeting the next player.
+	 *
+	 * Coverage:
+	 *  - Wild-draw family (Draw-4, HD, DB, HOS, Mystery) → penalty cards
+	 *  - Draw-2 → penalty cards
+	 *  - Spreader → handleSpreader()
+	 *  - Skip / Skip-Double / Reverse-Skip → skip next player(s)
+	 *  - Reverse / Backstab / Swap → change direction
+	 *  - Glasnost (Red-2) → faceup penalty on chosen victim
+	 *  - Quitter (Green-0) → eject next player
+	 *  - Mad (Yellow-1) → eject chosen victim (4-player only)
+	 *  - Holy Defender (Red-0) → redirect current penalty to next player
+	 *  - Fuck You (Blue-0) → send current penalty to next player
+	 *  - Ping → force-draw 1 card onto chosen victim
+	 *
+	 * Intentional exclusions (documented):
+	 *  - Clone itself            → no chain-clone (prevent infinite loops)
+	 *  - Backstab already handled above via VAL_R_BACKSTAB path
+	 *  - AIDS (Green-3)          → biological rules; cannot be cloned
+	 *  - Yellow-69               → unique card identity, cannot be cloned
+	 *  - Blue Shield             → passive card; cloning it has no effect
+	 *  - Magic-5 (Red-5)         → defensive only; meaningless to clone offensively
+	 *  - Mystery Wild            → handled separately via handleMysteryDraw()
+	 */
 	private void handleClone(boolean virtualPlayer) {
 		if (m_prevCard == null) return;
 		int prevID  = m_prevCard.getID();
 		int prevVal = m_prevCard.getValue();
-		if (prevVal == Card.VAL_CLONE) return;  // no chain-clone
+
+		// Guard: never chain-clone
+		if (prevVal == Card.VAL_CLONE) return;
 
 		promptUser(String.format(getString(R.string.msg_clone), cardToString(m_prevCard)));
 
+		// ── Wild-draw family ──────────────────────────────────────────────────
 		if (prevVal == Card.VAL_WILD_DRAW) {
-			int amt = (prevID == Card.ID_WILD_HD) ? 8 : 4;
-			m_penalty.addCards(m_prevCard, amt, m_currPlayer, getNextPlayer());
-			redrawTable();
+			if (prevID == Card.ID_WILD_MYSTERY) {
+				// Mystery reuses the card-before-the-clone (m_prevCard is Mystery,
+				// so we re-enter handleMysteryDraw which reads m_prevCard itself).
+				// Swap prevCard temporarily so Mystery reads the right context.
+				handleMysteryDraw();
+			} else {
+				int amt;
+				if      (prevID == Card.ID_WILD_HD) amt = 8;
+				else if (prevID == Card.ID_WILD_DB) amt = 4;   // DB: full 4 onto next player
+				else                                amt = 4;    // Draw-4, HOS → 4
+				m_penalty.addCards(m_prevCard, amt, m_currPlayer, getNextPlayer());
+				redrawTable();
+			}
 			return;
 		}
+
+		// ── Draw-2 ───────────────────────────────────────────────────────────
 		if (prevVal == Card.VAL_D) {
 			m_penalty.addCards(m_prevCard, 2, m_currPlayer, getNextPlayer());
 			redrawTable();
 			return;
 		}
+
+		// ── Spreader ─────────────────────────────────────────────────────────
 		if (prevVal == Card.VAL_D_SPREAD) {
 			handleSpreader(false);
 			return;
 		}
+
+		// ── Skip family ───────────────────────────────────────────────────────
 		if (prevVal == Card.VAL_S || prevVal == Card.VAL_S_DOUBLE || prevVal == Card.VAL_R_SKIP) {
 			m_currPlayer = nextPlayer();
 			if (prevVal == Card.VAL_S_DOUBLE && getActivePlayerCount() > 2) {
@@ -1087,19 +1131,113 @@ public class Game extends Thread {
 			}
 			return;
 		}
-		if (prevVal == Card.VAL_R || prevVal == Card.VAL_R_BACKSTAB
-				|| prevVal == Card.VAL_SWAP) {
+
+		// ── Reverse family (direction change) ─────────────────────────────────
+		if (prevVal == Card.VAL_R || prevVal == Card.VAL_R_BACKSTAB || prevVal == Card.VAL_SWAP) {
 			changeDirection();
+			// Backstab also forces a draw-2 onto the player now "before" us
+			if (prevVal == Card.VAL_R_BACKSTAB) {
+				Player prev = getPlayerBefore(m_currPlayer);
+				if (prev != null && prev != m_currPlayer) {
+					forceDraw(prev, 2);
+				}
+			}
+			// Swap also swaps hands with the player now "before" us
+			if (prevVal == Card.VAL_SWAP) {
+				Player prev = getPlayerBefore(m_currPlayer);
+				if (prev != null && prev != m_currPlayer) {
+					swapHands(m_currPlayer, prev);
+					promptUser(String.format(getString(R.string.msg_swap),
+							seatToString(m_currPlayer.getSeat()), seatToString(prev.getSeat())));
+				}
+			}
+			if (getActivePlayerCount() == 2) m_currPlayer = nextPlayer();
 			return;
 		}
-		if (prevID == Card.ID_WILD_MYSTERY) {
-			handleMysteryDraw();
-			return;
-		}
-		if (prevID == Card.ID_GREEN_0_QUITTER && getActivePlayerCount() > 2) {
-			m_penalty.setEject(m_prevCard, m_currPlayer, getNextPlayer());
+
+		// ── Glasnost (Red-2) ──────────────────────────────────────────────────
+		if (prevID == Card.ID_RED_2_GLASNOST) {
+			if (m_currPlayer.getHand().getNumCards() == 0) return;
+			m_currPlayer.chooseVictim();
+			if (m_stopping) return;
+			int victimSeat = m_currPlayer.getChosenVictim();
+			m_penalty.setFaceup(m_prevCard, m_currPlayer, m_players[victimSeat - 1]);
+			m_nextPlayerPreset = m_players[victimSeat - 1];
 			redrawTable();
+			return;
 		}
+
+		// ── Quitter (Green-0): eject next player ──────────────────────────────
+		if (prevID == Card.ID_GREEN_0_QUITTER) {
+			if (getActivePlayerCount() > 2) {
+				m_penalty.setEject(m_prevCard, m_currPlayer, getNextPlayer());
+				redrawTable();
+			}
+			return;
+		}
+
+		// ── Mad (Yellow-1): eject a chosen victim (4-player only) ────────────
+		if (prevID == Card.ID_YELLOW_1_MAD) {
+			if (m_currPlayer.getHand().getNumCards() == 0) return;
+			if (getActivePlayerCount() > 3) {
+				m_currPlayer.chooseVictim();
+				if (m_stopping) return;
+				int victimSeat = m_currPlayer.getChosenVictim();
+				m_penalty.setEject(m_prevCard, m_currPlayer, m_players[victimSeat - 1]);
+				m_penalty.setSecondaryVictim(m_currPlayer);
+				redrawTable();
+			}
+			return;
+		}
+
+		// ── Holy Defender (Red-0): redirect active penalty to next player ─────
+		if (prevID == Card.ID_RED_0_HD) {
+			if (m_penalty.getType() != Penalty.PENTYPE_NONE
+					&& m_penalty.getVictim() == m_currPlayer) {
+				m_penalty.setGeneratingPlayer(m_currPlayer);
+				m_penalty.setVictim(getNextPlayer());
+				promptUser(String.format(getString(R.string.msg_holy_defender),
+						seatToString(m_penalty.getVictim().getSeat())));
+			}
+			return;
+		}
+
+		// ── Fuck You (Blue-0): send active penalty to next player ─────────────
+		if (prevID == Card.ID_BLUE_0_FUCK_YOU) {
+			if (m_penalty.getType() != Penalty.PENTYPE_NONE
+					&& m_penalty.getVictim() == m_currPlayer) {
+				Player g = m_penalty.getGeneratingPlayer();
+				if (g == null) g = getNextPlayer();
+				m_penalty.setVictim(g);
+				m_penalty.setGeneratingPlayer(m_currPlayer);
+				promptUser(String.format(getString(R.string.msg_sending_penalty),
+						seatToString(m_penalty.getVictim().getSeat())));
+			}
+			return;
+		}
+
+		// ── Ping: force-draw 1 onto a chosen victim ───────────────────────────
+		if (prevID == Card.ID_BLUE_1_PING) {
+			if (m_currPlayer.getHand().getNumCards() == 0) return;
+			m_currPlayer.chooseVictim();
+			if (m_stopping) return;
+			int pingVictimSeat = m_currPlayer.getChosenVictim();
+			Player pingVictim  = m_players[pingVictimSeat - 1];
+			promptUser(String.format(getString(R.string.msg_ping),
+					seatToString(m_currPlayer.getSeat()),
+					seatToString(pingVictim.getSeat())));
+			Card drawn = drawCard();
+			if (drawn != null) {
+				pingVictim.addCardToHand(drawn, false);
+				m_gt.moveCardToPlayer(drawn, pingVictim, 15);
+			}
+			waitABit(2);
+			return;
+		}
+
+		// ── Intentional no-ops ────────────────────────────────────────────────
+		// AIDS, Yellow-69, Blue Shield, Magic-5: cloning these has no game effect.
+		// Plain numeric cards also fall through here (clone of a 7 does nothing useful).
 	}
 
 	private void handleFuckYou() {

@@ -23,6 +23,8 @@ import org.json.JSONObject;
  *    playing after declaring (unchanged behaviour, now applied at Weak too)
  *  - Backstab/Swap/Clone/Ping scoring: v3 cards now get proper heuristic values
  *  - Draw-pile awareness: if draw pile is small, hoard wilds less aggressively
+ *  - Ping victim targeting: directs Ping at the opponent with the fewest cards
+ *  - Color balance caching: baseline balance computed once per turn, not per candidate
  */
 public class ComputerPlayer extends Player {
 
@@ -32,6 +34,11 @@ public class ComputerPlayer extends Player {
 	private static final int ENDGAME_SKIP_BONUS = 60;
 	// Minimum draw-penalty size before we strongly prefer defenders
 	private static final int DEFEND_THRESHOLD = 4;
+
+	// ── Color-balance cache (invalidated at start of each playCard() call) ──
+	// Avoids recomputing the baseline balance once per candidate card.
+	private double m_cachedBaseBalance  = Double.NaN;
+	private int    m_cachedHandSnapshot = -1; // m_hand.getNumCards() when cache was set
 
 	public ComputerPlayer(Game g, GameOptions go) {
 		super(g, go);
@@ -70,11 +77,13 @@ public class ComputerPlayer extends Player {
 	public void addCardToHand(Card c, boolean instant) {
 		super.addCardToHand(c, instant);
 		readAggressionAndSkill();
+		invalidateBalanceCache();
 	}
 
 	@Override
 	public void finishTrick() {
 		readAggressionAndSkill();
+		invalidateBalanceCache();
 	}
 
 	// -------------------------------------------------------------------------
@@ -143,6 +152,45 @@ public class ComputerPlayer extends Player {
 		m_chosenVictim = minPlayer;
 	}
 
+	/**
+	 * Victim selection for Ping specifically: always targets the active opponent
+	 * with the fewest cards, regardless of skill level, since Ping is unblockable
+	 * and wasting it on a player with a large hand is always suboptimal.
+	 */
+	private void choosePingVictim() {
+		m_game.waitABit();
+
+		int minCards  = Integer.MAX_VALUE;
+		int minPlayer = 0;
+
+		for (int i = 3; i >= 0; i--) {
+			Player p = m_game.getPlayer(i);
+			if (p == this || !p.getActive()) continue;
+
+			int cardCount = p.getHand().getNumCards();
+			// Same SEAT_SOUTH aggression bias as normal victim selection
+			if (i == Game.SEAT_SOUTH - 1) {
+				cardCount -= m_aggression * 2;
+			}
+			if (cardCount < minCards) {
+				minPlayer = i + 1;
+				minCards  = cardCount;
+			}
+		}
+
+		// Fall back to generic victim selection if no target found
+		m_chosenVictim = (minPlayer != 0) ? minPlayer : defaultFallbackVictim();
+	}
+
+	/** Returns any active opponent seat, used as a last-resort fallback. */
+	private int defaultFallbackVictim() {
+		for (int i = 0; i < 4; i++) {
+			Player p = m_game.getPlayer(i);
+			if (p != this && p.getActive()) return i + 1;
+		}
+		return 0;
+	}
+
 	/** Weak victim selection – clockwise or counter-clockwise depending on aggression. */
 	private void chooseVictimWeak() {
 		int[] order = (m_aggression > 3)
@@ -164,6 +212,7 @@ public class ComputerPlayer extends Player {
 
 	public void playCard() {
 		readAggressionAndSkill();
+		invalidateBalanceCache();   // fresh turn → stale cache
 
 		m_wantsToPass = false;
 		m_hand.calculateValue();
@@ -171,7 +220,7 @@ public class ComputerPlayer extends Player {
 		// If we just drew, play it if legal – otherwise pass.
 		if (m_lastDrawn != null) {
 			if (m_game.checkCard(m_hand, m_lastDrawn)) {
-				m_playingCard    = m_lastDrawn;
+				m_playingCard     = m_lastDrawn;
 				m_wantsToPlayCard = true;
 			} else {
 				m_wantsToPass = true;
@@ -182,6 +231,13 @@ public class ComputerPlayer extends Player {
 		int opponentMinCards = getMinCardsRemaining();
 		int wildCount        = countCardsOfColor(Card.COLOR_WILD);
 		int penalty          = m_game.getPenalty().getNumCards();
+
+		// Pre-compute the baseline color balance once for the whole candidate loop.
+		// adjustForColorBalance() will read m_cachedBaseBalance rather than
+		// recomputing it for every card.
+		if (m_skill >= 2) {
+			ensureBalanceCache();
+		}
 
 		int  maxTestVal = Integer.MIN_VALUE;
 		Card bestCard   = null;
@@ -205,7 +261,12 @@ public class ComputerPlayer extends Player {
 		}
 
 		if (bestCard != null) {
-			m_playingCard    = bestCard;
+			// If the chosen card is Ping, use dedicated victim selection so it
+			// always targets the most threatening opponent.
+			if (bestCard.getValue() == Card.VAL_PING) {
+				choosePingVictim();
+			}
+			m_playingCard     = bestCard;
 			m_wantsToPlayCard = true;
 		} else {
 			m_wantsToDraw = true;
@@ -229,7 +290,7 @@ public class ComputerPlayer extends Player {
 		int testVal;
 		if (tc.getColor() == Card.COLOR_WILD) {
 			// Hold wilds while opponents still have many cards AND draw pile is healthy.
-			boolean drawPileHealthy = m_game.getDrawPile().getNumCards() > 15;
+			boolean drawPileHealthy    = m_game.getDrawPile().getNumCards() > 15;
 			boolean opponentsHaveCards = wildCount < opponentMinCards - 1;
 			testVal = (opponentsHaveCards && drawPileHealthy) ? 0 : tc.getCurrentValue();
 		} else {
@@ -266,7 +327,7 @@ public class ComputerPlayer extends Player {
 			return testVal;
 		}
 		int newHandValue = m_hand.calculateValue(false, tc);
-		if (newHandValue < 10)      return testVal + 100;
+		if      (newHandValue < 10) return testVal + 100;
 		else if (newHandValue < 20) return testVal + 70;
 		else if (newHandValue < 50) return 0;
 		else                        return testVal - 20;
@@ -299,7 +360,8 @@ public class ComputerPlayer extends Player {
 	 *  - Swap:     big bonus when AI has more cards than the target (swap is beneficial);
 	 *              penalty if AI has fewer cards than target
 	 *  - Clone:    bonus proportional to the value of the previously played card
-	 *  - Ping:     small consistent bonus since it's unblockable directed draw-1
+	 *  - Ping:     bonus scales with how few cards the most-threatened opponent holds;
+	 *              the actual victim is chosen separately via choosePingVictim()
 	 */
 	private int adjustForV3Cards(Card tc, int testVal, int opponentMinCards) {
 		int val = tc.getValue();
@@ -311,7 +373,7 @@ public class ComputerPlayer extends Player {
 			Player before = getPlayerBefore(m_seat);
 			if (before != null) {
 				int theirCards = before.getHand().getNumCards();
-				if (theirCards <= 3) testVal += 50;   // very threatening player
+				if      (theirCards <= 3) testVal += 50;   // very threatening player
 				else if (theirCards <= 6) testVal += 25;
 			}
 			return testVal;
@@ -326,10 +388,10 @@ public class ComputerPlayer extends Player {
 				int delta      = theirCards - myCards; // positive = we gain cards if we swap
 				// We want to swap when we have more cards than them (delta < 0 = we lose cards)
 				// or when they are about to win (small hand)
-				if (delta < -3) testVal += 60;         // swap rids us of a big hand
-				else if (delta < 0) testVal += 30;
-				else if (delta > 3) testVal -= 40;     // would give us even more cards
-				else testVal -= 10;
+				if      (delta < -3) testVal += 60;    // swap rids us of a big hand
+				else if (delta <  0) testVal += 30;
+				else if (delta >  3) testVal -= 40;    // would give us even more cards
+				else                 testVal -= 10;
 			}
 			return testVal;
 		}
@@ -337,22 +399,28 @@ public class ComputerPlayer extends Player {
 		// ── Clone ─────────────────────────────────────────────────────────────
 		if (val == Card.VAL_CLONE) {
 			Card prev = m_game.getLastPlayedCard();
-			if (prev == null) return testVal - 10;    // no previous card, weaker play
+			if (prev == null) return testVal - 10;     // no previous card, weaker play
 			int prevVal = prev.getValue();
 			// Clone is great when the previous card was an attack
-			if (prevVal == Card.VAL_WILD_DRAW) testVal += 80;
-			else if (prevVal == Card.VAL_D)    testVal += 40;
-			else if (prevVal == Card.VAL_D_SPREAD) testVal += 70;
-			else if (prevVal == Card.VAL_S || prevVal == Card.VAL_S_DOUBLE) testVal += 30;
-			else                               testVal += 10;
+			if      (prevVal == Card.VAL_WILD_DRAW)    testVal += 80;
+			else if (prevVal == Card.VAL_D)            testVal += 40;
+			else if (prevVal == Card.VAL_D_SPREAD)     testVal += 70;
+			else if (prevVal == Card.VAL_S
+					|| prevVal == Card.VAL_S_DOUBLE)     testVal += 30;
+			else                                       testVal += 10;
 			return testVal;
 		}
 
 		// ── Ping ─────────────────────────────────────────────────────────────
 		if (val == Card.VAL_PING) {
-			// Unblockable draw-1 – always decent; bonus when targeting low-hand player
+			// Unblockable directed draw-1.
+			// Base bonus for always being useful; scale up when opponentMinCards is
+			// very low because forcing even one extra card onto a near-winning opponent
+			// is high-value. The actual victim is picked in choosePingVictim() later.
 			testVal += 15;
-			if (opponentMinCards <= 2) testVal += 20;
+			if      (opponentMinCards <= 1) testVal += 40;  // opponent is about to win
+			else if (opponentMinCards <= 2) testVal += 25;
+			else if (opponentMinCards <= 3) testVal += 10;
 			return testVal;
 		}
 
@@ -390,7 +458,7 @@ public class ComputerPlayer extends Player {
 	 * we just need to make sure it wins the scoring comparison.
 	 */
 	private int adjustForDefender(Card tc, int testVal, int penaltyCards) {
-		int id = tc.getID();
+		int     id         = tc.getID();
 		boolean isDefender = id == Card.ID_RED_0_HD
 				|| id == Card.ID_BLUE_0_FUCK_YOU
 				|| id == Card.ID_GREEN_3_AIDS
@@ -407,6 +475,12 @@ public class ComputerPlayer extends Player {
 		return testVal;
 	}
 
+	/**
+	 * Adjusts score based on how playing {@code tc} changes the hand's color balance.
+	 *
+	 * Uses the cached baseline balance so this method is O(n) rather than O(n²)
+	 * across the full candidate loop.
+	 */
 	private int adjustForColorBalance(Card tc, int testVal, int opponentMinCards) {
 		boolean considerBalance = (opponentMinCards + m_aggression / 3) > 3;
 		if (!considerBalance) return testVal;
@@ -423,13 +497,27 @@ public class ComputerPlayer extends Player {
 	// Color balance helpers
 	// -------------------------------------------------------------------------
 
+	/**
+	 * Returns the fractional change in color balance caused by removing {@code c}.
+	 * Positive = more imbalanced (worse); negative = more balanced (better).
+	 *
+	 * Reads the cached baseline so the per-card O(n) inner loop is not repeated
+	 * for every candidate.
+	 */
 	public double computeChangeInColorBalance(Card c) {
-		double before = computeColorBalance(null);
+		double before = getCachedBaseBalance();
 		double after  = computeColorBalance(c);
 		if (before == 0) return 0;
 		return (after - before) / before;
 	}
 
+	/**
+	 * Computes the standard deviation of the four color counts, optionally
+	 * excluding one card (for look-ahead scoring).
+	 *
+	 * When called from {@link #computeChangeInColorBalance} the "before" value
+	 * comes from the cache; only the "after" (with exclusion) requires a full scan.
+	 */
 	public double computeColorBalance(Card exclude) {
 		int[] totals = new int[4];
 		for (int i = 0; i < m_hand.getNumCards(); i++) {
@@ -450,6 +538,32 @@ public class ComputerPlayer extends Player {
 			balance += Math.pow(t - avg, 2);
 		}
 		return Math.sqrt(balance);
+	}
+
+	// ── Cache management ──────────────────────────────────────────────────────
+
+	/**
+	 * Populates the balance cache if it is stale.
+	 * The snapshot key is the current hand size; any add/remove invalidates it.
+	 */
+	private void ensureBalanceCache() {
+		int currentSize = m_hand.getNumCards();
+		if (Double.isNaN(m_cachedBaseBalance) || m_cachedHandSnapshot != currentSize) {
+			m_cachedBaseBalance  = computeColorBalance(null);
+			m_cachedHandSnapshot = currentSize;
+		}
+	}
+
+	/** Returns the cached baseline balance, computing it first if necessary. */
+	private double getCachedBaseBalance() {
+		ensureBalanceCache();
+		return m_cachedBaseBalance;
+	}
+
+	/** Marks the cache as stale. Call whenever the hand composition changes. */
+	private void invalidateBalanceCache() {
+		m_cachedBaseBalance  = Double.NaN;
+		m_cachedHandSnapshot = -1;
 	}
 
 	// -------------------------------------------------------------------------

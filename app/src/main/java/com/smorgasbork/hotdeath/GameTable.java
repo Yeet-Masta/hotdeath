@@ -1311,10 +1311,10 @@ public class GameTable extends View {
 		registerCard(Card.ID_YELLOW_R_BACKSTAB, R.drawable.card_yellow_r_backstab, R.string.cardhelp_backstab, Card.COLOR_YELLOW, Card.VAL_R_BACKSTAB, Card.ID_YELLOW_R_BACKSTAB, 20);
 
 		// Dodge (one per colour — 8 variant, ×4 in deck)
-		registerCard(Card.ID_RED_8_DODGE,    R.drawable.card_red_8_dodge,    R.string.cardhelp_dodge, Card.COLOR_RED,    Card.VAL_DODGE, Card.ID_RED_8_DODGE,    8);
-		registerCard(Card.ID_GREEN_8_DODGE,  R.drawable.card_green_8_dodge,  R.string.cardhelp_dodge, Card.COLOR_GREEN,  Card.VAL_DODGE, Card.ID_GREEN_8_DODGE,  8);
-		registerCard(Card.ID_BLUE_8_DODGE,   R.drawable.card_blue_8_dodge,   R.string.cardhelp_dodge, Card.COLOR_BLUE,   Card.VAL_DODGE, Card.ID_BLUE_8_DODGE,   8);
-		registerCard(Card.ID_YELLOW_8_DODGE, R.drawable.card_yellow_8_dodge, R.string.cardhelp_dodge, Card.COLOR_YELLOW, Card.VAL_DODGE, Card.ID_YELLOW_8_DODGE, 8);
+		//registerCard(Card.ID_RED_8_DODGE,    R.drawable.card_red_8_dodge,    R.string.cardhelp_dodge, Card.COLOR_RED,    Card.VAL_DODGE, Card.ID_RED_8_DODGE,    8);
+		//registerCard(Card.ID_GREEN_8_DODGE,  R.drawable.card_green_8_dodge,  R.string.cardhelp_dodge, Card.COLOR_GREEN,  Card.VAL_DODGE, Card.ID_GREEN_8_DODGE,  8);
+		//registerCard(Card.ID_BLUE_8_DODGE,   R.drawable.card_blue_8_dodge,   R.string.cardhelp_dodge, Card.COLOR_BLUE,   Card.VAL_DODGE, Card.ID_BLUE_8_DODGE,   8);
+		//registerCard(Card.ID_YELLOW_8_DODGE, R.drawable.card_yellow_8_dodge, R.string.cardhelp_dodge, Card.COLOR_YELLOW, Card.VAL_DODGE, Card.ID_YELLOW_8_DODGE, 8);
 
 		// Clone (Green 2, Yellow 2 — ×2 in deck)
 		registerCard(Card.ID_GREEN_2_CLONE,  R.drawable.card_green_2_clone,  R.string.cardhelp_clone, Card.COLOR_GREEN,  Card.VAL_CLONE, Card.ID_GREEN_2_CLONE,  20);
