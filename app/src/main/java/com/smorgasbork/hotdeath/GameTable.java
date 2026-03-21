@@ -1313,7 +1313,7 @@ public class GameTable extends View {
 		registerCard(Card.ID_GREEN_R_SWAP,  R.drawable.card_green_r_swap,  R.string.cardhelp_swap, Card.COLOR_GREEN,  Card.VAL_SWAP, Card.ID_GREEN_R_SWAP,  20);
 		registerCard(Card.ID_YELLOW_R_SWAP, R.drawable.card_yellow_r_swap, R.string.cardhelp_swap, Card.COLOR_YELLOW, Card.VAL_SWAP, Card.ID_YELLOW_R_SWAP, 20);
 		*/
-
+		/*
 		// Backstab (one per colour — Reverse variant, ×4 in deck)
 		registerCard(Card.ID_RED_R_BACKSTAB,    R.drawable.card_back,    R.string.cardhelp_backstab, Card.COLOR_RED,    Card.VAL_R_BACKSTAB, Card.ID_RED_R_BACKSTAB,    20);
 		registerCard(Card.ID_GREEN_R_BACKSTAB,  R.drawable.card_back,  R.string.cardhelp_backstab, Card.COLOR_GREEN,  Card.VAL_R_BACKSTAB, Card.ID_GREEN_R_BACKSTAB,  20);
@@ -1336,6 +1336,7 @@ public class GameTable extends View {
 		// Swap (Green Reverse, Yellow Reverse — ×2 in deck)
 		registerCard(Card.ID_GREEN_R_SWAP,  R.drawable.card_back,  R.string.cardhelp_swap, Card.COLOR_GREEN,  Card.VAL_SWAP, Card.ID_GREEN_R_SWAP,  20);
 		registerCard(Card.ID_YELLOW_R_SWAP, R.drawable.card_back, R.string.cardhelp_swap, Card.COLOR_YELLOW, Card.VAL_SWAP, Card.ID_YELLOW_R_SWAP, 20);
+		*/
 
 		// ----- Shared bitmaps -----
 		BitmapFactory.Options opt = new BitmapFactory.Options();
