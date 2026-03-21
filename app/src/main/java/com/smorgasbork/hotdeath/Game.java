@@ -79,6 +79,9 @@ public class Game extends Thread {
 	private boolean    m_standardRules;
 	private boolean    m_oneDeck;
 
+	// ── MULTIPLAYER: session reference (null in single-player) ──
+	private MultiplayerSession m_mpSession = null;
+
 	// Accessors
 
 	public boolean   getStopping()          { return m_stopping; }
@@ -108,6 +111,8 @@ public class Game extends Thread {
 	boolean getLastCardCheckedIsDefender() {
 		return m_lastCardCheckedIsDefender;
 	}
+
+	public MultiplayerSession getMpSession() { return m_mpSession; }
 
 	public void setGameTable(GameTable gt) { m_gt = gt; }
 
@@ -187,6 +192,51 @@ public class Game extends Thread {
 			m_resumingSavedGame = true;
 		} catch (JSONException e) {
 			Log.e(TAG, "Failed to restore game from JSON: " + e.getMessage());
+		}
+	}
+
+	/**
+	 * New multiplayer game.
+	 *
+	 * <p>The local player sits at {@code session.getLocalSeat()} as a
+	 * {@link HumanPlayer}.  Every other active seat gets a
+	 * {@link NetworkPlayer} whose action queue is fed by
+	 * {@link MultiplayerSession}.  Seats not present in the session
+	 * start (and stay) inactive.
+	 */
+	public Game(GameActivity ga, GameOptions go, MultiplayerSession session) {
+		m_go        = go;
+		m_ga        = ga;
+		m_mpSession = session;
+		m_penalty   = null;
+
+		m_standardRules = m_go.getStandardRules();
+		m_oneDeck       = m_go.getOneDeck();
+		m_direction     = DIR_NONE;
+
+		int localSeat = session.getLocalSeat();
+
+		for (int i = 0; i < 4; i++) {
+			int seat = i + 1;   // seats are 1-based
+			if (seat == localSeat) {
+				m_players[i] = new HumanPlayer(this, m_go);
+			} else if (session.isSeatActive(seat)) {
+				NetworkPlayer np = new NetworkPlayer(this, m_go);
+				m_players[i] = np;
+				session.registerNetworkPlayer(seat, np);
+			} else {
+				// Placeholder – will be deactivated below.
+				m_players[i] = new ComputerPlayer(this, m_go);
+			}
+		}
+
+		assignSeats();
+
+		// Deactivate seats that are not participating in this online game.
+		for (int i = 0; i < 4; i++) {
+			if (!session.isSeatActive(i + 1)) {
+				m_players[i].setActive(false);
+			}
 		}
 	}
 
@@ -334,6 +384,15 @@ public class Game extends Thread {
 		DirectionIndicator.getInstance().reset();
 		ColorChooser.getInstance().reset();
 		for (Player p : m_players) p.resetRound();
+
+		// ── MULTIPLAYER: keep inactive seats deactivated after reset ─
+		if (m_mpSession != null) {
+			for (int i = 0; i < 4; i++) {
+				if (!m_mpSession.isSeatActive(i + 1)) {
+					m_players[i].setActive(false);
+				}
+			}
+		}
 	}
 
 	public void startRound() {
@@ -347,7 +406,26 @@ public class Game extends Thread {
 		m_currCard = null;
 		m_prevCard = null;
 
-		m_deck.shuffle();
+		//m_deck.shuffle();
+
+		// ── MULTIPLAYER: deterministic deck shuffle ──────────────────
+		// Replace the existing   m_deck.shuffle();   (or shuffle(n))
+		// line inside startRound() with this block:
+
+		if (m_mpSession != null) {
+			long seed;
+			if (m_mpSession.isHost()) {
+				// Host picks the seed and tells everyone.
+				seed = m_mpSession.generateAndBroadcastRoundSeed();
+			} else {
+				// Non-hosts block until the host broadcasts the seed.
+				seed = m_mpSession.waitForRoundSeed();
+			}
+			m_deck.shuffle(seed);
+		} else {
+			// Original single-player path – unchanged.
+			m_deck.shuffle();
+		}
 		for (Player p : m_players) p.getHand().reset();
 
 		if (m_standardRules) {

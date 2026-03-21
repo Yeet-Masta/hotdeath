@@ -46,6 +46,8 @@ public class GameActivity extends Activity {
 	private Game m_game;
 	private GameOptions m_go;
 
+	public static final int STARTUP_MODE_MULTIPLAYER = 3; // choose a value unused by your existing modes
+
 	// Accessors used by GameTable
 
 	public Integer getCardImageID(int id)  { return m_gt.getCardImageID(id); }
@@ -64,7 +66,14 @@ public class GameActivity extends Activity {
 		m_go = new GameOptions(this);
 		m_game = (startupMode == STARTUP_MODE_CONTINUE) ? tryLoadSavedGame() : null;
 
-		if (m_game == null || m_game.getDeck() == null) {
+		// ── MULTIPLAYER: choose correct Game constructor ─────────────
+		MultiplayerSession mpSession = MultiplayerSession.getInstance();
+
+		if (mpSession != null && startupMode == STARTUP_MODE_MULTIPLAYER) {
+			// Online game – hand the session to the Game.
+			m_game = new Game(this, m_go, mpSession);
+		} else {
+			// Original single-player / CPU game.
 			m_game = new Game(this, m_go);
 		}
 
@@ -112,6 +121,10 @@ public class GameActivity extends Activity {
 		m_gt = null;
 		m_go = null;
 		super.onDestroy();
+		// ── MULTIPLAYER ──────────────────────────────────────────────
+		if (MultiplayerSession.getInstance() != null) {
+			MultiplayerSession.getInstance().destroy();
+		}
 	}
 
 	// Private helpers

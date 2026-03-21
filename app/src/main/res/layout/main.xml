@@ -32,6 +32,12 @@
 			android:layout_height="wrap_content"
 			android:scaleType="center"
 			android:background="@null" />
+		<Button
+			android:id="@+id/btn_multiplayer"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Multiplayer"
+			android:layout_gravity="center_horizontal" />
 
 		<ImageButton
 			android:src="@drawable/sel_btn_settings"

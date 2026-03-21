@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.TextView;
 import android.text.method.ScrollingMovementMethod;
 
@@ -82,6 +83,7 @@ public class Main extends Activity implements OnClickListener
         
         findViewById(R.id.btn_continue).setOnClickListener(this);
         findViewById(R.id.btn_new_game).setOnClickListener(this);
+		findViewById(R.id.btn_multiplayer).setOnClickListener(this);
         findViewById(R.id.btn_settings).setOnClickListener(this);
         findViewById(R.id.btn_help).setOnClickListener(this);
         findViewById(R.id.btn_about).setOnClickListener(this);
@@ -122,6 +124,10 @@ public class Main extends Activity implements OnClickListener
 		} else if (id == R.id.btn_continue) {
 			intent = new Intent(this, GameActivity.class);
 			intent.putExtra(GameActivity.STARTUP_MODE, GameActivity.STARTUP_MODE_CONTINUE);
+			startActivity(intent);
+
+		} else if (id == R.id.btn_multiplayer) {
+			intent = new Intent(Main.this, MultiplayerActivity.class);
 			startActivity(intent);
 
 		} else if (id == R.id.btn_settings) {

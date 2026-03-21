@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:fitsSystemWindows="true"
+              android:orientation="vertical"
+              android:padding="16dp"
+              android:background="@drawable/table_background">
+
+    <!-- Server URL -->
+    <EditText
+            android:id="@+id/et_server_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Server URL (ws://host:30000)"
+            android:inputType="textUri"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#DCDCDC"
+            android:background="#44FFFFFF"
+            android:padding="8dp"
+            android:layout_marginBottom="8dp"/>
+
+    <!-- Player name -->
+    <EditText
+            android:id="@+id/et_player_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Your display name"
+            android:inputType="textPersonName"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#DCDCDC"
+            android:background="#44FFFFFF"
+            android:padding="8dp"
+            android:layout_marginBottom="8dp"/>
+
+    <!-- Room code (for joining) -->
+    <EditText
+            android:id="@+id/et_room_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Room code (leave blank to create)"
+            android:inputType="textCapCharacters"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#DCDCDC"
+            android:background="#44FFFFFF"
+            android:padding="8dp"
+            android:layout_marginBottom="12dp"/>
+
+    <!-- Create / Join buttons side-by-side -->
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+        <Button
+                android:id="@+id/btn_create"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Create Room"
+                android:layout_marginEnd="4dp"/>
+
+        <Button
+                android:id="@+id/btn_join"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Join Room"
+                android:layout_marginStart="4dp"/>
+    </LinearLayout>
+
+    <!-- Room code display (shown after joining) -->
+    <TextView
+            android:id="@+id/tv_room_code"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#FFD700"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="8dp"/>
+
+    <!-- Player list -->
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Players:"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"/>
+
+    <ListView
+            android:id="@+id/lv_players"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#33FFFFFF"/>
+
+    <!-- Status / error messages -->
+    <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enter your name and server address to begin."
+            android:textColor="#CCCCCC"
+            android:textSize="13sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"/>
+
+    <!-- Start Game (host only) -->
+    <Button
+            android:id="@+id/btn_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Game"
+            android:textSize="18sp"
+            android:visibility="invisible"/>
+
+</LinearLayout>
