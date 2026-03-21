@@ -25,9 +25,7 @@ public class Pointer implements Animatable {
         return instance;
     }
 
-    // -----------------------------------------------------------------------
     // Animatable
-    // -----------------------------------------------------------------------
 
     @Override
     public void startAnimation(AnimationParams params) {
@@ -75,9 +73,7 @@ public class Pointer implements Animatable {
     @Override
     public boolean isAnimating() { return isAnimating; }
 
-    // -----------------------------------------------------------------------
     // Accessors
-    // -----------------------------------------------------------------------
 
     public float getRot()        { return rot; }
     public float getScale()      { return scale; }

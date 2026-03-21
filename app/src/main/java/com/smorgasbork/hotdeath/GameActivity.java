@@ -46,9 +46,7 @@ public class GameActivity extends Activity {
 	private Game m_game;
 	private GameOptions m_go;
 
-	// -------------------------------------------------------------------------
 	// Accessors used by GameTable
-	// -------------------------------------------------------------------------
 
 	public Integer getCardImageID(int id)  { return m_gt.getCardImageID(id); }
 	public Integer[] getCardIDs()          { return m_gt.getCardIDs(); }
@@ -56,9 +54,7 @@ public class GameActivity extends Activity {
 	public Button getBtnNextRound()        { return m_btnNextRound; }
 	public Button getBtnFastForward()      { return m_btnFastForward; }
 
-	// -------------------------------------------------------------------------
 	// Lifecycle
-	// -------------------------------------------------------------------------
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -118,9 +114,7 @@ public class GameActivity extends Activity {
 		super.onDestroy();
 	}
 
-	// -------------------------------------------------------------------------
 	// Private helpers
-	// -------------------------------------------------------------------------
 
 	/** Attempt to deserialise a saved game; returns null on any failure. */
 	private Game tryLoadSavedGame() {
@@ -229,9 +223,7 @@ public class GameActivity extends Activity {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Dialog helpers
-	// -------------------------------------------------------------------------
 
 	public void showCardHelp() {
 		if (m_dlgCardHelp == null) {
@@ -266,9 +258,7 @@ public class GameActivity extends Activity {
 		m_dlgCardCatalog.show();
 	}
 
-	// -------------------------------------------------------------------------
 	// Menu button state management
-	// -------------------------------------------------------------------------
 
 	public void showMenuButtons() {
 		if (m_game.getCurrPlayer() instanceof HumanPlayer) {

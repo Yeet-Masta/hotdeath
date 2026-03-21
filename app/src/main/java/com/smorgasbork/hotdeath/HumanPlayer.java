@@ -23,9 +23,7 @@ public class HumanPlayer extends Player {
 		super(o, g, go);
 	}
 
-	// -------------------------------------------------------------------------
 	// Turn lifecycle
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Blocks the game thread until the player makes a move (play, draw, or pass).
@@ -42,9 +40,7 @@ public class HumanPlayer extends Player {
 		return true;
 	}
 
-	// -------------------------------------------------------------------------
 	// UI callbacks – called from UI thread
-	// -------------------------------------------------------------------------
 
 	public void turnDecisionPass() {
 		m_wantsToPass  = true;
@@ -72,9 +68,7 @@ public class HumanPlayer extends Player {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Decisions that require dialog prompts
-	// -------------------------------------------------------------------------
 
 	@Override
 	public int getNumCardsToDeal() {
@@ -133,9 +127,7 @@ public class HumanPlayer extends Player {
 		m_victimDecision = true;
 	}
 
-	// -------------------------------------------------------------------------
 	// Internal helper
-	// -------------------------------------------------------------------------
 
 	/** Spins (sleeping 100 ms per tick) until {@code condition} returns true or game stops. */
 	private void waitForDecision(BooleanSupplier condition) {

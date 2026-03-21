@@ -19,9 +19,7 @@ import java.util.Random;
  */
 public class Game extends Thread {
 
-	// -------------------------------------------------------------------------
 	// Constants
-	// -------------------------------------------------------------------------
 
 	public static final int MAX_NUM_CARDS = 216;
 
@@ -36,9 +34,7 @@ public class Game extends Thread {
 
 	private static final String TAG = "HDU";
 
-	// -------------------------------------------------------------------------
 	// State
-	// -------------------------------------------------------------------------
 
 	private volatile boolean m_stopping = false;
 
@@ -83,9 +79,7 @@ public class Game extends Thread {
 	private boolean    m_standardRules;
 	private boolean    m_oneDeck;
 
-	// -------------------------------------------------------------------------
 	// Accessors
-	// -------------------------------------------------------------------------
 
 	public boolean   getStopping()          { return m_stopping; }
 	public int       getWinner()            { return m_winner; }
@@ -127,9 +121,7 @@ public class Game extends Thread {
 		m_waitingToStartRound = wtsr;
 	}
 
-	// -------------------------------------------------------------------------
 	// Construction
-	// -------------------------------------------------------------------------
 
 	/** New game. */
 	public Game(GameActivity ga, GameOptions go) {
@@ -205,9 +197,7 @@ public class Game extends Thread {
 		m_players[3].setSeat(SEAT_EAST);
 	}
 
-	// -------------------------------------------------------------------------
 	// Serialisation
-	// -------------------------------------------------------------------------
 
 	public String getSnapshot() {
 		if (m_gameOver || m_snapshot == null) return "";
@@ -245,9 +235,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Pause / resume
-	// -------------------------------------------------------------------------
 
 	public void pause() {
 		synchronized (m_pauseLock) { m_paused = true; }
@@ -269,9 +257,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Shutdown
-	// -------------------------------------------------------------------------
 
 	public void shutdown() {
 		if (!m_stopping) {
@@ -292,9 +278,7 @@ public class Game extends Thread {
 		m_gt = null;
 	}
 
-	// -------------------------------------------------------------------------
 	// Thread entry point
-	// -------------------------------------------------------------------------
 
 	@Override
 	public void run() {
@@ -326,9 +310,7 @@ public class Game extends Thread {
 		Log.d(TAG, "exiting Game.run()");
 	}
 
-	// -------------------------------------------------------------------------
 	// Game / round management
-	// -------------------------------------------------------------------------
 
 	public void startGame() {
 		resetGame();
@@ -398,9 +380,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Dealing
-	// -------------------------------------------------------------------------
 
 	public void dealHands() {
 		waitUntilUnpaused();
@@ -481,9 +461,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Round advancement
-	// -------------------------------------------------------------------------
 
 	public boolean advanceRound() {
 		if (m_currPlayer == null) return false;
@@ -608,9 +586,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Player navigation
-	// -------------------------------------------------------------------------
 
 	public Player getNextPlayer() { return getNextPlayer(null); }
 
@@ -644,9 +620,7 @@ public class Game extends Thread {
 		return p;
 	}
 
-	// -------------------------------------------------------------------------
 	// Card checking
-	// -------------------------------------------------------------------------
 
 	boolean checkCard(Hand h, Card c) {
 		if (!h.isInHand(c)) return false;
@@ -758,9 +732,7 @@ public class Game extends Thread {
 		return m_lastCardCheckedIsDefender;
 	}
 
-	// -------------------------------------------------------------------------
 	// Special card handling
-	// -------------------------------------------------------------------------
 
 	public void handleSpecialCards(boolean virtualPlayer) {
 		if (m_currColor == Card.COLOR_WILD && !virtualPlayer) {
@@ -1025,9 +997,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// v3 card helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Returns the active player who would play immediately before {@code from}
@@ -1258,9 +1228,7 @@ public class Game extends Thread {
 		promptUser(String.format(getString(R.string.msg_sending_penalty), seatToString(m_penalty.getVictim().getSeat())));
 	}
 
-	// -------------------------------------------------------------------------
 	// Penalty assessment
-	// -------------------------------------------------------------------------
 
 	public void assessPenalty() {
 		if (m_penalty.getType() == Penalty.PENTYPE_NONE) return;
@@ -1395,9 +1363,7 @@ public class Game extends Thread {
 		if (p == m_players[SEAT_SOUTH - 1]) showFastForwardButton(true);
 	}
 
-	// -------------------------------------------------------------------------
 	// Round finish / scoring
-	// -------------------------------------------------------------------------
 
 	public void finishRound(Player winner) {
 		m_fastForward = false;
@@ -1461,9 +1427,7 @@ public class Game extends Thread {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Draw pile management
-	// -------------------------------------------------------------------------
 
 	public Card drawCard() {
 		if (m_drawPile.getNumCards() == 0) {
@@ -1501,9 +1465,7 @@ public class Game extends Thread {
 		return 0;
 	}
 
-	// -------------------------------------------------------------------------
 	// Force-draw helper
-	// -------------------------------------------------------------------------
 
 	void forceDraw(Player p, int numCards) {
 		if (numCards <= 0) return;
@@ -1540,9 +1502,7 @@ public class Game extends Thread {
 		if (notEnough) promptUser(getString(R.string.msg_discard_empty));
 	}
 
-	// -------------------------------------------------------------------------
 	// Bastard-card checks
-	// -------------------------------------------------------------------------
 
 	public boolean checkForAllBastardCards(Hand h) {
 		int count = 0;
@@ -1560,9 +1520,7 @@ public class Game extends Thread {
 		promptUser(String.format(getString(R.string.msg_all_bastard_cards), seatToString(p.getSeat())));
 	}
 
-	// -------------------------------------------------------------------------
 	// Shield / defender checks
-	// -------------------------------------------------------------------------
 
 	public boolean checkForShield(Hand h) {
 		for (int i = 0; i < h.getNumCards(); i++) {
@@ -1606,9 +1564,7 @@ public class Game extends Thread {
 		return count;
 	}
 
-	// -------------------------------------------------------------------------
 	// Utility helpers
-	// -------------------------------------------------------------------------
 
 	public int getActivePlayerCount() {
 		int count = 0;
@@ -1641,9 +1597,7 @@ public class Game extends Thread {
 		catch (InterruptedException ignored) {}
 	}
 
-	// -------------------------------------------------------------------------
 	// UI interaction
-	// -------------------------------------------------------------------------
 
 	public void drawPileTapped() {
 		if (m_waitingToStartRound) { m_waitingToStartRound = false; return; }
@@ -1705,9 +1659,8 @@ public class Game extends Thread {
 		Log.d(TAG, "direction change → " + directionToString(m_direction));
 	}
 
-	// -------------------------------------------------------------------------
 	// String helpers
-	// -------------------------------------------------------------------------
+	
 
 	public String cardToString(Card c) {
 		return c.toString(m_gt.getContext(), m_go.getFamilyFriendly());

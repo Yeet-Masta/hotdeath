@@ -23,9 +23,7 @@ public class CardPile {
 	private final Card.CardState cardState;
 	private final List<Card>     cards = new ArrayList<>();
 
-	// -----------------------------------------------------------------------
 	// Constructors
-	// -----------------------------------------------------------------------
 
 	public CardPile(boolean faceUp, Card.CardState cardState) {
 		this.faceUp    = faceUp;
@@ -42,9 +40,7 @@ public class CardPile {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Accessors
-	// -----------------------------------------------------------------------
 
 	public int  getNumCards()  { return cards.size(); }
 	public boolean isFaceUp()  { return faceUp; }
@@ -54,9 +50,7 @@ public class CardPile {
 		return (i >= 0 && i < cards.size()) ? cards.get(i) : null;
 	}
 
-	// -----------------------------------------------------------------------
 	// Mutation
-	// -----------------------------------------------------------------------
 
 	public void addCard(Card c, boolean instant) {
 		cards.add(c);
@@ -86,9 +80,7 @@ public class CardPile {
 		return null;
 	}
 
-	// -----------------------------------------------------------------------
 	// Shuffle
-	// -----------------------------------------------------------------------
 
 	public void shuffle() { shuffle(7); }
 
@@ -100,9 +92,7 @@ public class CardPile {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// JSON serialisation
-	// -----------------------------------------------------------------------
 
 	public JSONObject toJSON() throws JSONException {
 		JSONArray a = new JSONArray();

@@ -48,9 +48,7 @@ public class ComputerPlayer extends Player {
 		super(o, g, go);
 	}
 
-	// -------------------------------------------------------------------------
 	// Turn lifecycle
-	// -------------------------------------------------------------------------
 
 	@Override
 	public boolean startTurn() {
@@ -86,9 +84,7 @@ public class ComputerPlayer extends Player {
 		invalidateBalanceCache();
 	}
 
-	// -------------------------------------------------------------------------
 	// Decisions
-	// -------------------------------------------------------------------------
 
 	@Override
 	public void chooseNumCardsToDeal() {
@@ -206,9 +202,7 @@ public class ComputerPlayer extends Player {
 		}
 	}
 
-	// -------------------------------------------------------------------------
 	// Card selection
-	// -------------------------------------------------------------------------
 
 	public void playCard() {
 		readAggressionAndSkill();
@@ -318,9 +312,7 @@ public class ComputerPlayer extends Player {
 		return testVal;
 	}
 
-	// -------------------------------------------------------------------------
 	// Individual heuristic adjustors
-	// -------------------------------------------------------------------------
 
 	private int adjustForMad(Card tc, int testVal) {
 		if (tc.getID() != Card.ID_YELLOW_1_MAD || m_game.getActivePlayerCount() <= 3) {
@@ -493,9 +485,7 @@ public class ComputerPlayer extends Player {
 		return testVal;
 	}
 
-	// -------------------------------------------------------------------------
 	// Color balance helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Returns the fractional change in color balance caused by removing {@code c}.
@@ -566,9 +556,7 @@ public class ComputerPlayer extends Player {
 		m_cachedHandSnapshot = -1;
 	}
 
-	// -------------------------------------------------------------------------
 	// Utility helpers
-	// -------------------------------------------------------------------------
 
 	/** Returns the smallest hand size among active opponents. */
 	public int getMinCardsRemaining() {

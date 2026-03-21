@@ -36,9 +36,7 @@ public class GameTable extends View {
 	private static final String TAG = "HDU";
 	private static final int VIEW_ID = 42;
 
-	// -------------------------------------------------------------------------
 	// CardInfo — replaces four parallel HashMaps with one unified record
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Bundles every per-card asset reference that used to live in four separate
@@ -65,9 +63,7 @@ public class GameTable extends View {
 	/** Ordered list used by the card-catalog grid */
 	private Integer[] m_cardIDs;
 
-	// -------------------------------------------------------------------------
 	// Layout / drawing state
-	// -------------------------------------------------------------------------
 
 	private final int[] m_heldCardsOffset  = new int[4];
 	private final int[] m_tableCardsOffset = new int[4];
@@ -107,9 +103,7 @@ public class GameTable extends View {
 	private int m_emoticonWidth        = 0;
 	private int m_emoticonHeight       = 0;
 
-	// -------------------------------------------------------------------------
 	// Touch state
-	// -------------------------------------------------------------------------
 
 	private Point   m_ptTouchDown           = null;
 	private boolean m_heldSteady            = false;
@@ -120,9 +114,7 @@ public class GameTable extends View {
 	private int     m_touchHeldCardsSeat    = 0;
 	private int     m_touchTableCardsSeat   = 0;
 
-	// -------------------------------------------------------------------------
 	// Bitmaps & Paint
-	// -------------------------------------------------------------------------
 
 	private Bitmap m_bmpCardBack;
 	private Bitmap m_bmpPointer;
@@ -137,9 +129,7 @@ public class GameTable extends View {
 	private final Paint m_paintCardBadgeText;
 	private final Paint m_paintPointer;
 
-	// -------------------------------------------------------------------------
 	// Game references
-	// -------------------------------------------------------------------------
 
 	private Game        m_game;
 	private GameOptions m_go;
@@ -957,9 +947,7 @@ public class GameTable extends View {
 		cv.drawText(text, fx, fy, m_paintCardBadgeText);
 	}
 
-	// -------------------------------------------------------------------------
 	// Card drawing
-	// -------------------------------------------------------------------------
 
 	private void drawCard(Canvas cv, Card c) {
 		drawCard(cv, c, (int) c.getX(), (int) c.getY(), c.getFlip());
@@ -984,9 +972,7 @@ public class GameTable extends View {
 		cv.drawBitmap(b, m_drawMatrix, null);
 	}
 
-	// -------------------------------------------------------------------------
 	// Penalty drawing
-	// -------------------------------------------------------------------------
 
 	private void drawPenalty(Canvas cv) {
 		Penalty p = m_game.getPenalty();

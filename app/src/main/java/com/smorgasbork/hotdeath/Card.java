@@ -10,9 +10,7 @@ public class Card implements Animatable {
 	public static final float FLIPPING_MID_POINT = (FLIPPING_START + FLIPPING_END) / 2f;
 	public static final float FLIPPING_HALF_SPAN = (FLIPPING_END - FLIPPING_START) / 2f;
 
-	// -----------------------------------------------------------------------
 	// Enums replacing int constants
-	// -----------------------------------------------------------------------
 
 	public enum CardState { DRAW_PILE, MOVING, HAND, DISCARD_PILE }
 
@@ -44,9 +42,8 @@ public class Card implements Animatable {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Card ID constants (unchanged — needed for resource/deck lookups)
-	// -----------------------------------------------------------------------
+	
 	public static final int COLOR_RED    = 1;
 	public static final int COLOR_GREEN  = 2;
 	public static final int COLOR_BLUE   = 3;
@@ -166,9 +163,7 @@ public class Card implements Animatable {
 	public static final int ID_GREEN_R_SWAP      = 192;  // Swap (Green Reverse)
 	public static final int ID_YELLOW_R_SWAP     = 193;  // Swap (Yellow Reverse)
 
-	// -----------------------------------------------------------------------
 	// Fields
-	// -----------------------------------------------------------------------
 
 	private Hand      m_hand;
 	private final int m_color;
@@ -194,9 +189,7 @@ public class Card implements Animatable {
 	private CardState m_targetState;
 	private boolean   m_isAnimating;
 
-	// -----------------------------------------------------------------------
 	// Constructor
-	// -----------------------------------------------------------------------
 
 	public Card(int deckIndex, int color, int value, int id, int pointValue) {
 		m_deckIndex  = deckIndex;
@@ -206,9 +199,7 @@ public class Card implements Animatable {
 		m_pointValue = pointValue;
 	}
 
-	// -----------------------------------------------------------------------
 	// Accessors
-	// -----------------------------------------------------------------------
 
 	public Hand    getHand()        { return m_hand; }
 	public void    setHand(Hand h)  { m_hand = h; }
@@ -232,9 +223,7 @@ public class Card implements Animatable {
 	public void    setTargetX(int x){ m_targetX = x; }
 	public void    setTargetY(int y){ m_targetY = y; }
 
-	// -----------------------------------------------------------------------
 	// toString
-	// -----------------------------------------------------------------------
 
 	public String toString(Context ctx, boolean familyFriendly) {
 		// Named special cards take priority
@@ -314,9 +303,7 @@ public class Card implements Animatable {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Animatable implementation
-	// -----------------------------------------------------------------------
 
 	@Override
 	public void startAnimation(AnimationParams params) {
@@ -381,9 +368,7 @@ public class Card implements Animatable {
 	@Override
 	public boolean isAnimating() { return m_isAnimating; }
 
-	// -----------------------------------------------------------------------
 	// Utility
-	// -----------------------------------------------------------------------
 
 	private static float lerp(float a, float b, float t) {
 		return a + t * (b - a);

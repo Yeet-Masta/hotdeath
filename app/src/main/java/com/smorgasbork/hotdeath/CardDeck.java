@@ -19,12 +19,14 @@ import org.json.JSONObject;
  * <p>The public API ({@link #getCards()}, {@link #getNumCards()},
  * {@link #getCard(int)}, {@link #getCard(int, int)}, {@link #shuffle()}) is
  * unchanged so the rest of the codebase requires no modifications.
+ *
+ * <p>Two-deck (HD) mode combines one full HD set with one vanilla set.
+ * The exception is that Spreaders, Double Skips, and Reverse-Skips are
+ * "once per deck" cards and therefore appear twice (once in each set).
  */
 public class CardDeck {
 
-	// -----------------------------------------------------------------------
 	// Inner helper: a lightweight description of one card in the deck
-	// -----------------------------------------------------------------------
 
 	private static final class CardDef {
 		final int color, value, id, points;
@@ -36,17 +38,13 @@ public class CardDeck {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Fields
-	// -----------------------------------------------------------------------
 
 	private Card[] m_cards;
 	private Card[] m_oCards;   // shuffled order
 	private int    m_numCards = 0;
 
-	// -----------------------------------------------------------------------
 	// Public API
-	// -----------------------------------------------------------------------
 
 	public Card[] getCards()    { return m_cards; }
 	public int    getNumCards() { return m_numCards; }
@@ -64,9 +62,7 @@ public class CardDeck {
 		return null;
 	}
 
-	// -----------------------------------------------------------------------
 	// Constructor
-	// -----------------------------------------------------------------------
 
 	public CardDeck(boolean standardRules, boolean oneDeck) {
 		List<CardDef> defs = buildDefinitions(standardRules, oneDeck);
@@ -81,9 +77,7 @@ public class CardDeck {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Shuffle
-	// -----------------------------------------------------------------------
 
 	public void shuffle() {
 		for (int i = 0; i < m_numCards; i++) m_cards[i].setFaceUp(false);
@@ -95,22 +89,21 @@ public class CardDeck {
 		for (int pass = 0; pass < numTimes; pass++) {
 			for (int j = 0; j < m_numCards; j++) {
 				int k = rng.nextInt(m_numCards);
-				Card tmp   = m_oCards[j];
+				Card tmp    = m_oCards[j];
 				m_oCards[j] = m_oCards[k];
 				m_oCards[k] = tmp;
 			}
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Definition builder — returns an ordered list of CardDef entries
-	// -----------------------------------------------------------------------
 
 	private static List<CardDef> buildDefinitions(boolean standardRules, boolean oneDeck) {
 		List<CardDef> defs = new ArrayList<>(oneDeck ? 108 : 216);
-		int copies = oneDeck ? 1 : 2;
 
 		if (standardRules) {
+			// Standard rules: vanilla deck, copies = 1 or 2
+			int copies = oneDeck ? 1 : 2;
 			addStandardCards(defs, copies);
 		} else {
 			addHotDeathCards(defs, oneDeck);
@@ -118,9 +111,7 @@ public class CardDeck {
 		return defs;
 	}
 
-	// -----------------------------------------------------------------------
 	// Standard (vanilla) deck
-	// -----------------------------------------------------------------------
 
 	private static void addStandardCards(List<CardDef> defs, int copies) {
 		int[] colors = {
@@ -168,13 +159,14 @@ public class CardDeck {
 		}
 	}
 
-	// -----------------------------------------------------------------------
 	// Hot Death deck
-	// -----------------------------------------------------------------------
 
 	/**
 	 * Each row: { color, value, id, points }.
-	 * For the two-deck variant each entry is simply added twice.
+	 *
+	 * Cards marked with ONCE_PER_DECK (Spreaders, Double Skips, Reverse-Skips)
+	 * appear in both the HD set and the vanilla second deck.
+	 * All other HD cards appear exactly once regardless of deck count.
 	 */
 	private static final int[][] HD_CARDS = {
 			// ---- RED ----
@@ -198,11 +190,11 @@ public class CardDeck {
 			{ Card.COLOR_RED, 9,              Card.ID_RED_9,          9   },
 			{ Card.COLOR_RED, 9,              Card.ID_RED_9,          9   },
 			{ Card.COLOR_RED, Card.VAL_D,     Card.ID_RED_D,         20  },
-			{ Card.COLOR_RED, Card.VAL_D_SPREAD, Card.ID_RED_D_SPREADER, 60 },
+			{ Card.COLOR_RED, Card.VAL_D_SPREAD, Card.ID_RED_D_SPREADER, 60 },  // once per deck
 			{ Card.COLOR_RED, Card.VAL_S,     Card.ID_RED_S,         20  },
-			{ Card.COLOR_RED, Card.VAL_S_DOUBLE, Card.ID_RED_S_DOUBLE, 40 },
+			{ Card.COLOR_RED, Card.VAL_S_DOUBLE, Card.ID_RED_S_DOUBLE, 40 },    // once per deck
 			{ Card.COLOR_RED, Card.VAL_R,     Card.ID_RED_R,         20  },
-			{ Card.COLOR_RED, Card.VAL_R_SKIP, Card.ID_RED_R_SKIP,  40  },
+			{ Card.COLOR_RED, Card.VAL_R_SKIP, Card.ID_RED_R_SKIP,  40  },      // once per deck
 			// ---- GREEN ----
 			{ Card.COLOR_GREEN, 0,            Card.ID_GREEN_0_QUITTER, 100 },
 			{ Card.COLOR_GREEN, 1,            Card.ID_GREEN_1,        1   },
@@ -224,11 +216,11 @@ public class CardDeck {
 			{ Card.COLOR_GREEN, 9,            Card.ID_GREEN_9,        9   },
 			{ Card.COLOR_GREEN, 9,            Card.ID_GREEN_9,        9   },
 			{ Card.COLOR_GREEN, Card.VAL_D,   Card.ID_GREEN_D,       20  },
-			{ Card.COLOR_GREEN, Card.VAL_D_SPREAD, Card.ID_GREEN_D_SPREADER, 60 },
+			{ Card.COLOR_GREEN, Card.VAL_D_SPREAD, Card.ID_GREEN_D_SPREADER, 60 }, // once per deck
 			{ Card.COLOR_GREEN, Card.VAL_S,   Card.ID_GREEN_S,       20  },
-			{ Card.COLOR_GREEN, Card.VAL_S_DOUBLE, Card.ID_GREEN_S_DOUBLE, 40 },
+			{ Card.COLOR_GREEN, Card.VAL_S_DOUBLE, Card.ID_GREEN_S_DOUBLE, 40 },   // once per deck
 			{ Card.COLOR_GREEN, Card.VAL_R,   Card.ID_GREEN_R,       20  },
-			{ Card.COLOR_GREEN, Card.VAL_R_SKIP, Card.ID_GREEN_R_SKIP, 40 },
+			{ Card.COLOR_GREEN, Card.VAL_R_SKIP, Card.ID_GREEN_R_SKIP, 40 },       // once per deck
 			// ---- BLUE ----
 			{ Card.COLOR_BLUE, 0,             Card.ID_BLUE_0_FUCK_YOU, 0 },
 			{ Card.COLOR_BLUE, 1,             Card.ID_BLUE_1,         1  },
@@ -250,11 +242,11 @@ public class CardDeck {
 			{ Card.COLOR_BLUE, 9,             Card.ID_BLUE_9,         9  },
 			{ Card.COLOR_BLUE, 9,             Card.ID_BLUE_9,         9  },
 			{ Card.COLOR_BLUE, Card.VAL_D,    Card.ID_BLUE_D,        20  },
-			{ Card.COLOR_BLUE, Card.VAL_D_SPREAD, Card.ID_BLUE_D_SPREADER, 60 },
+			{ Card.COLOR_BLUE, Card.VAL_D_SPREAD, Card.ID_BLUE_D_SPREADER, 60 },   // once per deck
 			{ Card.COLOR_BLUE, Card.VAL_S,    Card.ID_BLUE_S,        20  },
-			{ Card.COLOR_BLUE, Card.VAL_S_DOUBLE, Card.ID_BLUE_S_DOUBLE, 40 },
+			{ Card.COLOR_BLUE, Card.VAL_S_DOUBLE, Card.ID_BLUE_S_DOUBLE, 40 },     // once per deck
 			{ Card.COLOR_BLUE, Card.VAL_R,    Card.ID_BLUE_R,        20  },
-			{ Card.COLOR_BLUE, Card.VAL_R_SKIP, Card.ID_BLUE_R_SKIP, 40 },
+			{ Card.COLOR_BLUE, Card.VAL_R_SKIP, Card.ID_BLUE_R_SKIP, 40 },         // once per deck
 			// ---- YELLOW ----
 			{ Card.COLOR_YELLOW, 0,           Card.ID_YELLOW_0_SHITTER, 0  },
 			{ Card.COLOR_YELLOW, 1,           Card.ID_YELLOW_1,       1   },
@@ -276,11 +268,11 @@ public class CardDeck {
 			{ Card.COLOR_YELLOW, 9,           Card.ID_YELLOW_9,       9   },
 			{ Card.COLOR_YELLOW, 9,           Card.ID_YELLOW_9,       9   },
 			{ Card.COLOR_YELLOW, Card.VAL_D,  Card.ID_YELLOW_D,      20  },
-			{ Card.COLOR_YELLOW, Card.VAL_D_SPREAD, Card.ID_YELLOW_D_SPREADER, 60 },
+			{ Card.COLOR_YELLOW, Card.VAL_D_SPREAD, Card.ID_YELLOW_D_SPREADER, 60 }, // once per deck
 			{ Card.COLOR_YELLOW, Card.VAL_S,  Card.ID_YELLOW_S,      20  },
-			{ Card.COLOR_YELLOW, Card.VAL_S_DOUBLE, Card.ID_YELLOW_S_DOUBLE, 40 },
+			{ Card.COLOR_YELLOW, Card.VAL_S_DOUBLE, Card.ID_YELLOW_S_DOUBLE, 40 },   // once per deck
 			{ Card.COLOR_YELLOW, Card.VAL_R,  Card.ID_YELLOW_R,      20  },
-			{ Card.COLOR_YELLOW, Card.VAL_R_SKIP, Card.ID_YELLOW_R_SKIP, 40 },
+			{ Card.COLOR_YELLOW, Card.VAL_R_SKIP, Card.ID_YELLOW_R_SKIP, 40 },       // once per deck
 			// ---- WILD (per-deck set of 8 specials) ----
 			{ Card.COLOR_WILD, Card.VAL_WILD_DRAW, Card.ID_WILD_DRAW_FOUR, 50 },
 			{ Card.COLOR_WILD, Card.VAL_WILD_DRAW, Card.ID_WILD_DRAW_FOUR, 50 },
@@ -296,13 +288,6 @@ public class CardDeck {
 			{ Card.COLOR_GREEN,  Card.VAL_R_BACKSTAB, Card.ID_GREEN_R_BACKSTAB,  20 },
 			{ Card.COLOR_BLUE,   Card.VAL_R_BACKSTAB, Card.ID_BLUE_R_BACKSTAB,   20 },
 			{ Card.COLOR_YELLOW, Card.VAL_R_BACKSTAB, Card.ID_YELLOW_R_BACKSTAB, 20 },
-			// Dodge (one per color, replaces one 8 slot)
-			/*
-			{ Card.COLOR_RED,    Card.VAL_DODGE, Card.ID_RED_8_DODGE,    8 },
-			{ Card.COLOR_GREEN,  Card.VAL_DODGE, Card.ID_GREEN_8_DODGE,  8 },
-			{ Card.COLOR_BLUE,   Card.VAL_DODGE, Card.ID_BLUE_8_DODGE,   8 },
-			{ Card.COLOR_YELLOW, Card.VAL_DODGE, Card.ID_YELLOW_8_DODGE, 8 },
-			 */
 			// Clone (2 total: Green 2, Yellow 2)
 			{ Card.COLOR_GREEN,  Card.VAL_CLONE, Card.ID_GREEN_2_CLONE,  20 },
 			{ Card.COLOR_YELLOW, Card.VAL_CLONE, Card.ID_YELLOW_2_CLONE, 20 },
@@ -313,12 +298,88 @@ public class CardDeck {
 			{ Card.COLOR_YELLOW, Card.VAL_SWAP,  Card.ID_YELLOW_R_SWAP,  20 },
 	};
 
+	/**
+	 * Returns true for HD card values that should appear once per deck (i.e. in
+	 * both the HD set and the vanilla second deck when playing two-deck mode).
+	 * These are Spreaders, Double Skips, and Reverse-Skips.
+	 */
+	private static boolean isOncePerDeckValue(int value) {
+		return value == Card.VAL_D_SPREAD
+				|| value == Card.VAL_S_DOUBLE
+				|| value == Card.VAL_R_SKIP;
+	}
+
+	/**
+	 * Builds the Hot Death card list.
+	 *
+	 * One-deck:  HD set only (one copy of each HD_CARDS row).
+	 * Two-deck:  One HD set + one vanilla set.
+	 *            Spreaders / Double Skips / Reverse-Skips are "once per deck"
+	 *            cards and therefore appear in both sets (twice total).
+	 *            All other HD-exclusive cards appear only once.
+	 */
 	private static void addHotDeathCards(List<CardDef> defs, boolean oneDeck) {
-		int copies = oneDeck ? 1 : 2;
+		// Always add the full HD set once.
 		for (int[] row : HD_CARDS) {
-			for (int c = 0; c < copies; c++) {
-				defs.add(new CardDef(row[0], row[1], row[2], row[3]));
+			defs.add(new CardDef(row[0], row[1], row[2], row[3]));
+		}
+
+		if (!oneDeck) {
+			// Second deck: add one vanilla set.
+			// "Once per deck" HD cards (Spreaders, Double Skips, Reverse-Skips) are
+			// already present from the HD set above, so they get their second copy here
+			// as their vanilla equivalents (same value, standard IDs).
+			addVanillaSecondDeck(defs);
+		}
+	}
+
+	/**
+	 * Adds one complete vanilla deck as the second deck in two-deck HD mode.
+	 *
+	 * This mirrors {@link #addStandardCards} with copies=1, producing:
+	 *   - one 0 per colour
+	 *   - two of each 1-9 per colour
+	 *   - two Draw, two Skip, two Reverse per colour
+	 *   - four Wild, four Wild Draw Four
+	 */
+	private static void addVanillaSecondDeck(List<CardDef> defs) {
+		int[] colors = {
+				Card.COLOR_RED, Card.COLOR_GREEN, Card.COLOR_BLUE, Card.COLOR_YELLOW
+		};
+		int[][] colorIds = {
+				{ Card.ID_RED_0, Card.ID_RED_1, Card.ID_RED_2, Card.ID_RED_3, Card.ID_RED_4,
+						Card.ID_RED_5, Card.ID_RED_6, Card.ID_RED_7, Card.ID_RED_8, Card.ID_RED_9,
+						Card.ID_RED_D, Card.ID_RED_S, Card.ID_RED_R },
+				{ Card.ID_GREEN_0, Card.ID_GREEN_1, Card.ID_GREEN_2, Card.ID_GREEN_3, Card.ID_GREEN_4,
+						Card.ID_GREEN_5, Card.ID_GREEN_6, Card.ID_GREEN_7, Card.ID_GREEN_8, Card.ID_GREEN_9,
+						Card.ID_GREEN_D, Card.ID_GREEN_S, Card.ID_GREEN_R },
+				{ Card.ID_BLUE_0, Card.ID_BLUE_1, Card.ID_BLUE_2, Card.ID_BLUE_3, Card.ID_BLUE_4,
+						Card.ID_BLUE_5, Card.ID_BLUE_6, Card.ID_BLUE_7, Card.ID_BLUE_8, Card.ID_BLUE_9,
+						Card.ID_BLUE_D, Card.ID_BLUE_S, Card.ID_BLUE_R },
+				{ Card.ID_YELLOW_0, Card.ID_YELLOW_1, Card.ID_YELLOW_2, Card.ID_YELLOW_3, Card.ID_YELLOW_4,
+						Card.ID_YELLOW_5, Card.ID_YELLOW_6, Card.ID_YELLOW_7, Card.ID_YELLOW_8, Card.ID_YELLOW_9,
+						Card.ID_YELLOW_D, Card.ID_YELLOW_S, Card.ID_YELLOW_R }
+		};
+		int[] values = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+				Card.VAL_D, Card.VAL_S, Card.VAL_R };
+		int[] points = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 20, 20, 20 };
+
+		for (int ci = 0; ci < colors.length; ci++) {
+			for (int vi = 0; vi < values.length; vi++) {
+				// Standard vanilla counts: one 0, two of everything else.
+				int count = (values[vi] == 0) ? 1 : 2;
+				for (int k = 0; k < count; k++) {
+					defs.add(new CardDef(colors[ci], values[vi], colorIds[ci][vi], points[vi]));
+				}
 			}
+		}
+
+		// Four Wild and four Wild Draw Four (vanilla versions only).
+		for (int i = 0; i < 4; i++) {
+			defs.add(new CardDef(Card.COLOR_WILD, Card.VAL_WILD, Card.ID_WILD, 50));
+		}
+		for (int i = 0; i < 4; i++) {
+			defs.add(new CardDef(Card.COLOR_WILD, Card.VAL_WILD_DRAW, Card.ID_WILD_DRAW_FOUR, 50));
 		}
 	}
 }
