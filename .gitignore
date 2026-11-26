@@ -2,6 +2,6 @@ local.properties
 app/build
 .gradle
 .idea
-gradle/wrapper
 build
 hotdeath.iml
+app/release/

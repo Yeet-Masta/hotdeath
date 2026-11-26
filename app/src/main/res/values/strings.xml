@@ -231,4 +231,42 @@
 	<string name="lbl_menu_draw">DRAW</string>
 	<string name="lbl_menu_pass">PASS</string>
 	<string name="lbl_menu_help">HELP</string>
+	<!-- Accessibility descriptions for the game table -->
+	<string name="a11y_table_turn">%1$s to play. Top card: %2$s. Color: %3$s. You hold %4$d cards: %5$s.</string>
+	<string name="a11y_table_round_over">Round over. Scores: %1$s.</string>
+	<string name="a11y_table_dealing">Dealing.</string>
+	<string name="a11y_score_entry">%1$s %2$d</string>
+	<string name="a11y_draw_pile">Draw pile, %1$d cards</string>
+	<string name="a11y_discard_pile">Discard pile: %1$s</string>
+	<string name="a11y_card_back">face-down card</string>
+	<!-- multiplayer -->
+	<string name="lbl_multiplayer">MULTIPLAYER</string>
+	<string name="mp_title">Multiplayer</string>
+	<string name="mp_name_hint">Your name</string>
+	<string name="mp_nearby">Same room (Nearby)</string>
+	<string name="mp_host_nearby">Host nearby game</string>
+	<string name="mp_join_nearby">Join nearby game</string>
+	<string name="mp_online">Online (relay server)</string>
+	<string name="mp_relay_hint">Relay address, e.g. wss://example.com/ws</string>
+	<string name="mp_host_online">Host online game</string>
+	<string name="mp_code_hint">Room code</string>
+	<string name="mp_join_online">Join online game</string>
+	<string name="mp_start">Start game</string>
+	<string name="mp_leave">Leave</string>
+	<string name="mp_searching">Looking for games nearby…</string>
+	<string name="mp_join_host">Join %1$s</string>
+	<string name="mp_room_code">Room code: %1$s</string>
+	<string name="mp_players">Players:
+%1$s</string>
+	<string name="mp_computer">(computer)</string>
+	<string name="mp_waiting_host">Waiting for the host to start…</string>
+	<string name="mp_advertising">Waiting for players to join…</string>
+	<string name="mp_connecting">Connecting…</string>
+	<string name="mp_error">Error: %1$s</string>
+	<string name="mp_need_name_url">Enter a relay address first.</string>
+	<string name="mp_need_code">Enter the room code.</string>
+	<string name="mp_permissions">Nearby play needs Bluetooth and Wi-Fi permissions.</string>
+	<string name="mp_left">%1$s left; a computer plays for them now</string>
+	<string name="mp_host_lost">Lost the connection to the host.</string>
+	<string name="mp_ended">The multiplayer game has ended.</string>
 </resources>

@@ -79,4 +79,13 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:2.2.10"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.10"
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    // Multiplayer: same-room play and the online relay
+    implementation 'com.google.android.gms:play-services-nearby:19.3.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    testImplementation 'junit:junit:4.13.2'
+    // android.jar's org.json is a stub in local unit tests; use the real one there
+    testImplementation 'org.json:json:20240303'
 }
