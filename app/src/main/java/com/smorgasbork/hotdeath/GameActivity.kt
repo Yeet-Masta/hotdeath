@@ -180,8 +180,12 @@ class GameActivity : AppCompatActivity() {
 
 	private fun onTableAction(a: PlayerAction) {
 		// Tapping the discard pile mid-round shows what was played.
-		if (a == PlayerAction.DiscardTap && view?.waitingToStartRound != true) showHistory()
-		else session.act(a)
+		val v = view
+		if (a == PlayerAction.DiscardTap && v?.waitingToStartRound != true) {
+			if (v?.prompt == null) showHistory()
+		} else {
+			session.act(a)
+		}
 	}
 
 	private fun onStatus(s: SessionStatus) {

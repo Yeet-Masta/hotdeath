@@ -246,6 +246,7 @@ object Wire {
 			GameMessage.LuckOfIrish -> put("k", "LuckOfIrish")
 			is GameMessage.Drawing -> put("k", "Drawing").put("s", m.seat.name).put("n", m.count)
 			is GameMessage.AllBastardCards -> put("k", "AllBastardCards").put("s", m.seat.name)
+			GameMessage.Stalemate -> put("k", "Stalemate")
 			is GameMessage.HasBlueShield -> put("k", "HasBlueShield").put("s", m.seat.name)
 			is GameMessage.HolyDefender -> put("k", "HolyDefender").put("s", m.victim.name)
 			GameMessage.Magic5 -> put("k", "Magic5")
@@ -277,6 +278,7 @@ object Wire {
 			"LuckOfIrish" -> GameMessage.LuckOfIrish
 			"Drawing" -> GameMessage.Drawing(s(), n())
 			"AllBastardCards" -> GameMessage.AllBastardCards(s())
+			"Stalemate" -> GameMessage.Stalemate
 			"HasBlueShield" -> GameMessage.HasBlueShield(s())
 			"HolyDefender" -> GameMessage.HolyDefender(s())
 			"Magic5" -> GameMessage.Magic5

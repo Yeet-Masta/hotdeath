@@ -245,6 +245,7 @@ object CardText {
 			GameMessage.LuckOfIrish -> ctx.getString(R.string.msg_luck_of_irish)
 			is GameMessage.Drawing -> ctx.getString(R.string.msg_player_drawing, s(m.seat), m.count)
 			is GameMessage.AllBastardCards -> ctx.getString(R.string.msg_all_bastard_cards, s(m.seat))
+			GameMessage.Stalemate -> ctx.getString(R.string.msg_stalemate)
 			is GameMessage.HasBlueShield -> ctx.getString(R.string.msg_has_blue_shield, s(m.seat))
 			is GameMessage.HolyDefender -> ctx.getString(R.string.msg_holy_defender, s(m.victim))
 			GameMessage.Magic5 -> ctx.getString(R.string.msg_magic_5)

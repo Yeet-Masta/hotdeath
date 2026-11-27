@@ -51,6 +51,8 @@ sealed interface GameMessage {
 	data object LuckOfIrish : GameMessage
 	data class Drawing(val seat: Seat, val count: Int) : GameMessage
 	data class AllBastardCards(val seat: Seat) : GameMessage
+	/** The round went on so long nobody could win it; the lowest hand takes it. */
+	data object Stalemate : GameMessage
 	data class HasBlueShield(val seat: Seat) : GameMessage
 	data class HolyDefender(val victim: Seat) : GameMessage
 	data object Magic5 : GameMessage

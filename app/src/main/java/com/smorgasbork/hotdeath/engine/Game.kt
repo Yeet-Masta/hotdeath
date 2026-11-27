@@ -204,6 +204,13 @@ class Game private constructor(
 			snapshot = capture()
 			awaitUnpaused()
 			if (roundComplete) return
+			if (cardsPlayed >= STALEMATE_PLAYS) {
+				// With few players and an empty draw pile, attack cards can cycle
+				// between hands forever. Call it: the lowest hand wins the round.
+				message(GameMessage.Stalemate)
+				finishRound(players.filter { it.active }.minBy { it.hand.calculateValue().total })
+				return
+			}
 			if (!advanceRound()) return
 		}
 	}
@@ -1336,6 +1343,9 @@ class Game private constructor(
 	)
 
 	companion object {
+		/** Plays in one round after which it is called a stalemate (far more than a real round needs). */
+		const val STALEMATE_PLAYS = 1000
+
 		fun newGame(config: GameConfig, random: Random = Random.Default, pacing: Boolean = true): Game =
 			Game(config, CardDeck(config.deckType), random, pacing)
 

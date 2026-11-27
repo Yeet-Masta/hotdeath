@@ -278,6 +278,7 @@
 	<string name="why_holds_color">You can\'t play Wild Draw 4 while you hold a %1$s card</string>
 	<string name="why_no_match">Needs a %1$s card, or one that matches %2$s</string>
 	<string name="why_no_match_any">That doesn\'t match %1$s</string>
+	<string name="msg_stalemate">Nobody can win this round: the lowest hand takes it</string>
 	<string name="msg_timed_out">%1$s ran out of time</string>
 
 	<!-- Turn clock -->
