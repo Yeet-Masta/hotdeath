@@ -56,6 +56,32 @@
 	    	android:layout_weight="1"
 	    	android:layout_gravity="center">
 
+			<Button
+				android:id="@+id/btn_multiplayer"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_horizontal"
+				android:layout_marginTop="4dp"
+				android:layout_marginBottom="4dp"
+				android:minWidth="200dp"
+				android:background="#99000000"
+				android:text="@string/lbl_multiplayer"
+				android:textColor="@android:color/white"
+				android:textStyle="bold" />
+
+			<Button
+				android:id="@+id/btn_stats"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_horizontal"
+				android:layout_marginTop="4dp"
+				android:layout_marginBottom="4dp"
+				android:minWidth="200dp"
+				android:background="#99000000"
+				android:text="@string/lbl_stats"
+				android:textColor="@android:color/white"
+				android:textStyle="bold" />
+
 			<ImageButton
 				android:src="@drawable/sel_btn_help"
 				android:id="@+id/btn_help"

@@ -8,6 +8,7 @@ import com.smorgasbork.hotdeath.engine.Seat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /**
  * A two-way text channel to one other device. Implementations deliver
@@ -28,6 +29,8 @@ fun interface SessionListener {
 sealed interface SessionStatus {
 	/** A remote player disconnected; a computer now plays [seat]. */
 	data class PlayerLeft(val seat: Seat, val name: String?) : SessionStatus
+	/** A remote player who left reconnected and plays [seat] again. */
+	data class PlayerBack(val seat: Seat, val name: String?) : SessionStatus
 	/** The connection to the host is gone. */
 	data class HostLost(val reason: String?) : SessionStatus
 }
@@ -59,6 +62,8 @@ class HostSession(
 	override val me: Seat = Seat.SOUTH,
 	private val names: List<String?> = List(4) { null },
 	remotes: Map<Seat, Link> = emptyMap(),
+	/** Secret per remote seat; a player who reconnects with it gets the seat back. */
+	private val tokens: Map<Seat, String> = emptyMap(),
 ) : GameSession {
 
 	private val live = LinkedHashMap(remotes)
@@ -71,10 +76,45 @@ class HostSession(
 
 	init {
 		game.listener = GameListener(::publish)
-		for ((seat, link) in remotes) {
-			link.onMessage = { text -> fromRemote(seat, text) }
-			link.onClosed = { left(seat) }
+		for ((seat, link) in remotes) attach(seat, link)
+	}
+
+	private fun attach(seat: Seat, link: Link) {
+		link.onMessage = { text -> fromRemote(seat, link, text) }
+		link.onClosed = { if (live[seat] === link) left(seat) }
+	}
+
+	/**
+	 * A new connection during the game. Only a player rejoining with their
+	 * seat's token is let in; anyone else is turned away.
+	 */
+	fun accept(link: Link) {
+		link.onMessage = handshake@{ text ->
+			val m = runCatching { Wire.decode(text) }.getOrNull() as? WireMessage.Hello ?: return@handshake
+			val seat = tokens.entries.firstOrNull { it.value == m.rejoin }?.key
+			if (m.version != Wire.PROTOCOL || m.rejoin == null || seat == null) {
+				link.send(Wire.encode(WireMessage.Bye(if (m.version != Wire.PROTOCOL) "incompatible version" else "game started")))
+				link.close()
+				return@handshake
+			}
+			rejoin(seat, link)
 		}
+		link.onClosed = {}
+	}
+
+	private fun rejoin(seat: Seat, link: Link) {
+		// The old connection may not have noticed it is dead yet: drop it quietly.
+		live.remove(seat)?.let { old ->
+			old.onMessage = null
+			old.onClosed = null
+			old.close()
+		}
+		live[seat] = link
+		attach(seat, link)
+		game.takeBack(seat)
+		link.send(Wire.encode(WireMessage.Start(seat, tokens[seat])))
+		link.send(Wire.encode(WireMessage.Update(game.viewFor(seat, names), null)))
+		onStatus?.invoke(SessionStatus.PlayerBack(seat, names[seat.index]))
 	}
 
 	override fun start() {
@@ -109,11 +149,12 @@ class HostSession(
 		}
 	}
 
-	private fun fromRemote(seat: Seat, text: String) {
+	private fun fromRemote(seat: Seat, link: Link, text: String) {
+		if (live[seat] !== link) return
 		when (val m = runCatching { Wire.decode(text) }.getOrNull()) {
 			is WireMessage.Action -> game.apply(seat, m.action)
 			is WireMessage.Bye -> {
-				live[seat]?.close()
+				link.close()
 				left(seat)
 			}
 			// Garbage or a message that makes no sense mid-game: ignore it.
@@ -129,7 +170,12 @@ class HostSession(
 }
 
 /** Plays a game hosted on another device. */
-class ClientSession(private val link: Link, override val me: Seat) : GameSession {
+class ClientSession(
+	private val link: Link,
+	override val me: Seat,
+	/** Lets this player rejoin the game if the connection drops. */
+	val rejoinToken: String? = null,
+) : GameSession {
 
 	override var view: TableView? = null
 		private set
@@ -184,7 +230,11 @@ class ClientSession(private val link: Link, override val me: Seat) : GameSession
 }
 
 /** Host settings with the seats people play; cheats and open hands are off in multiplayer. */
-class MultiplayerConfig(private val base: GameConfig, override val humanSeats: Set<Seat>) : GameConfig by base {
+class MultiplayerConfig(
+	private val base: GameConfig,
+	override val humanSeats: Set<Seat>,
+	override val turnSeconds: Int = 0,
+) : GameConfig by base {
 	override val cheatLevel: Int get() = 0
 	override val faceUp: Boolean get() = false
 }
@@ -240,13 +290,14 @@ class HostLobby(private val hostName: String) {
 	}
 
 	/** Starts the game; empty seats are played by computers. */
-	fun start(config: GameConfig, scope: CoroutineScope, pacing: Boolean = true): HostSession {
+	fun start(config: GameConfig, scope: CoroutineScope, pacing: Boolean = true, turnSeconds: Int = 0): HostSession {
 		val remotes = seated.mapValues { it.value.second }
 		waiting.forEach { refuse(it, "game started") }
 		waiting.clear()
-		val game = Game.newGame(MultiplayerConfig(config, setOf(Seat.SOUTH) + remotes.keys), pacing = pacing)
-		val session = HostSession(game, scope, Seat.SOUTH, names, remotes)
-		for ((seat, link) in remotes) link.send(Wire.encode(WireMessage.Start(seat)))
+		val game = Game.newGame(MultiplayerConfig(config, setOf(Seat.SOUTH) + remotes.keys, turnSeconds), pacing = pacing)
+		val tokens = remotes.mapValues { UUID.randomUUID().toString() }
+		val session = HostSession(game, scope, Seat.SOUTH, names, remotes, tokens)
+		for ((seat, link) in remotes) link.send(Wire.encode(WireMessage.Start(seat, tokens[seat])))
 		seated.clear()
 		return session
 	}
@@ -264,7 +315,7 @@ class HostLobby(private val hostName: String) {
 }
 
 /** A client waiting in a host's lobby. */
-class ClientLobby(private val link: Link, name: String) {
+class ClientLobby(private val link: Link, name: String, rejoin: String? = null) {
 
 	var onLobby: ((List<String?>) -> Unit)? = null
 	var onStart: ((ClientSession) -> Unit)? = null
@@ -274,7 +325,7 @@ class ClientLobby(private val link: Link, name: String) {
 	init {
 		link.onMessage = ::onText
 		link.onClosed = { end(null) }
-		link.send(Wire.encode(WireMessage.Hello(Wire.PROTOCOL, Wire.cleanName(name))))
+		link.send(Wire.encode(WireMessage.Hello(Wire.PROTOCOL, Wire.cleanName(name), rejoin)))
 	}
 
 	private fun onText(text: String) {
@@ -282,7 +333,7 @@ class ClientLobby(private val link: Link, name: String) {
 			is WireMessage.Lobby -> onLobby?.invoke(m.names)
 			is WireMessage.Start -> {
 				done = true
-				onStart?.invoke(ClientSession(link, m.seat))
+				onStart?.invoke(ClientSession(link, m.seat, m.token))
 			}
 			is WireMessage.Bye -> {
 				link.close()

@@ -1,6 +1,7 @@
 package com.smorgasbork.hotdeath.engine
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Decisions for a person, at this device or a remote one. Each decision
@@ -23,6 +24,15 @@ class HumanController : PlayerController {
 
 	val awaitingTurn: Boolean get() = turn != null
 
+	/** Makes a single decision for a person who ran out of time. */
+	private val standIn = ComputerController()
+	private val fallback: PlayerController get() = autopilot ?: standIn
+
+	/** A person (e.g. a reconnecting player) plays this seat again. */
+	fun takeBack() {
+		autopilot = null
+	}
+
 	fun handOver(computer: PlayerController = ComputerController()) {
 		if (autopilot != null) return
 		autopilot = computer
@@ -36,25 +46,24 @@ class HumanController : PlayerController {
 		autopilot?.let { return it.takeTurn(game, me) }
 		val d = CompletableDeferred<TurnAction?>()
 		turn = d
-		game.turnStarted()
 		val action = try {
-			d.await()
+			timed(game, me) { game.turnStarted(); d.await() }
 		} finally {
 			turn = null
 		}
-		return action ?: autopilot!!.takeTurn(game, me)
+		return action ?: fallback.takeTurn(game, me)
 	}
 
 	override suspend fun chooseNumCardsToDeal(game: Game, me: Player): Int {
 		autopilot?.let { return it.chooseNumCardsToDeal(game, me) }
 		return prompt(game, me, Prompt.NumCardsToDeal, CompletableDeferred<Int?>().also { numCards = it }) { numCards = null }
-			?: autopilot!!.chooseNumCardsToDeal(game, me)
+			?: fallback.chooseNumCardsToDeal(game, me)
 	}
 
 	override suspend fun chooseColor(game: Game, me: Player): CardColor {
 		autopilot?.let { return it.chooseColor(game, me) }
 		return prompt(game, me, Prompt.Color, CompletableDeferred<CardColor?>().also { color = it }) { color = null }
-			?: autopilot!!.chooseColor(game, me)
+			?: fallback.chooseColor(game, me)
 	}
 
 	override suspend fun chooseVictim(game: Game, me: Player, reason: VictimReason): Seat {
@@ -63,16 +72,32 @@ class HumanController : PlayerController {
 		// If only one other player is active, select automatically.
 		if (options.size == 1) return options[0]
 		return prompt(game, me, Prompt.Victim(options), CompletableDeferred<Seat?>().also { victim = it }) { victim = null }
-			?: autopilot!!.chooseVictim(game, me, reason)
+			?: fallback.chooseVictim(game, me, reason)
 	}
 
 	private suspend fun <T> prompt(game: Game, me: Player, p: Prompt, d: CompletableDeferred<T?>, clear: () -> Unit): T? {
-		game.beginPrompt(p, me.seat)
 		try {
-			return d.await()
+			return timed(game, me) { game.beginPrompt(p, me.seat); d.await() }
 		} finally {
 			clear()
 			game.endPrompt()
+		}
+	}
+
+	/**
+	 * Runs [wait] under the game's per-decision time limit. Null when time ran
+	 * out (or the seat was handed over), so the caller asks [fallback].
+	 */
+	private suspend fun <T> timed(game: Game, me: Player, wait: suspend () -> T?): T? {
+		val limitMs = game.config.turnSeconds * 1000L
+		if (limitMs <= 0) return wait()
+		game.startClock(me.seat, limitMs)
+		try {
+			val r = withTimeoutOrNull(limitMs) { wait() }
+			if (r == null && autopilot == null) game.timedOut(me.seat)
+			return r
+		} finally {
+			game.stopClock()
 		}
 	}
 

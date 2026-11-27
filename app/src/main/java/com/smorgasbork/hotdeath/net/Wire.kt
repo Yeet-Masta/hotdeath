@@ -5,6 +5,7 @@ import com.smorgasbork.hotdeath.engine.CardType
 import com.smorgasbork.hotdeath.engine.DeckType
 import com.smorgasbork.hotdeath.engine.Direction
 import com.smorgasbork.hotdeath.engine.GameMessage
+import com.smorgasbork.hotdeath.engine.NoGoodReason
 import com.smorgasbork.hotdeath.engine.PenaltyType
 import com.smorgasbork.hotdeath.engine.Prompt
 import com.smorgasbork.hotdeath.engine.Seat
@@ -14,11 +15,11 @@ import org.json.JSONObject
 /** Messages between a host and its clients. */
 sealed interface WireMessage {
 	/** Client → host, first message. */
-	data class Hello(val version: Int, val name: String) : WireMessage
+	data class Hello(val version: Int, val name: String, val rejoin: String? = null) : WireMessage
 	/** Host → clients: who is in the lobby, by seat (null = computer / empty). */
 	data class Lobby(val names: List<String?>) : WireMessage
-	/** Host → client: the game started and you play [seat]. */
-	data class Start(val seat: Seat) : WireMessage
+	/** Host → client: the game started and you play [seat]; [token] lets you rejoin it. */
+	data class Start(val seat: Seat, val token: String? = null) : WireMessage
 	/** Host → client: the table changed, optionally with an animation. */
 	data class Update(val view: TableView, val event: ViewEvent?) : WireMessage
 	/** Client → host. */
@@ -39,9 +40,9 @@ object Wire {
 
 	fun encode(m: WireMessage): String = JSONObject().apply {
 		when (m) {
-			is WireMessage.Hello -> put("t", "hello").put("v", m.version).put("name", m.name)
+			is WireMessage.Hello -> put("t", "hello").put("v", m.version).put("name", m.name).apply { m.rejoin?.let { put("rejoin", it) } }
 			is WireMessage.Lobby -> put("t", "lobby").put("names", names(m.names))
-			is WireMessage.Start -> put("t", "start").put("seat", m.seat.name)
+			is WireMessage.Start -> put("t", "start").put("seat", m.seat.name).apply { m.token?.let { put("token", it) } }
 			is WireMessage.Update -> {
 				put("t", "u").put("v", view(m.view))
 				m.event?.let { put("e", event(it)) }
@@ -54,10 +55,11 @@ object Wire {
 	fun decode(text: String): WireMessage {
 		val o = JSONObject(text)
 		return when (val t = o.getString("t")) {
-			"hello" -> WireMessage.Hello(o.getInt("v"), cleanName(o.getString("name")))
+			"hello" -> WireMessage.Hello(o.getInt("v"), cleanName(o.getString("name")), optToken(o, "rejoin"))
 			"lobby" -> WireMessage.Lobby(names(o.getJSONArray("names")))
-			"start" -> WireMessage.Start(seat(o.getString("seat")))
-			"u" -> WireMessage.Update(view(o.getJSONObject("v")), o.optJSONObject("e")?.let(::event))
+			"start" -> WireMessage.Start(seat(o.getString("seat")), optToken(o, "token"))
+			// An animation this version does not know is dropped; the table itself still updates.
+			"u" -> WireMessage.Update(view(o.getJSONObject("v")), o.optJSONObject("e")?.let { runCatching { event(it) }.getOrNull() })
 			"a" -> WireMessage.Action(action(o.getJSONObject("a")))
 			"bye" -> WireMessage.Bye(o.optString("reason").take(200))
 			else -> throw IllegalArgumentException("unknown message $t")
@@ -71,6 +73,7 @@ object Wire {
 	// ── helpers ───────────────────────────────────────────────────────────────
 
 	private fun seat(s: String) = Seat.valueOf(s)
+	private fun optToken(o: JSONObject, k: String): String? = if (o.isNull(k) || !o.has(k)) null else o.getString(k).take(64)
 	private fun optSeat(o: JSONObject, k: String): Seat? = if (o.isNull(k) || !o.has(k)) null else seat(o.getString(k))
 	private fun optColor(o: JSONObject, k: String): CardColor? = if (o.isNull(k) || !o.has(k)) null else CardColor.valueOf(o.getString(k))
 	private fun JSONObject.putEnum(k: String, e: Enum<*>?) = put(k, e?.name ?: JSONObject.NULL)
@@ -114,6 +117,8 @@ object Wire {
 		put("canDraw", v.canDraw)
 		put("canPass", v.canPass)
 		put("legal", ints(v.legal))
+		putEnum("clock", v.clockSeat)
+		put("clockMs", v.clockLeftMs)
 		v.prompt?.let { put("prompt", prompt(it)) }
 		v.penalty?.let { p ->
 			put("penalty", JSONObject()
@@ -161,6 +166,8 @@ object Wire {
 			canDraw = o.getBoolean("canDraw"),
 			canPass = o.getBoolean("canPass"),
 			legal = o.optJSONArray("legal")?.let { ints(it) } ?: emptyList(),
+			clockSeat = optSeat(o, "clock"),
+			clockLeftMs = o.optLong("clockMs"),
 			prompt = o.optJSONObject("prompt")?.let(::prompt),
 			penalty = o.optJSONObject("penalty")?.let { p ->
 				PenaltyView(PenaltyType.valueOf(p.getString("type")), p.getInt("n"), p.getInt("orig"),
@@ -226,7 +233,8 @@ object Wire {
 			is GameMessage.Dealing -> put("k", "Dealing").put("s", m.dealer.name).put("n", m.count)
 			GameMessage.TapDrawPile -> put("k", "TapDrawPile")
 			is GameMessage.YourPlay -> put("k", "YourPlay").put("s", m.seat.name)
-			is GameMessage.CardNoGood -> put("k", "CardNoGood").put("s", m.seat.name)
+			is GameMessage.CardNoGood -> put("k", "CardNoGood").put("s", m.seat.name).apply { m.why?.let { put("why", why(it)) } }
+			is GameMessage.TimedOut -> put("k", "TimedOut").put("s", m.seat.name)
 			is GameMessage.PlayerDrawsCard -> put("k", "PlayerDrawsCard").put("s", m.seat.name)
 			is GameMessage.TakesPenalty -> put("k", "TakesPenalty").put("s", m.seat.name).put("n", m.count).putEnum("c", m.reason)
 			is GameMessage.FaceUp -> put("k", "FaceUp").put("s", m.seat.name)
@@ -256,7 +264,8 @@ object Wire {
 			"Dealing" -> GameMessage.Dealing(s(), n())
 			"TapDrawPile" -> GameMessage.TapDrawPile
 			"YourPlay" -> GameMessage.YourPlay(s())
-			"CardNoGood" -> GameMessage.CardNoGood(s())
+			"CardNoGood" -> GameMessage.CardNoGood(s(), o.optJSONObject("why")?.let(::why))
+			"TimedOut" -> GameMessage.TimedOut(s())
 			"PlayerDrawsCard" -> GameMessage.PlayerDrawsCard(s())
 			"TakesPenalty" -> GameMessage.TakesPenalty(s(), n(), if (o.isNull("c") || !o.has("c")) null else CardType.valueOf(o.getString("c")))
 			"FaceUp" -> GameMessage.FaceUp(s())
@@ -277,6 +286,28 @@ object Wire {
 			"Ping" -> GameMessage.Ping(s(), s2())
 			else -> throw IllegalArgumentException("unknown message $k")
 		}
+	}
+
+	private fun why(r: NoGoodReason) = JSONObject().apply {
+		when (r) {
+			NoGoodReason.NotYourTurn -> put("k", "turn")
+			is NoGoodReason.UnderAttack -> put("k", "attack").put("n", r.count)
+			NoGoodReason.Aids -> put("k", "aids")
+			NoGoodReason.Shitter -> put("k", "shitter")
+			is NoGoodReason.HoldsColor -> put("k", "holds").putEnum("color", r.color)
+			is NoGoodReason.NoMatch -> put("k", "match").putEnum("color", r.color).putEnum("top", r.top)
+		}
+	}
+
+	/** Null for a reason this version does not know (the plain message is shown). */
+	private fun why(o: JSONObject): NoGoodReason? = when (o.optString("k")) {
+		"turn" -> NoGoodReason.NotYourTurn
+		"attack" -> NoGoodReason.UnderAttack(o.getInt("n"))
+		"aids" -> NoGoodReason.Aids
+		"shitter" -> NoGoodReason.Shitter
+		"holds" -> NoGoodReason.HoldsColor(optColor(o, "color"))
+		"match" -> NoGoodReason.NoMatch(optColor(o, "color"), if (o.isNull("top") || !o.has("top")) null else CardType.valueOf(o.getString("top")))
+		else -> null
 	}
 
 	// ── actions ───────────────────────────────────────────────────────────────

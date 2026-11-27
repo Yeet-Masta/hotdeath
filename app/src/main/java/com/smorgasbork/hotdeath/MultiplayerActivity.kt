@@ -44,6 +44,13 @@ class MultiplayerActivity : AppCompatActivity() {
 	private lateinit var players: TextView
 	private lateinit var hostList: LinearLayout
 	private lateinit var startButton: Button
+	private lateinit var timerButton: Button
+	private val config by lazy { PrefsConfig(this) }
+	/** Set while reconnecting to a game in progress. */
+	private var rejoin: Rejoin.Info? = null
+	/** How the client reached its host, saved so it can rejoin. */
+	private var joinedVia: String? = null
+	private var joinedHostName: String? = null
 
 	private var hostLobby: HostLobby? = null
 	private var clientLobby: ClientLobby? = null
@@ -67,6 +74,21 @@ class MultiplayerActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		title = getString(R.string.mp_title)
 		setContentView(buildLayout())
+		if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_REJOIN, false)) startRejoin()
+	}
+
+	/** Reconnects the way the last game was reached, offering the saved token. */
+	private fun startRejoin() {
+		val info = Rejoin.load(this) ?: return
+		rejoin = info
+		when (info.via) {
+			Rejoin.VIA_ONLINE -> {
+				relayField.setText(info.url)
+				codeField.setText(info.code)
+				joinOnline()
+			}
+			else -> withNearbyPermissions(::joinNearby)
+		}
 	}
 
 	override fun onDestroy() {
@@ -120,12 +142,15 @@ class MultiplayerActivity : AppCompatActivity() {
 		players = TextView(this).apply { setPadding(0, dp(8), 0, dp(8)) }
 		hostList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
 		startButton = button(getString(R.string.mp_start), ::startGame).apply { visibility = View.GONE }
+		timerButton = button("") { cycleTimer() }.apply { visibility = View.GONE }
+		showTimer()
 		lobbyPanel = LinearLayout(this).apply {
 			orientation = LinearLayout.VERTICAL
 			visibility = View.GONE
 			addView(status)
 			addView(hostList)
 			addView(players)
+			addView(timerButton)
 			addView(startButton)
 			addView(button(getString(R.string.mp_leave)) {
 				leave()
@@ -151,13 +176,26 @@ class MultiplayerActivity : AppCompatActivity() {
 		hostList.removeAllViews()
 		players.text = ""
 		startButton.visibility = View.GONE
+		timerButton.visibility = View.GONE
 	}
 
 	private fun showLobby(statusText: String, host: Boolean) {
 		choices.visibility = View.GONE
 		lobbyPanel.visibility = View.VISIBLE
 		startButton.visibility = if (host) View.VISIBLE else View.GONE
+		timerButton.visibility = startButton.visibility
 		showStatus(statusText)
+	}
+
+	private fun showTimer() {
+		val s = config.mpTurnSeconds
+		timerButton.text = if (s <= 0) getString(R.string.mp_timer_off) else getString(R.string.mp_timer, s)
+	}
+
+	private fun cycleTimer() {
+		val i = TIMER_CHOICES.indexOf(config.mpTurnSeconds)
+		config.mpTurnSeconds = TIMER_CHOICES[(i + 1) % TIMER_CHOICES.size]
+		showTimer()
 	}
 
 	private fun showStatus(text: String) {
@@ -219,13 +257,22 @@ class MultiplayerActivity : AppCompatActivity() {
 		val client = NearbyClient(this, name)
 		nearbyClient = client
 		val found = HashMap<String, Button>()
+		var connecting = false
+		val connect = { id: String, hostName: String ->
+			connecting = true
+			hostList.removeAllViews()
+			showStatus(getString(R.string.mp_connecting))
+			joinedVia = Rejoin.VIA_NEARBY
+			joinedHostName = hostName
+			client.connect(id)
+		}
 		client.onFound = { id, hostName ->
-			if (id !in found) {
-				val b = button(getString(R.string.mp_join_host, Wire.cleanName(hostName))) {
-					hostList.removeAllViews()
-					showStatus(getString(R.string.mp_connecting))
-					client.connect(id)
-				}
+			if (connecting) {
+				// Already connecting to a host.
+			} else if (rejoin?.hostName != null && rejoin?.hostName == hostName) {
+				connect(id, hostName)
+			} else if (id !in found) {
+				val b = button(getString(R.string.mp_join_host, Wire.cleanName(hostName))) { connect(id, hostName) }
 				found[id] = b
 				hostList.addView(b)
 			}
@@ -234,7 +281,7 @@ class MultiplayerActivity : AppCompatActivity() {
 		client.onError = ::showError
 		client.onConnected = { link -> joined(link, name) }
 		client.startDiscovery()
-		showLobby(getString(R.string.mp_searching), host = false)
+		showLobby(getString(if (rejoin != null) R.string.mp_rejoining else R.string.mp_searching), host = false)
 	}
 
 	// ── online ────────────────────────────────────────────────────────────────
@@ -261,6 +308,7 @@ class MultiplayerActivity : AppCompatActivity() {
 		val name = myName()
 		val client = RelayClient(url, code)
 		relayClient = client
+		joinedVia = Rejoin.VIA_ONLINE
 		client.onConnected = { link -> joined(link, name) }
 		client.onError = ::showError
 		showLobby(getString(R.string.mp_connecting), host = false)
@@ -277,22 +325,27 @@ class MultiplayerActivity : AppCompatActivity() {
 	}
 
 	private fun joined(link: Link, name: String) {
-		val lobby = ClientLobby(link, name)
+		val lobby = ClientLobby(link, name, rejoin?.token)
 		clientLobby = lobby
-		showStatus(getString(R.string.mp_waiting_host))
+		showStatus(getString(if (rejoin != null) R.string.mp_rejoining else R.string.mp_waiting_host))
 		lobby.onLobby = ::showPlayers
-		lobby.onEnded = { reason -> showError(reason ?: getString(R.string.mp_host_lost)) }
+		lobby.onEnded = { reason ->
+			if (rejoin != null) Rejoin.clear(this)
+			rejoin = null
+			showError(reason ?: getString(R.string.mp_host_lost))
+		}
 		lobby.onStart = ::clientStarted
 	}
 
 	private fun startGame() {
 		val lobby = hostLobby ?: return
-		nearbyHost?.stopAccepting()
-		relayHost?.stopAccepting()
 		val scope = MainScope()
-		val session = lobby.start(PrefsConfig(this), scope)
+		val session = lobby.start(config, scope, turnSeconds = config.mpTurnSeconds)
 		val nh = nearbyHost
 		val rh = relayHost
+		// Keep listening: a player whose connection drops may rejoin with their token.
+		nh?.onLink = session::accept
+		rh?.onLink = session::accept
 		launchGame(Multiplayer.Handoff(session, scope) {
 			nh?.close()
 			rh?.close()
@@ -300,6 +353,10 @@ class MultiplayerActivity : AppCompatActivity() {
 	}
 
 	private fun clientStarted(session: ClientSession) {
+		session.rejoinToken?.let { token ->
+			Rejoin.save(this, token, joinedVia ?: Rejoin.VIA_NEARBY, joinedHostName,
+				relayField.text.toString().trim(), codeField.text.toString().trim())
+		}
 		val nc = nearbyClient
 		val rc = relayClient
 		launchGame(Multiplayer.Handoff(session, null) {
@@ -334,5 +391,7 @@ class MultiplayerActivity : AppCompatActivity() {
 	companion object {
 		private const val PREF_NAME = "player_name"
 		private const val PREF_RELAY = "relay_url"
+		const val EXTRA_REJOIN = "com.smorgasbork.hotdeath.rejoin"
+		private val TIMER_CHOICES = listOf(0, 15, 30, 60, 90)
 	}
 }

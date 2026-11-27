@@ -93,6 +93,13 @@ class Game private constructor(
 	var promptSeat: Seat? = null
 		private set
 
+	/** The person whose decision is timed, while the clock runs. */
+	var clockSeat: Seat? = null
+		private set
+	/** When [clockSeat]'s time runs out ([System.currentTimeMillis]). */
+	var clockDeadline: Long = 0
+		private set
+
 	/** What the direction indicator currently shows (for views attaching mid-game). */
 	var indicatorDirection: Direction = Direction.NONE
 		private set
@@ -1146,9 +1153,27 @@ class Game private constructor(
 	fun humanPlay(seat: Seat, c: Card) {
 		val p = currPlayer ?: return
 		val h = humanController(seat) ?: return
-		if (p.seat != seat || !p.isHuman || !roundIsActive || !h.awaitingTurn || c !in p.hand) return
+		if (p.seat != seat) {
+			// Tapping a card on someone else's turn: say so.
+			if (roundIsActive && player(seat).isHuman && c in player(seat).hand && pendingPrompt == null)
+				message(GameMessage.CardNoGood(seat, NoGoodReason.NotYourTurn))
+			return
+		}
+		if (!p.isHuman || !roundIsActive || !h.awaitingTurn || c !in p.hand) return
 		if (checkCard(p.hand, c)) h.submitTurn(TurnAction.Play(c))
-		else message(GameMessage.CardNoGood(seat))
+		else message(GameMessage.CardNoGood(seat, whyInvalid(p.hand, c)))
+	}
+
+	/** Why [c] cannot be played from [h] now (assumes [checkCard] said no). */
+	fun whyInvalid(h: Hand, c: Card): NoGoodReason {
+		val curr = lastPlayedCard
+		if (penalty.isActive) {
+			return if (curr?.type == CardType.GREEN_3_AIDS) NoGoodReason.Aids
+			else NoGoodReason.UnderAttack(penalty.numCards)
+		}
+		if (c.type == CardType.YELLOW_0_SHITTER) return NoGoodReason.Shitter
+		if (standardRules && c.value == CardValue.WILD_DRAW && h.hasColorMatch(currColor)) return NoGoodReason.HoldsColor(currColor)
+		return NoGoodReason.NoMatch(currColor, curr?.type)
 	}
 
 	/** Answers the open prompt, if it belongs to [seat]. */
@@ -1173,6 +1198,16 @@ class Game private constructor(
 		changed()
 	}
 
+	/** A person (e.g. one who reconnected) plays [seat] again. */
+	fun takeBack(seat: Seat) {
+		val h = humanController(seat) ?: return
+		if (h.autopilot == null) return
+		h.takeBack()
+		fastForward = false
+		showFastForwardButton = false
+		changed()
+	}
+
 	fun startFastForward() {
 		fastForward = true
 		showFastForwardButton = false
@@ -1185,6 +1220,19 @@ class Game private constructor(
 
 	/** A person can now act on their turn. */
 	internal fun turnStarted() = changed()
+
+	internal fun startClock(seat: Seat, limitMs: Long) {
+		clockSeat = seat
+		clockDeadline = System.currentTimeMillis() + limitMs
+	}
+
+	internal fun stopClock() {
+		if (clockSeat == null) return
+		clockSeat = null
+		changed()
+	}
+
+	internal fun timedOut(seat: Seat) = message(GameMessage.TimedOut(seat))
 
 	internal fun beginPrompt(p: Prompt, seat: Seat) {
 		pendingPrompt = p

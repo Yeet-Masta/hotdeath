@@ -2,6 +2,8 @@ package com.smorgasbork.hotdeath.net
 
 import com.smorgasbork.hotdeath.engine.CardColor
 import com.smorgasbork.hotdeath.engine.CardDeck
+import com.smorgasbork.hotdeath.engine.CardType
+import com.smorgasbork.hotdeath.engine.NoGoodReason
 import com.smorgasbork.hotdeath.engine.DeckType
 import com.smorgasbork.hotdeath.engine.Game
 import com.smorgasbork.hotdeath.engine.GameEvent
@@ -180,6 +182,69 @@ class NetworkGameTest {
 		withTimeout(120_000) { while (!game.gameOver) yield() }
 		assertEquals(SessionStatus.PlayerLeft(Seat.WEST, "West"), left)
 		assertTrue(!game.player(Seat.WEST).isHuman)
+	}
+
+	@Test
+	fun aPlayerWhoDropsCanRejoinTheirSeat() = runTable(DeckType.HYBRID, 3) { t ->
+		t.start(CoroutineScope(kotlin.coroutines.coroutineContext), 3)
+		val game = t.host.game
+		val statuses = ArrayList<SessionStatus>()
+		t.host.onStatus = { statuses += it }
+		withTimeout(60_000) { while ((t.bots[Seat.WEST]?.updates ?: 0) < 30) yield() }
+		val token = t.clients[Seat.WEST]!!.rejoinToken!!
+		t.clients[Seat.WEST]!!.close()
+		withTimeout(10_000) { while (game.player(Seat.WEST).isHuman) yield() }
+
+		val scope = CoroutineScope(kotlin.coroutines.coroutineContext)
+		// A stranger without the token is turned away.
+		val (h1, c1) = MemLink.pair(scope)
+		t.host.accept(h1)
+		var refused: String? = null
+		ClientLobby(c1, "Stranger", "not-a-token").onEnded = { refused = it }
+		withTimeout(10_000) { while (refused == null) yield() }
+		assertEquals("game started", refused)
+
+		// WEST comes back with the token and gets the seat back.
+		val (h2, c2) = MemLink.pair(scope)
+		t.host.accept(h2)
+		var back: ClientSession? = null
+		ClientLobby(c2, "West", token).onStart = { s -> back = s }
+		withTimeout(10_000) { while (back == null) yield() }
+		assertEquals(Seat.WEST, back!!.me)
+		assertTrue(game.player(Seat.WEST).isHuman)
+		assertTrue(SessionStatus.PlayerBack(Seat.WEST, "West") in statuses)
+		val b = Bot(back!!, t.deck)
+		back!!.listener = SessionListener(b::onUpdate)
+		withTimeout(120_000) { while (!game.gameOver) yield() }
+		assertTrue(b.updates > 10)
+	}
+
+	@Test
+	fun reasonsAndTokensSurviveTheWire() {
+		val msgs = listOf(
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.NotYourTurn),
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.UnderAttack(4)),
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.Aids),
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.Shitter),
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.HoldsColor(CardColor.RED)),
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.NoMatch(CardColor.GREEN, CardType.RED_7)),
+			GameMessage.CardNoGood(Seat.WEST, NoGoodReason.NoMatch(null, null)),
+			GameMessage.CardNoGood(Seat.WEST),
+			GameMessage.TimedOut(Seat.EAST),
+		)
+		for (m in msgs) {
+			val g = Game.newGame(TestConfig(DeckType.STANDARD), Random(1), pacing = false)
+			val u = WireMessage.Update(g.viewFor(Seat.SOUTH), ViewEvent.Message(m))
+			assertEquals(u, Wire.decode(Wire.encode(u)))
+		}
+		for (m in listOf(WireMessage.Hello(Wire.PROTOCOL, "A", "tok"), WireMessage.Hello(Wire.PROTOCOL, "A"),
+				WireMessage.Start(Seat.EAST, "tok"), WireMessage.Start(Seat.EAST))) {
+			assertEquals(m, Wire.decode(Wire.encode(m)))
+		}
+		// An update whose event this version does not know still updates the table.
+		val g = Game.newGame(TestConfig(DeckType.STANDARD), Random(1), pacing = false)
+		val text = Wire.encode(WireMessage.Update(g.viewFor(Seat.SOUTH), null)).replaceFirst("{", "{\"e\":{\"k\":\"future\"},")
+		assertEquals(null, (Wire.decode(text) as WireMessage.Update).event)
 	}
 
 	@Test

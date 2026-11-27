@@ -42,6 +42,18 @@
 		android:entries="@array/cheat_levels"
 		android:entryValues="@array/cheat_level_values"
 		android:icon="@drawable/ic_cheat" />
+	<CheckBoxPreference
+		android:key="haptics"
+		android:title="@string/haptics_title"
+		android:summary="@string/haptics_summary"
+		android:defaultValue="true" />
+	<ListPreference
+		android:key="history_count"
+		android:title="@string/history_count_title"
+		android:summary="@string/history_count_summary"
+		android:defaultValue="5"
+		android:entries="@array/history_counts"
+		android:entryValues="@array/history_counts" />
 	<!-- Navigate to players preferences fragment -->
 	<androidx.preference.Preference
 		android:key="players_prefs"

@@ -11,6 +11,22 @@ interface GameConfig {
 	val pauseLength: Int
 	fun skill(seat: Seat): Int
 	fun aggression(seat: Seat): Int
+	/** Seconds a person has for each decision before a computer makes it for them; 0 = no limit. */
+	val turnSeconds: Int get() = 0
+}
+
+/** Why a card the player tapped cannot be played. */
+sealed interface NoGoodReason {
+	data object NotYourTurn : NoGoodReason
+	/** Under attack: only a defender (or taking the penalty) will do. */
+	data class UnderAttack(val count: Int) : NoGoodReason
+	/** Nothing defends against AIDS. */
+	data object Aids : NoGoodReason
+	data object Shitter : NoGoodReason
+	/** Standard rules: no Wild Draw 4 while holding a card of the current color. */
+	data class HoldsColor(val color: CardColor?) : NoGoodReason
+	/** Needs the current [color], or something that plays on [top]. */
+	data class NoMatch(val color: CardColor?, val top: CardType?) : NoGoodReason
 }
 
 /** Something the UI should show the player. Formatting into text is the UI's job. */
@@ -20,7 +36,9 @@ sealed interface GameMessage {
 	/** Shown only to [seat]. */
 	data class YourPlay(val seat: Seat) : GameMessage
 	/** Shown only to [seat]. */
-	data class CardNoGood(val seat: Seat) : GameMessage
+	data class CardNoGood(val seat: Seat, val why: NoGoodReason? = null) : GameMessage
+	/** [seat] ran out of time; a computer made the move. */
+	data class TimedOut(val seat: Seat) : GameMessage
 	data class PlayerDrawsCard(val seat: Seat) : GameMessage
 	data class TakesPenalty(val seat: Seat, val count: Int, val reason: CardType?) : GameMessage
 	data class FaceUp(val seat: Seat) : GameMessage

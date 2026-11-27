@@ -10,6 +10,7 @@ import com.smorgasbork.hotdeath.engine.Game
 import com.smorgasbork.hotdeath.engine.SnapshotJson
 import com.smorgasbork.hotdeath.net.GameSession
 import com.smorgasbork.hotdeath.net.HostSession
+import com.smorgasbork.hotdeath.net.SessionListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 
@@ -53,6 +54,19 @@ class GameViewModel(app: Application, mode: Int) : AndroidViewModel(app) {
 	}
 
 	val multiplayer: Boolean get() = session?.savable == false
+
+	/** Counts stats and keeps recent plays for every update, even while no screen is attached. */
+	val recorder = GameRecorder(Stats(app))
+
+	/** The game screen's listener; updates arrive here first. */
+	var ui: SessionListener? = null
+
+	init {
+		session?.listener = SessionListener { v, e ->
+			recorder.record(v, e)
+			ui?.onUpdate(v, e)
+		}
+	}
 
 	fun start() = session?.start()
 

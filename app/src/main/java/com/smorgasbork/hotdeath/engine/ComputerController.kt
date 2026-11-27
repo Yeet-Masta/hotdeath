@@ -12,6 +12,11 @@ import kotlin.random.Random
  *   2 = Expert  – all of Strong, plus color-balance optimisation, endgame pressure
  *                 (skip cards to protect its own win), and smarter v3 card use
  *
+ * Strong and Expert also stop the next player when they are about to go out,
+ * shed points when anyone is close to winning, keep Holy Defender and
+ * Fuck You for when they are attacked, get rid of the Shitter whenever they
+ * can, and pick colors that let them dump their most expensive cards.
+ *
  * Aggression biases attacks toward seats played by people.
  */
 class ComputerController(private val random: Random = Random.Default) : PlayerController {
@@ -23,6 +28,14 @@ class ComputerController(private val random: Random = Random.Default) : PlayerCo
 		const val ENDGAME_SKIP_BONUS = 60
 		/** Draw-penalty size at which the AI strongly prefers defenders. */
 		const val DEFEND_THRESHOLD = 4
+		/** Hand size at which an opponent is "about to go out". */
+		const val THREAT_HAND_SIZE = 2
+		/** Bonus for skip/draw cards that hit a next player who is about to go out. */
+		const val STOP_BONUS = 70
+		/** Cost of spending a defender when nothing is attacking. */
+		const val SPEND_DEFENDER_COST = 40
+		/** Bonus for getting the Shitter out of the hand. */
+		const val DUMP_SHITTER_BONUS = 200
 	}
 
 	private var skill = 1
@@ -40,12 +53,19 @@ class ComputerController(private val random: Random = Random.Default) : PlayerCo
 	override suspend fun chooseNumCardsToDeal(game: Game, me: Player): Int = random.nextInt(11) + 5
 
 	override suspend fun chooseColor(game: Game, me: Player): CardColor {
+		readSettings(game, me)
 		game.waitABit()
 		// Pick the color we hold the most of so follow-up plays are more likely.
+		// Stronger players also count what those cards are worth, to dump points.
+		val values = if (skill >= 1) me.hand.estimateValue() else null
 		return CardColor.SUITS
-			.map { it to me.hand.countSuit(it) }
+			.map { suit ->
+				val cards = me.hand.cards.filter { it.color == suit }
+				val worth = values?.let { v -> cards.sumOf { v.valueOf(it) } } ?: 0
+				Triple(suit, cards.size, cards.size * 10 + worth / 5)
+			}
 			.filter { it.second > 0 }
-			.maxByOrNull { it.second }?.first
+			.maxByOrNull { it.third }?.first
 			?: CardColor.RED
 	}
 
@@ -124,11 +144,6 @@ class ComputerController(private val random: Random = Random.Default) : PlayerCo
 				best = tc
 				break
 			}
-			// TODO: improve this AI
-			//   - throw the mystery draw on numbered cards
-			//   - don't throw MAD when point count in hand is too high (unless player count < 4)
-			//   - consider the damage of offensive cards; look to hit players with low card counts
-			//   - advanced: throw MAD to catch an opponent and force them over 1000 points
 			val testVal = scoreCandidate(ctx, tc)
 			if (testVal >= maxTestVal) {
 				maxTestVal = testVal
@@ -169,6 +184,8 @@ class ComputerController(private val random: Random = Random.Default) : PlayerCo
 		testVal = adjustForSixtyNine(ctx, tc, testVal)
 		testVal = adjustForMysteryDraw(ctx, tc, testVal)
 		testVal = adjustForV3Cards(ctx, tc, testVal)
+		testVal = adjustForThreat(ctx, tc, testVal, base)
+		testVal = adjustForKeepers(ctx, tc, testVal)
 
 		if (skill >= 2) {
 			testVal = adjustForColorBalance(ctx, tc, testVal)
@@ -262,6 +279,31 @@ class ComputerController(private val random: Random = Random.Default) : PlayerCo
 			}
 		}
 		return testVal
+	}
+
+	/**
+	 * When the next player is about to go out, hit them with a skip or draw
+	 * card; when anyone is close, get rid of expensive cards first.
+	 */
+	private fun adjustForThreat(ctx: Context, tc: Card, testValIn: Int, base: Int): Int {
+		var testVal = testValIn
+		val next = ctx.game.getNextPlayer(ctx.me)
+		if (next !== ctx.me && next.hand.size <= THREAT_HAND_SIZE) {
+			val v = tc.value
+			if (v.isSkipFamily || v == CardValue.REVERSE_SKIP || v.isDrawFamily) testVal += STOP_BONUS
+			else if (v.isReverseFamily && ctx.game.activePlayerCount > 2) testVal += STOP_BONUS / 3
+		}
+		if (ctx.opponentMinCards <= THREAT_HAND_SIZE) testVal += base / 2
+		return testVal
+	}
+
+	/** Keep defenders for real attacks; never keep the Shitter. */
+	private fun adjustForKeepers(ctx: Context, tc: Card, testVal: Int): Int = when {
+		tc.type == CardType.YELLOW_0_SHITTER -> testVal + DUMP_SHITTER_BONUS
+		ctx.game.penalty.isActive -> testVal
+		(tc.type == CardType.RED_0_HD || tc.type == CardType.BLUE_0_FUCK_YOU) && ctx.me.hand.size > ENDGAME_HAND_SIZE ->
+			testVal - SPEND_DEFENDER_COST
+		else -> testVal
 	}
 
 	/** Near our own win, prefer cards that stop opponents from going out first. */

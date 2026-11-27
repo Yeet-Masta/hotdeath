@@ -10,6 +10,7 @@ class TestConfig(
 	override val cheatLevel: Int = 0,
 	override val pauseLength: Int = 0,
 	private val skill: Int = 1,
+	override val turnSeconds: Int = 0,
 ) : GameConfig {
 	override fun skill(seat: Seat): Int = skill
 	override fun aggression(seat: Seat): Int = 0
@@ -50,6 +51,10 @@ fun gameAt(
 	top: CardType,
 	color: CardColor,
 	south: List<CardType>,
+	turnSeconds: Int = 0,
+	/** SOUTH is played by a computer too. */
+	computerSouth: Boolean = false,
+	westCards: Int = 5,
 	penalty: (CardPicker, Card) -> PenaltySnapshot = { _, _ -> NO_PENALTY },
 ): Game {
 	val deck = CardDeck(deckType)
@@ -57,7 +62,7 @@ fun gameAt(
 	val topCard = p.take(top)
 	val southCards = south.map(p::take)
 	val pen = penalty(p, topCard)
-	val others = List(3) { p.rest().take(5).map(p::claim) }
+	val others = List(3) { i -> p.rest().take(if (i == 0) westCards else 5).map(p::claim) }
 	val hands = listOf(southCards) + others
 	val players = hands.mapIndexed { i, cards ->
 		PlayerSnapshot(true, 0, 0, false, -1, 0, 0, emptyList(), cards.map { it.deckIndex }, emptyList(), i == 0)
@@ -78,7 +83,8 @@ fun gameAt(
 		players = players,
 		penalty = pen,
 	)
-	return Game.restore(s, TestConfig(deckType, humanSeats = setOf(Seat.SOUTH)), Random(1), pacing = false)
+	val humans = if (computerSouth) emptySet() else setOf(Seat.SOUTH)
+	return Game.restore(s, TestConfig(deckType, humanSeats = humans, turnSeconds = turnSeconds), Random(1), pacing = false)
 }
 
 fun Game.check(t: CardType): PlayCheck = evaluate(southPlayer.hand, southPlayer.hand.cards.first { it.type == t })

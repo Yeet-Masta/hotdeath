@@ -37,6 +37,13 @@ class PrefsConfig(context: Context) : GameConfig {
 	override val cheatLevel: Int get() = int(CHEAT_LEVEL, "0")
 	override val pauseLength: Int get() = int(GAME_SPEED, "1")
 	val familyFriendly: Boolean get() = prefs.getBoolean(FAMILY_FRIENDLY, true)
+	val haptics: Boolean get() = prefs.getBoolean(HAPTICS, true)
+	/** How many recent plays tapping the discard pile shows. */
+	val historyCount: Int get() = int(HISTORY_COUNT, "5")
+	/** Seconds per decision in a multiplayer game this device hosts; 0 = no limit. */
+	var mpTurnSeconds: Int
+		get() = int(MP_TURN_TIMER, "0")
+		set(v) = prefs.edit().putString(MP_TURN_TIMER, v.toString()).apply()
 
 	/** WEST is opponent 1, NORTH 2, EAST 3; a computer in SOUTH mirrors opponent 2. */
 	private fun opponentNumber(seat: Seat): Int = when (seat) {
@@ -68,5 +75,8 @@ class PrefsConfig(context: Context) : GameConfig {
 		private const val CHEAT_LEVEL = "cheat_level"
 		private const val FAMILY_FRIENDLY = "family_friendly"
 		private const val GAME_STATE = "gamestate"
+		private const val HAPTICS = "haptics"
+		private const val HISTORY_COUNT = "history_count"
+		private const val MP_TURN_TIMER = "mp_turn_timer"
 	}
 }

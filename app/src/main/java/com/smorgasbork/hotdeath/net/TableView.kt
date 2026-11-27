@@ -68,6 +68,10 @@ data class TableView(
 	val canPass: Boolean,
 	/** Ids of the viewer's held cards they may play right now. */
 	val legal: List<Int>,
+	/** Whose decision is on the clock, or null when none is. */
+	val clockSeat: Seat? = null,
+	/** Time [clockSeat] had left when this view was made. */
+	val clockLeftMs: Long = 0,
 	/** A question only the viewer must answer, or null. */
 	val prompt: Prompt?,
 	val penalty: PenaltyView?,
@@ -154,6 +158,8 @@ fun Game.viewFor(me: Seat, names: List<String?> = List(4) { null }): TableView {
 		showMenu = showMenu && myTurn,
 		canDraw = canDraw,
 		canPass = myTurn && !canDraw,
+		clockSeat = clockSeat,
+		clockLeftMs = if (clockSeat == null) 0 else (clockDeadline - System.currentTimeMillis()).coerceAtLeast(0),
 		legal = if (!myTurn) emptyList() else player(me).hand.cards.filter { checkCard(player(me).hand, it) }.map { it.deckIndex },
 		prompt = if (promptSeat == me) pendingPrompt else null,
 		penalty = if (!penalty.isActive) null else PenaltyView(

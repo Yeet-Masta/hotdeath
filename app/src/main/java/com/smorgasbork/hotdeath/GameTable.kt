@@ -943,6 +943,7 @@ class GameTable(context: Context) : View(context) {
 					else return false
 				}
 				id == ID_DRAW_PILE && click -> act(if (v.waitingToStartRound) PlayerAction.NextRound else PlayerAction.Draw)
+				id == ID_DISCARD_PILE && click -> act(PlayerAction.DiscardTap)
 				id == ID_DISCARD_PILE && longClick -> v.discard.lastOrNull()?.let(::typeOf)?.let { onCardHelp?.invoke(it) }
 				else -> return false
 			}

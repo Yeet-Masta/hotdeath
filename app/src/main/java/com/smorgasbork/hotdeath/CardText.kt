@@ -7,6 +7,7 @@ import com.smorgasbork.hotdeath.engine.CardColor
 import com.smorgasbork.hotdeath.engine.CardType
 import com.smorgasbork.hotdeath.engine.CardValue
 import com.smorgasbork.hotdeath.engine.GameMessage
+import com.smorgasbork.hotdeath.engine.NoGoodReason
 import com.smorgasbork.hotdeath.engine.Seat
 
 /** Android resources and display text for the engine's types. */
@@ -206,13 +207,30 @@ object CardText {
 		}
 	}
 
+	/** Why a tapped card cannot be played, or the plain message when the reason is unknown. */
+	private fun noGood(ctx: Context, why: NoGoodReason?, ff: Boolean): String = when (why) {
+		null -> ctx.getString(R.string.msg_card_no_good)
+		NoGoodReason.NotYourTurn -> ctx.getString(R.string.why_not_your_turn)
+		is NoGoodReason.UnderAttack -> ctx.getString(R.string.why_under_attack, why.count)
+		NoGoodReason.Aids -> ctx.getString(R.string.why_aids)
+		NoGoodReason.Shitter -> ctx.getString(R.string.why_shitter, cardName(ctx, CardType.YELLOW_0_SHITTER, ff),
+			cardName(ctx, CardType.RED_0_HD, ff), cardName(ctx, CardType.RED_5_MAGIC, ff))
+		is NoGoodReason.HoldsColor -> ctx.getString(R.string.why_holds_color, colorName(ctx, why.color).trim())
+		is NoGoodReason.NoMatch -> when {
+			why.top == null -> ctx.getString(R.string.msg_card_no_good)
+			why.color == null || why.color == CardColor.WILD -> ctx.getString(R.string.why_no_match_any, cardName(ctx, why.top, ff))
+			else -> ctx.getString(R.string.why_no_match, colorName(ctx, why.color).trim().lowercase(), cardName(ctx, why.top, ff))
+		}
+	}
+
 	fun message(ctx: Context, m: GameMessage, ff: Boolean, nameOf: (Seat) -> String = { seatName(ctx, it) }): String {
 		fun s(seat: Seat) = nameOf(seat)
 		return when (m) {
 			is GameMessage.Dealing -> ctx.getString(R.string.msg_dealing, s(m.dealer), m.count)
 			GameMessage.TapDrawPile -> ctx.getString(R.string.msg_tap_draw_pile)
 			is GameMessage.YourPlay -> ctx.getString(R.string.msg_your_play)
-			is GameMessage.CardNoGood -> ctx.getString(R.string.msg_card_no_good)
+			is GameMessage.CardNoGood -> noGood(ctx, m.why, ff)
+			is GameMessage.TimedOut -> ctx.getString(R.string.msg_timed_out, s(m.seat))
 			is GameMessage.PlayerDrawsCard -> ctx.getString(R.string.msg_player_draws_card, s(m.seat))
 			is GameMessage.TakesPenalty -> ctx.getString(R.string.msg_player_takes_penalty, s(m.seat), m.count,
 				m.reason?.let { cardName(ctx, it, ff) } ?: "")
