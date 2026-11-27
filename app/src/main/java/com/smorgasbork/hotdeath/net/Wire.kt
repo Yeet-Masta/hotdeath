@@ -113,6 +113,7 @@ object Wire {
 		put("menu", v.showMenu)
 		put("canDraw", v.canDraw)
 		put("canPass", v.canPass)
+		put("legal", ints(v.legal))
 		v.prompt?.let { put("prompt", prompt(it)) }
 		v.penalty?.let { p ->
 			put("penalty", JSONObject()
@@ -159,6 +160,7 @@ object Wire {
 			showMenu = o.getBoolean("menu"),
 			canDraw = o.getBoolean("canDraw"),
 			canPass = o.getBoolean("canPass"),
+			legal = o.optJSONArray("legal")?.let { ints(it) } ?: emptyList(),
 			prompt = o.optJSONObject("prompt")?.let(::prompt),
 			penalty = o.optJSONObject("penalty")?.let { p ->
 				PenaltyView(PenaltyType.valueOf(p.getString("type")), p.getInt("n"), p.getInt("orig"),

@@ -532,11 +532,11 @@ class GameTable(context: Context) : View(context) {
 
 		val tl = handLayout(p, true, min(table.size - tableOffset[i], maxCards), sp)
 		tableRect[i] = tl.rect
-		layCards(canvas, table, tOff, tl, now, mine)
+		layCards(canvas, table, tOff, tl, now, mine = false)
 
 		val hl = handLayout(p, false, min(held.size - heldOffset[i], maxCards), sp)
 		heldRect[i] = hl.rect
-		layCards(canvas, held, hOff, hl, now, mine)
+		layCards(canvas, held, hOff, hl, now, mine, if (mine) view?.legal ?: emptyList() else emptyList())
 
 		drawCountBadge(canvas, tOff, ptTableOffsetBadge[i])
 		drawCountBadge(canvas, hOff, ptHeldOffsetBadge[i])
@@ -571,7 +571,8 @@ class GameTable(context: Context) : View(context) {
 		}
 	}
 
-	private fun layCards(canvas: Canvas, ids: List<Int>, offset: Int, l: HandLayout, now: Long, mine: Boolean) {
+	/** [raised] cards (the ones you may play now) sit a little higher. */
+	private fun layCards(canvas: Canvas, ids: List<Int>, offset: Int, l: HandLayout, now: Long, mine: Boolean, raised: List<Int> = emptyList()) {
 		var x = l.x
 		var y = l.y
 		val stop = min(offset + maxCards, ids.size)
@@ -580,7 +581,8 @@ class GameTable(context: Context) : View(context) {
 			val s = sprite(id)
 			when {
 				j in offset until stop -> {
-					val flip = s.frame(now, x, y, face)
+					val lift = if (id in raised) cardH / 8 else 0f
+					val flip = s.frame(now, x, y - lift, face)
 					if (s.moving) moving += id to flip else drawCard(canvas, typeOf(id), s.x, s.y, s.shownFaceUp, flip)
 					if (mine) myCards += A11yCard(id, RectF(x, y, x + if (j == stop - 1) cardW else l.dx, y + cardH))
 					x += l.dx
