@@ -1,318 +1,168 @@
 package com.smorgasbork.hotdeath.engine
 
-import kotlin.math.pow
-import kotlin.math.sqrt
-import kotlin.random.Random
-
 /**
- * AI player. Skill levels (per seat, from [GameConfig.skill]):
- *   0 = Weak    – plays the highest-value valid card; naive victim choice
- *   1 = Strong  – holds wilds while opponents have many cards; smarter heuristics;
- *                 targets the opponent closest to winning
- *   2 = Expert  – all of Strong, plus color-balance optimisation, endgame pressure
- *                 (skip cards to protect its own win), and smarter v3 card use
- *
- * Aggression biases attacks toward seats played by people.
+ * The computer player. Plays to win in normal mode and to get out in
+ * elimination mode, with a little randomness that shrinks as skill grows.
  */
-class ComputerController(private val random: Random = Random.Default) : PlayerController {
+class ComputerController : PlayerController {
 
-	private companion object {
-		/** Hand size at or below which the AI is in "endgame" mode. */
-		const val ENDGAME_HAND_SIZE = 3
-		/** Bonus for skip-family cards that protect the AI's own endgame. */
-		const val ENDGAME_SKIP_BONUS = 60
-		/** Draw-penalty size at which the AI strongly prefers defenders. */
-		const val DEFEND_THRESHOLD = 4
-	}
+	private fun skill(game: Game, me: Player) = game.config.skill(me.seat)
+	private fun elim(game: Game) = game.config.eliminationMode
 
-	private var skill = 1
-	private var aggression = 0
-
-	private fun readSettings(game: Game, me: Player) {
-		skill = game.config.skill(me.seat)
-		aggression = game.config.aggression(me.seat)
-	}
-
-	// -------------------------------------------------------------------------
-	// Decisions
-	// -------------------------------------------------------------------------
-
-	override suspend fun chooseNumCardsToDeal(game: Game, me: Player): Int = random.nextInt(11) + 5
-
-	override suspend fun chooseColor(game: Game, me: Player): CardColor {
-		game.waitABit()
-		// Pick the color we hold the most of so follow-up plays are more likely.
-		return CardColor.SUITS
-			.map { it to me.hand.countSuit(it) }
-			.filter { it.second > 0 }
-			.maxByOrNull { it.second }?.first
-			?: CardColor.RED
-	}
-
-	override suspend fun chooseVictim(game: Game, me: Player, reason: VictimReason): Seat {
-		readSettings(game, me)
-		game.waitABit()
-		// Ping is unblockable, so always aim it at the most threatening opponent.
-		if (skill == 0 && reason != VictimReason.PING) return chooseVictimWeak(game, me)
-		return fewestCardsOpponent(game, me) ?: fallbackVictim(game, me)
-	}
-
-	/**
-	 * The active opponent with the fewest cards (closest to winning), treating
-	 * people as having fewer cards the more aggressive this AI is.
-	 */
-	private fun fewestCardsOpponent(game: Game, me: Player): Seat? {
-		var minCards = Int.MAX_VALUE
-		var best: Seat? = null
-		for (p in game.players.asReversed()) {
-			if (p === me || !p.active) continue
-			var count = p.hand.size
-			if (p.isHuman) count -= aggression * 2
-			if (count < minCards) {
-				minCards = count
-				best = p.seat
-			}
-		}
-		return best
-	}
-
-	private fun fallbackVictim(game: Game, me: Player): Seat =
-		game.players.firstOrNull { it !== me && it.active }?.seat ?: me.seat
-
-	/** Clockwise from SOUTH when aggressive, otherwise counter-clockwise from EAST. */
-	private fun chooseVictimWeak(game: Game, me: Player): Seat {
-		val order = if (aggression > 3) game.players else game.players.asReversed()
-		return order.firstOrNull { it !== me && it.active }?.seat ?: fallbackVictim(game, me)
-	}
-
-	// -------------------------------------------------------------------------
-	// Turn
-	// -------------------------------------------------------------------------
+	/** The opponent closest to going out. */
+	private fun leader(game: Game, options: List<Seat>): Seat =
+		options.minWith(compareBy<Seat> { game.player(it).hand.size }.thenBy { game.random.nextInt(100) })
 
 	override suspend fun takeTurn(game: Game, me: Player): TurnAction {
-		readSettings(game, me)
 		game.waitABit()
-
-		val hand = me.hand
-		if (!game.hasValidCards(hand)) {
-			return if (me.hasTriedDrawing) TurnAction.Pass else TurnAction.Draw
+		me.drawnThisTurn?.let { drawn ->
+			// Apocalypse rules: play the drawn card if possible.
+			return if (drawn in game.legalPlays(me)) TurnAction.Play(drawn) else TurnAction.Pass
 		}
-
-		// If we just drew, play it if legal – otherwise pass.
-		me.lastDrawn?.let { drawn ->
-			return if (game.checkCard(hand, drawn)) TurnAction.Play(drawn) else TurnAction.Pass
+		if (game.canChangeColor(me)) {
+			val best = bestColor(game, me)
+			if (best != game.currColor) return TurnAction.ChangeColor(best)
 		}
+		val targets = game.invadeTargets(me)
+		val bigArmy = me.hand.cards.mapNotNull { it.type.number }.maxOrNull() ?: 0
+		if (targets.isNotEmpty() && bigArmy >= 7 && game.random.nextFloat() < 0.6f) {
+			return TurnAction.Invade(targets[game.random.nextInt(targets.size)])
+		}
+		val legal = game.legalPlays(me)
+		if (legal.isEmpty()) return TurnAction.Draw
+		if (skill(game, me) == 0 && game.random.nextFloat() < 0.4f) return TurnAction.Play(legal[game.random.nextInt(legal.size)])
+		return TurnAction.Play(legal.maxBy { score(game, me, it) + game.random.nextFloat() })
+	}
 
-		val values = hand.estimateValue()
-		val ctx = Context(
-			game = game,
-			me = me,
-			values = values,
-			opponentMinCards = minCardsRemaining(game, me),
-			wildCount = hand.countSuit(CardColor.WILD),
-			penaltyCards = game.penalty.numCards,
-			baseBalance = colorBalance(hand, null),
+	private fun score(game: Game, me: Player, c: Card): Float {
+		val elim = elim(game)
+		val nextUp = game.step(me)
+		val danger = nextUp.hand.size <= 2
+		val colorCount = me.hand.countColor(c.color).toFloat()
+		var s = colorCount
+		val sp = c.special
+		if (sp == null) {
+			when (c.face) {
+				Face.WILD, Face.WILD_DRAW_FOUR -> s -= if (me.hand.size <= 3) 0f else 8f
+				Face.DRAW_TWO, Face.SKIP -> s += if (danger) 15f else 3f
+				else -> {}
+			}
+			if (c.face == Face.WILD_DRAW_FOUR) s += if (danger) 15f else 4f
+			return s
+		}
+		s += when (sp) {
+			Special.MAD, Special.MARTYR -> if (elim) 60f else -100f
+			Special.QUITTER -> if (elim) 100f else 30f
+			Special.LUCK, Special.BLUE_SHIELD, Special.CONQUEST, Special.PROPHET, Special.YIN, Special.YANG -> 25f
+			Special.DEATH, Special.VIRUS, Special.GLASNOST -> 15f
+			Special.FAMINE, Special.WAR -> if (me.hand.size <= 4) 10f else -5f
+			Special.CURE -> if (me.virusCount > 0) 40f else -5f
+			Special.I_DONT_LIKE_THESE -> if (me.hand.size >= 9) 15f else -20f
+			Special.COMMUNISM -> {
+				val avg = game.activePlayers.sumOf { it.hand.size }.toFloat() / game.activePlayerCount
+				if (me.hand.size > avg + 1) 25f else -40f
+			}
+			Special.NECROMANCER -> if (game.players.any { it.status == Status.REMOVED }) (if (elim) 20f else -30f) else 0f
+			Special.HOLY_DEFENDER, Special.FUCK_YOU, Special.FTPIP, Special.DODGE, Special.AIDS,
+			Special.MAGIC_5, Special.PENN_STATE -> -25f
+			Special.SPREADER -> 15f
+			Special.HOT_DEATH, Special.HARVESTER, Special.DELAYED_BLAST, Special.BACKSTAB,
+			Special.TASTE_THE_RAINBOW, Special.MYSTERY_DRAW -> if (danger) 20f else 6f
+			Special.CHOSEN_ONE, Special.GIFT, Special.GOLD_COIN, Special.PING -> 6f
+			Special.DOUBLE_SKIP, Special.REVERSE_SKIP -> if (danger) 12f else 3f
+			else -> 0f
+		}
+		return s
+	}
+
+	override suspend fun answer(game: Game, me: Player, attack: Attack): TurnAction {
+		game.waitABit(2)
+		val opts = game.answers(me, attack)
+		if (opts.isEmpty()) return TurnAction.Pass
+		fun has(s: Special) = opts.firstOrNull { it.special == s }
+		val stack = opts.filter { it.special !in DEFENSES }
+		val serious = when (attack.kind) {
+			AttackKind.QUIT -> !elim(game)
+			AttackKind.GLASNOST -> me.hand.has(Special.QUITTER)
+			AttackKind.PING, AttackKind.VIRUS -> false
+			AttackKind.DRAW -> attack.amount + attack.pile.size >= 4
+			AttackKind.RAINBOW -> true
+		}
+		if (attack.kind == AttackKind.QUIT && elim(game)) return TurnAction.Pass
+		has(Special.MAGIC_5)?.let { return TurnAction.Play(it) }
+		if (stack.isNotEmpty() && (serious || game.random.nextFloat() < 0.7f)) return TurnAction.Play(stack.first())
+		if (!serious && skill(game, me) > 0 && game.random.nextFloat() < 0.6f) return TurnAction.Pass
+		for (s in listOf(Special.HOLY_DEFENDER, Special.FUCK_YOU, Special.FTPIP, Special.DODGE, Special.AIDS)) {
+			has(s)?.let { return TurnAction.Play(it) }
+		}
+		return TurnAction.Pass
+	}
+
+	private fun bestColor(game: Game, me: Player): CardColor {
+		val ban = me.bannedColor
+		return CardColor.SUITS.filter { it != ban }.maxBy { me.hand.countColor(it) * 10 + game.random.nextInt(10) }
+	}
+
+	override suspend fun chooseColor(game: Game, me: Player): CardColor {
+		game.waitABit(2)
+		return bestColor(game, me)
+	}
+
+	override suspend fun chooseVictim(game: Game, me: Player, reason: Reason, options: List<Seat>, optional: Boolean): Seat? {
+		game.waitABit(2)
+		if (options.isEmpty()) return null
+		return when (reason) {
+			Reason.NECROMANCER, Reason.PROPHET -> options[game.random.nextInt(options.size)]
+			else -> leader(game, options)
+		}
+	}
+
+	override suspend fun chooseCard(game: Game, me: Player, reason: Reason, options: List<Card>, optional: Boolean): Card? {
+		game.waitABit(2)
+		if (options.isEmpty()) return null
+		return when (reason) {
+			// Slip someone the Quitter, then accuse them.
+			Reason.GIFT_CARD -> options.firstOrNull { it.special == Special.QUITTER }
+				?: options.filter { it.special == null }.minByOrNull { me.hand.countColor(it.color) }
+				?: options.first()
+			Reason.ARMY -> if (elim(game)) {
+				options.firstOrNull { it.special == Special.QUITTER } ?: options.maxBy { it.type.number ?: 0 }
+			} else {
+				options.filter { it.special != Special.QUITTER }.maxByOrNull { it.type.number ?: 0 } ?: options.first()
+			}
+			Reason.CHOSEN_ONE -> options.maxBy {
+				(if (it.special != null) 20 else 0) + (if (it.color == CardColor.WILD) 10 else me.hand.countColor(it.color))
+			}
+			Reason.REMOVE_HORSEMAN -> options.firstOrNull { c -> c.special == Special.DEATH && c in me.field }
+				?: options.firstOrNull { c -> c.special == Special.CONQUEST && c !in me.field }
+				?: options.firstOrNull { it.special == Special.WAR }
+			else -> options[game.random.nextInt(options.size)]
+		}
+	}
+
+	override fun jumpInDelay(game: Game, me: Player, card: Card, windowMs: Long): Long? {
+		val s = card.special
+		if (!elim(game) && (s == Special.MAD || s == Special.MARTYR)) return null
+		val chance = when (skill(game, me)) { 0 -> 0.35f; 1 -> 0.55f; else -> 0.75f }
+		if (game.random.nextFloat() >= chance) return null
+		if (windowMs <= 0) return 0
+		return 300 + game.random.nextLong(maxOf(1, windowMs - 300))
+	}
+
+	/** Someone this player knows is holding the Quitter. */
+	fun accusation(game: Game, me: Player): Seat? = game.players.firstOrNull { q ->
+		q !== me && q.active && q.hand.cards.any { c ->
+			c.special == Special.QUITTER && (q.hand.isVisible(c) || c in me.peeked || c in q.hand.revealedCards)
+		}
+	}?.seat
+
+	/** Now and then, ask the Prophet about the Quitter. */
+	fun prophetQuestion(game: Game, me: Player): CardType? =
+		if (game.random.nextFloat() < 0.3f) CardType.special(Special.QUITTER) else null
+
+	companion object {
+		private val DEFENSES = setOf(
+			Special.HOLY_DEFENDER, Special.FUCK_YOU, Special.FTPIP, Special.DODGE, Special.AIDS, Special.MAGIC_5,
 		)
-
-		var maxTestVal = Int.MIN_VALUE
-		var best: Card? = null
-		for (tc in hand.cards) {
-			val check = game.evaluate(hand, tc)
-			if (check == PlayCheck.INVALID) continue
-			// Always play a defender immediately when under a heavy penalty.
-			if (check == PlayCheck.DEFENDER && ctx.penaltyCards >= DEFEND_THRESHOLD) {
-				best = tc
-				break
-			}
-			// TODO: improve this AI
-			//   - throw the mystery draw on numbered cards
-			//   - don't throw MAD when point count in hand is too high (unless player count < 4)
-			//   - consider the damage of offensive cards; look to hit players with low card counts
-			//   - advanced: throw MAD to catch an opponent and force them over 1000 points
-			val testVal = scoreCandidate(ctx, tc)
-			if (testVal >= maxTestVal) {
-				maxTestVal = testVal
-				best = tc
-			}
-		}
-
-		return best?.let { TurnAction.Play(it) } ?: TurnAction.Draw
 	}
-
-	private class Context(
-		val game: Game,
-		val me: Player,
-		/** Card values of the whole hand, computed once per turn. */
-		val values: HandValue,
-		val opponentMinCards: Int,
-		val wildCount: Int,
-		val penaltyCards: Int,
-		/** Color balance of the whole hand, computed once per turn. */
-		val baseBalance: Double,
-	)
-
-	/** Heuristic value of playing `tc`. Higher = more desirable. */
-	private fun scoreCandidate(ctx: Context, tc: Card): Int {
-		val base = ctx.values.valueOf(tc)
-		if (skill == 0) return base
-
-		var testVal = if (tc.color == CardColor.WILD) {
-			// Hold wilds while opponents still have many cards AND the draw pile is healthy.
-			val drawPileHealthy = ctx.game.drawPile.size > 15
-			val opponentsHaveCards = ctx.wildCount < ctx.opponentMinCards - 1
-			if (opponentsHaveCards && drawPileHealthy) 0 else base
-		} else {
-			base
-		}
-
-		testVal = adjustForMad(ctx, tc, testVal)
-		testVal = adjustForSixtyNine(ctx, tc, testVal)
-		testVal = adjustForMysteryDraw(ctx, tc, testVal)
-		testVal = adjustForV3Cards(ctx, tc, testVal)
-
-		if (skill >= 2) {
-			testVal = adjustForColorBalance(ctx, tc, testVal)
-			testVal = adjustForEndgamePressure(ctx, tc, testVal)
-		}
-
-		if (ctx.penaltyCards >= DEFEND_THRESHOLD) testVal = adjustForDefender(ctx, tc, testVal)
-		return testVal
-	}
-
-	// -------------------------------------------------------------------------
-	// Heuristic adjustors
-	// -------------------------------------------------------------------------
-
-	private fun adjustForMad(ctx: Context, tc: Card, testVal: Int): Int {
-		if (tc.type != CardType.YELLOW_1_MAD || ctx.game.activePlayerCount <= 3) return testVal
-		val newHandValue = ctx.me.hand.estimateValue(tc).total
-		return when {
-			newHandValue < 10 -> testVal + 100
-			newHandValue < 20 -> testVal + 70
-			newHandValue < 50 -> 0
-			else -> testVal - 20
-		}
-	}
-
-	private fun adjustForSixtyNine(ctx: Context, tc: Card, testVal: Int): Int {
-		if (tc.type != CardType.YELLOW_69) return testVal
-		return ctx.values.total - ctx.me.hand.estimateValue(tc).total
-	}
-
-	private fun adjustForMysteryDraw(ctx: Context, tc: Card, testVal: Int): Int {
-		if (tc.type != CardType.WILD_MYSTERY) return testVal
-		val lpc = ctx.game.lastPlayedCard ?: return testVal
-		if (lpc.type == CardType.YELLOW_69) return testVal + 200
-		val n = lpc.value.number ?: return testVal
-		return when {
-			n <= 0 -> testVal
-			n < 5 -> testVal + 15
-			n < 8 -> testVal + 30
-			else -> testVal + 50
-		}
-	}
-
-	/**
-	 *  - Backstab: bonus when the player before us is close to winning (they draw 2)
-	 *  - Swap:     bonus when we hold more cards than the player before us
-	 *  - Clone:    bonus proportional to the strength of the previous card
-	 *  - Ping:     bonus the fewer cards the most threatening opponent holds
-	 */
-	private fun adjustForV3Cards(ctx: Context, tc: Card, testValIn: Int): Int {
-		var testVal = testValIn
-		val game = ctx.game
-		when (tc.value) {
-			CardValue.REVERSE_BACKSTAB -> {
-				val before = game.getPlayerBefore(ctx.me)
-				if (before !== ctx.me) {
-					val theirCards = before.hand.size
-					if (theirCards <= 3) testVal += 50 else if (theirCards <= 6) testVal += 25
-				}
-			}
-			CardValue.REVERSE_SWAP -> {
-				val before = game.getPlayerBefore(ctx.me)
-				if (before !== ctx.me) {
-					val delta = before.hand.size - ctx.me.hand.size // positive = we'd gain cards
-					testVal += when {
-						delta < -3 -> 60
-						delta < 0 -> 30
-						delta > 3 -> -40
-						else -> -10
-					}
-				}
-			}
-			CardValue.CLONE -> {
-				val prev = game.lastPlayedCard ?: return testVal - 10
-				testVal += when (prev.value) {
-					CardValue.WILD_DRAW -> 80
-					CardValue.DRAW -> 40
-					CardValue.DRAW_SPREAD -> 70
-					CardValue.SKIP, CardValue.SKIP_DOUBLE -> 30
-					else -> 10
-				}
-			}
-			else -> if (tc.type == CardType.BLUE_1_PING) {
-				testVal += 15
-				testVal += when {
-					ctx.opponentMinCards <= 1 -> 40
-					ctx.opponentMinCards <= 2 -> 25
-					ctx.opponentMinCards <= 3 -> 10
-					else -> 0
-				}
-			}
-		}
-		return testVal
-	}
-
-	/** Near our own win, prefer cards that stop opponents from going out first. */
-	private fun adjustForEndgamePressure(ctx: Context, tc: Card, testValIn: Int): Int {
-		var testVal = testValIn
-		if (ctx.me.hand.size > ENDGAME_HAND_SIZE) return testVal
-		val v = tc.value
-		if (v.isSkipFamily || v == CardValue.REVERSE_SKIP) testVal += ENDGAME_SKIP_BONUS
-		if (v.isDrawFamily) testVal += ENDGAME_SKIP_BONUS / 2
-		// Save the wild if a matching color card will do.
-		if (tc.color == CardColor.WILD && ctx.me.hand.countSuit(ctx.game.currColor) > 0) testVal -= 20
-		return testVal
-	}
-
-	/** Under a draw penalty, strongly reward a legal defender. */
-	private fun adjustForDefender(ctx: Context, tc: Card, testVal: Int): Int {
-		val isDefender = tc.type == CardType.RED_0_HD || tc.type == CardType.BLUE_0_FUCK_YOU
-				|| tc.type == CardType.GREEN_3_AIDS || tc.type == CardType.RED_5_MAGIC
-		val isStack = tc.value == CardValue.WILD_DRAW && ctx.game.penalty.origCard?.value == CardValue.WILD_DRAW
-		return if (isDefender || isStack) testVal + ctx.penaltyCards * 15 else testVal
-	}
-
-	private fun adjustForColorBalance(ctx: Context, tc: Card, testVal: Int): Int {
-		if ((ctx.opponentMinCards + aggression / 3) <= 3) return testVal
-		if (ctx.baseBalance == 0.0) return testVal
-		val change = (colorBalance(ctx.me.hand, tc) - ctx.baseBalance) / ctx.baseBalance
-		return when {
-			change < -0.5 -> testVal + 40
-			change < -0.25 -> testVal + 20
-			change > 0.5 -> testVal - 40
-			change > 0.25 -> testVal - 20
-			else -> testVal
-		}
-	}
-
-	// -------------------------------------------------------------------------
-	// Helpers
-	// -------------------------------------------------------------------------
-
-	/** Spread of the four suit counts (lower = more balanced), optionally without one card. */
-	internal fun colorBalance(hand: Hand, exclude: Card?): Double {
-		val totals = IntArray(4)
-		for (c in hand.cards) {
-			if (c === exclude) continue
-			val i = CardColor.SUITS.indexOf(c.color)
-			if (i >= 0) totals[i]++
-		}
-		val avg = totals.sum() / 4.0
-		return sqrt(totals.sumOf { (it - avg).pow(2) })
-	}
-
-	private fun minCardsRemaining(game: Game, me: Player): Int =
-		game.players.filter { it !== me && it.active }.minOfOrNull { it.hand.size } ?: Int.MAX_VALUE
 }

@@ -6,45 +6,6 @@
 <item>@string/cardcolor_blue</item>
 <item>@string/cardcolor_yellow</item>
 </array>
-<string-array name="deal_values">
-<item>5</item>
-<item>6</item>
-<item>7</item>
-<item>8</item>
-<item>9</item>
-<item>10</item>
-<item>11</item>
-<item>12</item>
-<item>13</item>
-<item>14</item>
-<item>15</item>
-</string-array>
-<string-array name="deck_types">
-<item>@string/deck_original</item>
-<item>@string/deck_half</item>
-<item>@string/deck_hybrid</item>
-<item>@string/deck_extended</item>
-<item>@string/deck_vanilla</item>
-</string-array>
-<string-array name="deck_type_values">
-<item>original</item>
-<item>half</item>
-<item>hybrid</item>
-<item>extended</item>
-<item>vanilla</item>
-</string-array>
-<string-array name="cheat_levels">
-<item>@string/cheat_level_0</item>
-<item>@string/cheat_level_1</item>
-<item>@string/cheat_level_2</item>
-<item>@string/cheat_level_3</item>
-</string-array>
-<string-array name="cheat_level_values">
-<item>0</item>
-<item>1</item>
-<item>2</item>
-<item>3</item>
-</string-array>
 <string-array name="skill_levels">
 <item>@string/skill_level_0</item>
 <item>@string/skill_level_1</item>
@@ -54,20 +15,6 @@
 <item>0</item>
 <item>1</item>
 <item>2</item>
-</string-array>
-<string-array name="aggression_levels">
-<item>@string/aggression_level_n6</item>
-<item>@string/aggression_level_n3</item>
-<item>@string/aggression_level_0</item>
-<item>@string/aggression_level_3</item>
-<item>@string/aggression_level_6</item>
-</string-array>
-<string-array name="aggression_level_values">
-<item>-6</item>
-<item>-3</item>
-<item>0</item>
-<item>3</item>
-<item>6</item>
 </string-array>
 <string-array name="game_speeds">
 <item>@string/game_speed_0</item>
@@ -82,5 +29,17 @@
 <item>2</item>
 <item>3</item>
 <item>4</item>
+</string-array>
+<string-array name="jump_in_times">
+<item>@string/jump_in_0</item>
+<item>@string/jump_in_1</item>
+<item>@string/jump_in_2</item>
+<item>@string/jump_in_3</item>
+</string-array>
+<string-array name="jump_in_values">
+<item>1000</item>
+<item>2000</item>
+<item>3000</item>
+<item>5000</item>
 </string-array>
 </resources>

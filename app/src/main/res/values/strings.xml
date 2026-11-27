@@ -20,100 +20,11 @@
 	<string name="direction_clockwise">clockwise</string>
 	<string name="direction_counterclockwise">counterclockwise</string>
 
-	<string name="deck_type_title">Card Deck</string>
-	<string name="deck_type_summary">Choose which deck type to use</string>
-	<string name="deck_original">Original (1 vanilla deck + 1 modified deck = 216 Cards)</string>
-	<string name="deck_half">Half (1 modified deck, 108 Cards)</string>
-	<string name="deck_hybrid">Hybrid (1 vanilla deck + 39 modified cards = 147 Cards)</string>
-	<string name="deck_extended">Extended (Original + 9 extra cards = 225 Cards)</string>
-	<string name="deck_vanilla">Vanilla (108 Cards)</string>
-
 	<string name="cardval_d">Draw Two</string>
 	<string name="cardval_s">Skip</string>
 	<string name="cardval_r">Reverse</string>
-	<string name="cardval_d_spread">Draw Two Spreader</string>
-	<string name="cardval_s_double">Double Skip</string>
-	<string name="cardval_r_skip">Reverse Skip</string>
 	<string name="cardval_wild">Wild</string>
 	<string name="cardval_wild_drawfour">Wild Draw Four</string>
-	
-	<string name="cardname_wild_hd">Hot Death Draw Four Wild</string>
-	<string name="cardname_wild_db">Delayed Blast Draw Four Wild</string>
-	<string name="cardname_wild_hos">Harvester of Sorrows</string>
-	<string name="cardname_wild_mystery">Mystery Wild</string>
-	<string name="cardname_red_0_hd">Holy Defender</string>
-	<string name="cardname_red_2_glasnost">Glasnost</string>
-	<string name="cardname_red_5_magic">Magic 5</string>
-	<string name="cardname_green_0_quitter">Quitter</string>
-	<string name="cardname_green_3_aids">AIDS</string>
-	<string name="cardname_green_3_aids_ff">Virus</string>
-	<string name="cardname_green_4_irish">Luck of the Irish</string>
-	<string name="cardname_blue_0_fuck_you">Fuck You</string>
-	<string name="cardname_blue_0_fuck_you_ff">Retaliation</string>
-	<string name="cardname_blue_2_shield">Blue Shield</string>
-	<string name="cardname_yellow_0_shitter">Shitter</string>
-	<string name="cardname_yellow_0_shitter_ff">Big Brother</string>
-	<string name="cardname_yellow_1_mad">Mutual Assured Destruction</string>
-	<string name="cardname_yellow_69">69</string>
-
-	<string name="cardname_backstab">Backstab</string>
-	<string name="cardname_clone">Clone</string>
-	<string name="cardname_ping">Ping</string>
-	<string name="cardname_swap">Swap</string>
-
-	<string name="msg_dealing">%1$s deals %2$d cards</string>
-	<string name="msg_card_no_good">That card\'s no good</string>
-	<string name="msg_shuffling_discard">Shuffling %d cards from the discard pile</string>
-	<string name="msg_shuffling_discard_1">Shuffling 1 card from the discard pile</string>
-	<string name="msg_discard_empty">No cards in draw pile or discard pile.</string>
-	<string name="msg_player_draws_card">%s draws a card</string>
-	<string name="msg_player_draws_specific_card">%1$s draws %2$s</string>
-	<string name="msg_player_draw">Draw card: %s</string>
-	<string name="msg_declare_round_winner">%s wins!</string>
-	<string name="msg_tap_draw_pile">Tap the draw pile to start next hand.</string>
-	<string name="msg_declare_game_winner">Game over!  %s wins!</string>
-	<string name="msg_your_play">Your play</string>
-	<string name="msg_you_have_defender">(you have a defensive card)</string>
-	<string name="msg_you_have_defenders">(you have %d defensive cards)</string>
-	<string name="msg_prompt_draw">Draw a card</string>
-	<string name="msg_all_bastard_cards">%s wins hand with all bastard cards!</string>
-	<string name="msg_holy_defender">Holy defender passes penalty to %s</string>
-	<string name="msg_magic_5">Magic 5 nulls the penalty</string>
-	<string name="msg_sharing_penalty">Sharing penalty with %s</string>
-	<string name="msg_sending_penalty">Sending penalty back to %s</string>
-	<string name="msg_luck_of_irish">Luck of the Irish reduces penalty</string>
-	<string name="msg_player_faceup">%s\'s cards set faceup</string>
-	<string name="msg_player_ejected">%s ejected</string>
-	<string name="msg_player_drawing">%1$s draws %2$d</string>
-	<string name="msg_has_blue_shield">%1$s has blue shield</string>
-	<string name="msg_color_chosen">%1$s chooses %2$s</string>
-
-	<string name="msg_backstab">%1$s is backstabbed and draws 2!</string>
-	<string name="msg_clone">Clone copies %1$s!</string>
-	<string name="msg_ping">%1$s pings %2$s — draw 1!</string>
-	<string name="msg_swap">%1$s swaps hands with %2$s!</string>
-
-	<string name="msg_round_score_positive">%1$d + %2$d + %3$d = %4$d</string>
-	<string name="msg_round_score_negative">%1$d - %2$d + %3$d = %4$d</string>
-
-	<string name="msg_penalty_first_drawfour">%1$s threw a Draw Four - %2$d to %3$s…</string>
-	<string name="msg_penalty_stacked_drawfour">%1$s stacked a Draw Four - %2$d to %3$s…</string>
-	<string name="msg_penalty_first_wild_hd">%1$s threw Hot Death - %2$d to %3$s…</string>
-	<string name="msg_penalty_stacked_wild_hd">%1$s stacked Hot Death - %2$d to %3$s…</string>
-	<string name="msg_penalty_first_wild_db">%1$s threw a Delayed Blast - %2$d to %3$s…</string>
-	<string name="msg_penalty_stacked_wild_db">%1$s stacked a Delayed Blast - %2$d to %3$s…</string>
-	<string name="msg_penalty_first_wild_hos">%1$s threw the Harvester of Sorrows - %2$d to %3$s…</string>
-	<string name="msg_penalty_stacked_wild_hos">%1$s stacked the Harvester of Sorrows - %2$d to %3$s…</string>
-	<string name="msg_penalty_first_wild_mystery">%1$s threw Mystery Draw - %2$d to %3$s…</string>
-	<string name="msg_penalty_stacked_wild_mystery">%1$s stacked Mystery Draw - %2$d to %3$s…</string>
-	<string name="msg_penalty_null_wild_mystery">%1$s threw Mystery Draw on a non-number; same as Wild</string>
-
-	<string name="msg_player_takes_penalty">%1$s draws %2$d (%3$s)</string>
-	<string name="msg_player_ejected_by">%1$s ejected by %2$s</string>
-
-	<string name="prompt_deal">How many cards do you want to deal?</string>
-	<string name="prompt_color">Pick a color</string>
-	<string name="prompt_victim">Pick a victim</string>
 
 	<string name="cardhelp_0">Value: 0 points</string>
 	<string name="cardhelp_1">Value: 1 point</string>
@@ -128,39 +39,8 @@
 	<string name="cardhelp_d">Forces the next player to draw 2 cards.  Value: 20 points</string>
 	<string name="cardhelp_s">Skips the next player.  Value: 20 points</string>
 	<string name="cardhelp_r">Reverses the direction of gameplay.  Value: 20 points</string>
-
-	<string name="cardhelp_d_spread">Spreaders are high-powered Draw 2 cards that force every player around the table to draw two cards (except the owner of the Spreader). The owner then plays another card. At the end of the hand, Spreaders are each worth 20 points times the total number of one\'s opponents. (Protection cards: The Blue Shield)</string>
-	<string name="cardhelp_s_double">Skips two players instead of just one. In a two-player game, a player who lays a Double-Skip plays again. At the end of the hand, the Double-Skip is worth 40 points.</string>
-	<string name="cardhelp_r_skip">Reverses the direction of the play, then skips one player. In a two-player game, a player who lays a Reverse Skip plays again. At the end of the hand, the Reverse Skip is worth 40 points.</string>
 	<string name="cardhelp_wild">Can be played on any color card.  Allows player to select a new color.  Value: 50 points</string>
 	<string name="cardhelp_wild_drawfour">Can be played on any color card.  Allows player to select a new color and forces the next player to draw four cards.  The card may only be played when the player holding it does not have a card in their hand to match the color on the Discard pile.  Value: 50 points</string>
-
-	<string name="cardhelp_wild_hd">The namesake of the game, the Hot Death card is a Wild Draw 8. A player may stack it just like any other Wild Draw card. At the end of the hand, the Hot Death card is worth 100 points.</string>
-	<string name="cardhelp_wild_db">Acts first as a skip, then as a normal Wild Draw 4. It may be stacked like any other Wild Draw card. At the end of the hand, the Delayed Blast card is worth 100 points.</string>
-	<string name="cardhelp_wild_hos">The Harvester of Sorrows is a Wild Draw 4. It may be stacked on another Wild Draw card, but no other Wild Draw can be stacked upon it. It also cannot be defended against. A player facing the Harvester must take his cards. At the end of the hand, the Harvester of Sorrows is worth 0 points. Save it for a good occasion.</string>
-	<string name="cardhelp_wild_mystery">The effects of the Mystery Draw card vary depending on what card it is played upon. If it is played on a non-numbered card, it acts as a normal Wild card. If played on a number, the next player must draw that many cards. (And, you guessed it, if played on the 69 card, the next player must draw 69 cards.) At the end of the hand, the Mystery Draw card is worth 10 times the highest number card in its owner\'s hand, or 10 points if its owner has no number cards.</string>
-	<string name="cardhelp_red_0_hd">The Holy Defender acts as a protective shield against the Wild Draw, Quitter, and Glasnost cards. The player laying the Holy Defender is skipped, and the effects of the hostile card are transferred to the next person in the sequence of play. At the end of the hand, the Holy Defender halves its owner\'s score.  If a player gets all four \"bastard\" cards in his hand (Quitter, Shitter, Fuck You, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_red_0_hd_ff">The Holy Defender acts as a protective shield against the Wild Draw, Quitter, and Glasnost cards. The player laying the Holy Defender is skipped, and the effects of the hostile card are transferred to the next person in the sequence of play. At the end of the hand, the Holy Defender halves its owner\'s score.  If a player gets all four \"bastard\" cards in his hand (Quitter, Big Brother, Retaliation, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_red_2_glasnost">Glasnost is Russian for ""openness."" A player laying the Glasnost card makes the player of his choice lay all his cards down face up on the table for everyone to see. The victim of the Glasnost card does not have to keep face up any cards he draws after that point, but the initial cards must remain face up. At the end of the hand, the Glasnost card is worth 75 points.</string>
-	<string name="cardhelp_red_5_magic">The Magic Red 5 has two special attributes. First, it may be played on ANY other card. Second, it has the effect of completely nullifying the Hot Death card. Poof. Like nothing ever happened. At the end of the hand, the Magic Red 5 subtracts 5 points from the player\'s score.</string>
-	<string name="cardhelp_green_0_quitter">When the Quitter is played, the next player in the sequence must lay down his hand and take all the points in it. He is out of the game for the rest of the hand. The Retaliation, the Holy Defender, and the Virus card are defenses against the Quitter. The Quitter has no effect when there are only two players. At the end of the hand, the Quitter is worth 100 points. If a player has the Quitter and the Fuck You at the end of a hand, he gets 1,000 points.  If a player gets all four \"bastard\" cards in his hand (Quitter, Shitter, Fuck You, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_green_0_quitter_ff">When the Quitter is played, the next player in the sequence must lay down his hand and take all the points in it. He is out of the game for the rest of the hand. The Retaliation, the Holy Defender, and the Virus card are defenses against the Quitter. The Quitter has no effect when there are only two players. At the end of the hand, the Quitter is worth 100 points. If a player has the Quitter and the Retaliation at the end of a hand, he gets 1,000 points.  If a player gets all four \"bastard\" cards in his hand (Quitter, Big Brother, Retaliation, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_green_3_aids">Allows a player to share his misery with whomever caused it. The card can be used against the Wild Draw, Quitter, and Glasnost cards. Played against a Wild Draw, the effects are split between the two players. Played against the Quitter or Glasnost, both players suffer the hostile card\'s effect. At the end of the hand, a player caught holding the AIDS card is ""infected."" The card is only worth 3 points, but the player takes an extra 10-point penalty on that hand and on every subsequent hand in which he is not the winner. The effects of being ""infected"" more than once are cumulative.</string>
-	<string name="cardhelp_green_3_aids_ff">Allows a player to share his misery with whomever caused it. The card can be used against the Wild Draw, Quitter, and Glasnost cards. Played against a Wild Draw, the effects are split between the two players. Played against the Quitter or Glasnost, both players suffer the hostile card\'s effect. At the end of the hand, a player caught holding the Virus card is ""infected."" The card is only worth 3 points, but the player takes an extra 10-point penalty on that hand and on every subsequent hand in which he is not the winner. The effects of being ""infected"" more than once are cumulative.</string>
-	<string name="cardhelp_green_4_irish">Allows the player holding it to draw one card fewer than he would normally be required to — for example, if a Wild Draw 4 were played against him, he would only have to draw three cards. The player does not have to play the card to receive this protection. At the end of the hand, the Luck o\' the Irish card is worth 75 points.</string>
-	<string name="cardhelp_blue_0_fuck_you">Sends the effects of a Wild Draw, the Quitter, or the Glasnost card back where it came from. It also reverses the direction of play. At the end of the hand, the Fuck You card doubles its owner\'s score. If a player has the Fuck You and the Quitter at the end of a hand, he gets 1,000 points.  If a player gets all four \"bastard\" cards in his hand (Quitter, Shitter, Fuck You, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_blue_0_fuck_you_ff">Sends the effects of a Wild Draw, the Quitter, or the Glasnost card back where it came from. It also reverses the direction of play. At the end of the hand, the Retaliation card doubles its owner\'s score. If a player has the Retaliation and the Quitter at the end of a hand, he gets 1,000 points.  If a player gets all four \"bastard\" cards in his hand (Quitter, Big Brother, Retaliation, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_blue_2_shield">The only special feature of the Blue Shield card is its defense against Spreaders. A player holding the Blue Shield card is automatically protected from Spreaders. The player who laid the Spreader draws the two cards that the holder of the Blue Shield card would have drawn, then play continues with the holder of the Blue Shield card. At the end of the hand, the Blue Shield card is worth the same as the card in its owner\'s hand with the highest point value.</string>
-	<string name="cardhelp_yellow_0_shitter">The most dismal card in the deck. A player under the watchful eye of (holding) The Shitter can only play it at one of three times: on the Holy Defender, on the Magic Red 5, or as the last card he plays. Why is this so bad? Because at the end of the hand, all players add up their point totals, and the player holding The Shitter takes the highest total of points of all the players around the table. One is guaranteed to do as poorly as or worse than all of one\'s opponents.  If a player gets all four \"bastard\" cards in his hand (Quitter, Shitter, Fuck You, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_yellow_0_shitter_ff">The most dismal card in the deck. A player under the watchful eye of (holding) the Big Brother can only play it at one of three times: on the Holy Defender, on the Magic Red 5, or as the last card he plays. Why is this so bad? Because at the end of the hand, all players add up their point totals, and the player holding the Big Brother takes the highest total of points of all the players around the table. One is guaranteed to do as poorly as or worse than all of one\'s opponents.  If a player gets all four \"bastard\" cards in his hand (Quitter, Big Brother, Retaliation, and Holy Defender), the hand ends immediately, and that player gets a score of 0 for the hand.</string>
-	<string name="cardhelp_yellow_1_mad">The Mutual Assured Destruction card is a double-edged sword. When a player lays the M.A.D. card, he must lay down his hand and take all the points in it — but he forces another player of his choice to do the same. There is no defense against the M.A.D. card. The M.A.D. card has no effect when there are only two or three players. At the end of the hand, the M.A.D. card is worth 100 points.</string>
-	<string name="cardhelp_yellow_69">May be played on any 6 or any 9 (or, of course, on any yellow card). It also allows any player holding it to play a 6 on a 9 or a 9 on a 6 regardless of color. If any player challenges such a move, the player with the 69 card shows it, and the challenger must draw two cards. At the end of the hand, the player holding the 69 card takes a total of 69 points, regardless of what other cards he holds — though that score may be affected by the Fuck You, Holy Defender, Magic Red 5, or an earlier AIDS card or overridden by The Shitter.</string>
-	<string name="cardhelp_yellow_69_ff">May be played on any 6 or any 9 (or, of course, on any yellow card). It also allows any player holding it to play a 6 on a 9 or a 9 on a 6 regardless of color. If any player challenges such a move, the player with the 69 card shows it, and the challenger must draw two cards. At the end of the hand, the player holding the 69 card takes a total of 69 points, regardless of what other cards he holds — though that score may be affected by the Retaliation, Holy Defender, Magic Red 5, or an earlier Virus card or overridden by the Big Brother.</string>
-
-	<string name="cardhelp_backstab">The player before you draws 2 cards and the turn order is reversed. Blockable and stackable with Draw 2s.</string>
-	<string name="cardhelp_clone">Copies the effect of the card currently on top of the pile and applies it to the next player. If played on a stack it copies that card\'s contribution. Does not apply to Field cards. Blockable and stackable if the copied card is stackable.</string>
-	<string name="cardhelp_ping">Choose any player — they draw exactly 1 card. Play continues normally. No card or rule in the game stops Ping or changes its 1-card pickup.</string>
-	<string name="cardhelp_swap">Swap your hand with the player before you (Field cards are not swapped). Turn order then reverses.</string>
 
 	<string name="settings_title">Settings</string>
 	<string name="game_speed_title">Game speed</string>
@@ -172,9 +52,6 @@
 	<string name="game_speed_3">Slow</string>
 	<string name="game_speed_4">Very slow</string>
 
-	<string name="standard_rules_title">Standard rules</string>
-	<string name="standard_rules_summary">Disable special cards; play standard rules</string>
-
 	<string name="computer_4th_title">Computer 4th</string>
 	<string name="computer_4th_summary">Have a computer play the 4th (south) seat; mostly useful for testing</string>
 
@@ -184,16 +61,8 @@
 	<string name="family_friendly_title">Family friendly</string>
 	<string name="family_friendly_summary">Replace politically incorrect original Hot Death cards with family friendly alternative designs</string>
 
-	<string name="cheat_level_title">Cheat level</string>
-	<string name="cheat_level_summary">Swap out some cards for good ones after hands are dealt out</string>
-
-	<string name="cheat_level_0">Honest</string>
-	<string name="cheat_level_1">Rascal (Swap 1 Card)</string>
-	<string name="cheat_level_2">Scoundrel (Swap 2 Cards)</string>
-	<string name="cheat_level_3">Dirtbag (Swap 3 Cards)</string>
-
 	<string name="players">Opponents</string>
-	<string name ="players_summary">Change skill and aggression</string>
+	<string name ="players_summary">Change how well the computers play</string>
 
 	<string name="player1">West</string>
 	<string name="player2">North</string>
@@ -205,15 +74,6 @@
 	<string name="skill_level_1">Strong</string>
 	<string name="skill_level_2">Expert</string>
 
-	<string name="aggression_title">Aggression</string>
-	<string name="aggression_summary">Aggression level of the player (indicates how hard this player will attack you, the human player)</string>
-
-	<string name="aggression_level_n6">Pushover</string>
-	<string name="aggression_level_n3">Nice guy</string>
-	<string name="aggression_level_0">Normal</string>
-	<string name="aggression_level_3">Jerk</string>
-	<string name="aggression_level_6">Sadist</string>
-
 	<string name="menu_item_draw_title">Draw</string>
 	<string name="menu_item_draw_shortcut">d</string>
 	<string name="menu_item_pass_title">Pass</string>
@@ -224,18 +84,15 @@
 	<string name="dlg_about_title">About Hot Death</string>
 	<string name="dlg_about_text"><i>Version %s\nCopyright smorgasbork.com</i>\n\nHot Death is a variation of the classic card game, Uno.\n\nThis is a labor of love for me, as I have enjoyed the original Hot Death Uno for many years.  I first saw it in electronic form in the mid 90s, as a Visual Basic application for Windows.\n\nHere is the original "About" screen from that application (dated November 23, 1993):\n\n"Wow, you actually read "About" screens? I never do. Anyway, UNO is a trademark of Parker Brothers. Hot Death UNO was created by Byron Hoffman, John Howard, Chris Kulander, and Matt Murray; expanded by Keith Ammann, Larry Geraghty, Chris Kulander, Matt Murray, and Jason Seifert; and coded for Windows in Visual Basic by Mister Señor Love Daddy. I know this looks like shareware, but please do not send me any money or Parker Brothers might sue me. I didn't exactly get their permission to do this."\n\nInspired by the original, I wrote a version for Pocket PC in the early 2000s, and now it is here for Android.\n\nThis program is released as an open source project under the GPL (http://www.gnu.org/licenses/gpl.html)\n\nTo access the source, visit http://www.smorgasbork.com/hotdeath/</string>
 	<string name="dlg_help_title">How to Play</string>
-	<string name="dlg_help_text">A random player is chosen to deal the first hand, after which each hand is dealt by the player who won the last.  The dealer chooses how many cards to deal, between five and 15.\n\nTo play a card, simply tap it; the "badge" in the lower right-hand corner shows you how many cards are in your hand.  If you cannot see them all, simply drag left or right to view your entire hand.\n\nPlay progresses as in standard UNO, though there are some additional quirks.\n\nWhen a Wild Draw 4, Delayed Blast Wild Draw 4 or Hot Death card is played, the recipient may stack another on top of it, passing the accumulated effects on to the next player.  The stacking ends when the Harvester of Sorrows is played (draw cards cannot be stacked on top of the Harvester) or when a player cannot continue the stacking.  Draw 2s (including Spreaders) and Mystery Draw can never be stacked.\n\nPlay is to 1,000.\n\nFor more specifics about any card, tap and hold the card.  Or use the menu and select "Card Info" to learn about any card in the deck.</string>
 
 	<string name="lbl_next_round">NEXT ROUND</string>
 	<string name="lbl_fast_forward">FAST FORWARD</string>
 	<string name="lbl_menu_draw">DRAW</string>
 	<string name="lbl_menu_pass">PASS</string>
-	<string name="lbl_menu_help">HELP</string>
+	<string name="lbl_menu_help">Card list</string>
 	<!-- Accessibility descriptions for the game table -->
 	<string name="a11y_table_turn">%1$s to play. Top card: %2$s. Color: %3$s. You hold %4$d cards: %5$s.</string>
-	<string name="a11y_table_round_over">Round over. Scores: %1$s.</string>
 	<string name="a11y_table_dealing">Dealing.</string>
-	<string name="a11y_score_entry">%1$s %2$d</string>
 	<string name="a11y_draw_pile">Draw pile, %1$d cards</string>
 	<string name="a11y_discard_pile">Discard pile: %1$s</string>
 	<string name="a11y_card_back">face-down card</string>
@@ -269,4 +126,220 @@
 	<string name="mp_left">%1$s left; a computer plays for them now</string>
 	<string name="mp_host_lost">Lost the connection to the host.</string>
 	<string name="mp_ended">The multiplayer game has ended.</string>
+
+	<!-- Hot Death Uno Redux (Constitution v3.1) -->
+	<string name="cardname_sixty_nine">69</string>
+	<string name="cardname_aids">AIDS</string>
+	<string name="cardname_backstab">Backstab</string>
+	<string name="cardname_blue_shield">Blue Shield</string>
+	<string name="cardname_clone">Clone</string>
+	<string name="cardname_communism">Communism</string>
+	<string name="cardname_conquest">Conquest</string>
+	<string name="cardname_cure">Cure</string>
+	<string name="cardname_death">Death</string>
+	<string name="cardname_delayed_blast">Delayed Blast</string>
+	<string name="cardname_dodge">Dodge</string>
+	<string name="cardname_double_skip">Double Skip</string>
+	<string name="cardname_famine">Famine</string>
+	<string name="cardname_ftpip">Fuck This Person In Particular</string>
+	<string name="cardname_fuck_you">Fuck You</string>
+	<string name="cardname_gift">Gift</string>
+	<string name="cardname_glasnost">Glasnost</string>
+	<string name="cardname_gold_coin">Gold Coin</string>
+	<string name="cardname_harvester">Harvester of Sorrows</string>
+	<string name="cardname_holy_defender">Holy Defender</string>
+	<string name="cardname_hot_death">Hot Death</string>
+	<string name="cardname_i_dont_like_these">I Don\'t Like These</string>
+	<string name="cardname_luck">Luck</string>
+	<string name="cardname_mad">M.A.D.</string>
+	<string name="cardname_magic_5">Magic 5</string>
+	<string name="cardname_martyr">Martyr</string>
+	<string name="cardname_mystery_draw">Mystery Draw</string>
+	<string name="cardname_necromancer">Necromancer</string>
+	<string name="cardname_penn_state">Penn State</string>
+	<string name="cardname_ping">Ping</string>
+	<string name="cardname_plague">Plague</string>
+	<string name="cardname_prophet">Prophet</string>
+	<string name="cardname_quitter">Quitter</string>
+	<string name="cardname_recycler">Recycler</string>
+	<string name="cardname_reverse_skip">Reverse Skip</string>
+	<string name="cardname_spreader">Spreader</string>
+	<string name="cardname_swap">Swap</string>
+	<string name="cardname_taste_the_rainbow">Taste the Rainbow</string>
+	<string name="cardname_chosen_one">The Chosen One</string>
+	<string name="cardname_flood">The Flood</string>
+	<string name="cardname_virus">Virus</string>
+	<string name="cardname_war">War</string>
+	<string name="cardname_yin">Yin</string>
+	<string name="cardname_yang">Yang</string>
+	<string name="cardname_aids_ff">Cooties</string>
+	<string name="cardname_ftpip_ff">Forget This Person In Particular</string>
+	<string name="cardname_fuck_you_ff">Forget You</string>
+	<string name="cardhelp_sixty_nine">Works as a 6 or a 9 of its color, and its number is 69. Jumps in on (and can be jumped on by) a 6 or 9 of its color.</string>
+	<string name="cardhelp_aids">When you are made to draw, split the cards with whoever made you draw (they get the odd card). On Quitter, its player is removed too; on Glasnost, both hands are shown. Not on Spreader, Ping or field cards.</string>
+	<string name="cardhelp_backstab">Reverses play, then the player before you draws 2. Stacks with Draw Twos.</string>
+	<string name="cardhelp_blue_shield">Field card. Draw attacks on you are blocked and your turn is skipped; 4 or more cards break the shield. Harvester of Sorrows breaks it and you still draw. You may stack instead.</string>
+	<string name="cardhelp_clone">Repeats the effect of the card below it on the next player. On a stack it adds the last card\'s amount again. Plays on anything. Not field cards or Communism.</string>
+	<string name="cardhelp_communism">Everyone\'s cards are pooled and shared out evenly. Field cards you are dealt come into play for you.</string>
+	<string name="cardhelp_conquest">Horseman, field card. On your turn you may invade a player instead of playing: both pick a number card, higher wins. Capture an army from everyone to become the Conqueror and change the color before you play.</string>
+	<string name="cardhelp_cure">Cures one Virus on you.</string>
+	<string name="cardhelp_death">Horseman. Pick a victim; the top card of the draw pile sets how many turns they have left (4 if it is not a number). At 0 they are out. Luck adds a turn, Virus takes one. Unblockable.</string>
+	<string name="cardhelp_delayed_blast">Skips the next player; the one after draws 4. Stacks with Draw Fours. In a duel, a plain Draw Four.</string>
+	<string name="cardhelp_dodge">When attacked, the attack misses you and goes to the next player. Not Harvester of Sorrows, AIDS or Spreader.</string>
+	<string name="cardhelp_double_skip">Skips the next two players.</string>
+	<string name="cardhelp_famine">Horseman. While it is out you must play whenever you can, and keep playing after plain cards. If you cannot play, draw until you can.</string>
+	<string name="cardhelp_ftpip">When attacked, send the attack to a player of your choice. Play continues after you unless they defend.</string>
+	<string name="cardhelp_fuck_you">Sends any attack back to where it started and reverses play. Plays on anything; without an attack it is a Reverse.</string>
+	<string name="cardhelp_gift">Give one of your other cards to a player of your choice (not your last card).</string>
+	<string name="cardhelp_glasnost">Pick a player: their hand is laid out face up. Holding Quitter gets them caught.</string>
+	<string name="cardhelp_gold_coin">Flip a coin. Heads: draw one card per player and hand them out as you like.</string>
+	<string name="cardhelp_harvester">Draw 4. Unblockable, stacks with Draw Fours, breaks Blue Shields.</string>
+	<string name="cardhelp_holy_defender">Blocks attacks except Harvester of Sorrows, Ping, Gift, AIDS and Spreader. Whenever it is played you may remove a Horseman.</string>
+	<string name="cardhelp_hot_death">Draw 8. Stacks with Draw Fours and Eights.</string>
+	<string name="cardhelp_i_dont_like_these">Throw away your hand and draw the same number of new cards.</string>
+	<string name="cardhelp_luck">Field card: draw one card less every time you have to draw.</string>
+	<string name="cardhelp_mad">You and a player of your choice drop your hands and leave the round.</string>
+	<string name="cardhelp_magic_5">When attacked, takes 8 off the stack for every Hot Death in it. Plays on anything.</string>
+	<string name="cardhelp_martyr">You leave the round and give all your cards to a player of your choice.</string>
+	<string name="cardhelp_mystery_draw">Played on a 1 to 9 (or the 69), the next player draws that many cards. Otherwise a Wild.</string>
+	<string name="cardhelp_necromancer">Bring back a player who is out, with 8 new cards. Anyone can stop it with a Fuck You.</string>
+	<string name="cardhelp_penn_state">The only answer to Spreader, played for you: the Spreader\'s player draws your 2 cards instead.</string>
+	<string name="cardhelp_ping">A player of your choice draws exactly 1 card.</string>
+	<string name="cardhelp_plague">Comes into play when drawn. Everyone else draws a card after each turn until its carrier\'s next turn.</string>
+	<string name="cardhelp_prophet">Field card. You see a player\'s hand. Others may ask you once a turn whether that player has a card; the answer is always true. A yes on Quitter removes its holder.</string>
+	<string name="cardhelp_quitter">The next player is removed from the round (elimination mode: you are). Anyone caught holding it is removed.</string>
+	<string name="cardhelp_recycler">Reverses play. Later cards go on a new pile until a reverse card is played; then the next player draws that whole pile.</string>
+	<string name="cardhelp_reverse_skip">Reverses play and skips the next player.</string>
+	<string name="cardhelp_spreader">Everyone else draws 2 and you go again. Only Penn State stops it.</string>
+	<string name="cardhelp_swap">Swap hands with the player before you, then reverse play.</string>
+	<string name="cardhelp_taste_the_rainbow">The next player draws until they have drawn all four colors or a wild.</string>
+	<string name="cardhelp_chosen_one">Draw 5, keep one, the rest go back on top of the draw pile.</string>
+	<string name="cardhelp_flood">Washes away field cards except Death, War, Conquest, Yin and Yang. Ends the Plague.</string>
+	<string name="cardhelp_virus">Infect a player: they draw one extra card every time they draw, until cured.</string>
+	<string name="cardhelp_war">Horseman. Everyone turns up a card and may not play its color until War is gone.</string>
+	<string name="cardhelp_yin">Like Luck, and in play the moment you draw it. With Yang on another player you team up; with both you are immune to most attacks.</string>
+	<string name="cardhelp_yang">Like Luck, and in play the moment you draw it. With Yin on another player you team up; with both you are immune to most attacks.</string>
+	<string name="msg_dealing">%1$s deals %3$d cards each</string>
+	<string name="msg_tap_draw_pile">Tap the draw pile for the next round</string>
+	<string name="msg_your_play">Your play</string>
+	<string name="msg_your_answer">You are attacked by %4$s: answer or take it</string>
+	<string name="msg_jump_in_now">Jump in with your %4$s!</string>
+	<string name="msg_card_no_good">You can\'t play that card</string>
+	<string name="msg_draws_card">%1$s draws a card</string>
+	<string name="msg_drawing">%1$s draws %3$d</string>
+	<string name="msg_takes_attack">%1$s takes %4$s (%3$d)</string>
+	<string name="msg_jumped_in">%1$s jumps in with %4$s!</string>
+	<string name="msg_wrong_jump_in">%1$s jumped in with the wrong card: draw 2</string>
+	<string name="msg_calls_uno">%1$s: UNO!</string>
+	<string name="msg_caught_no_uno">%2$s caught %1$s without UNO: draw 2</string>
+	<string name="msg_false_uno">False UNO call by %1$s: draw 2</string>
+	<string name="msg_cannot_win_no_uno">%1$s went out without calling UNO: draw 2</string>
+	<string name="msg_round_winner">%1$s wins the round!</string>
+	<string name="msg_round_loser">%1$s is last and loses the round!</string>
+	<string name="msg_round_no_winner">Nobody is left: no winner this round</string>
+	<string name="msg_player_out">%1$s is out!</string>
+	<string name="msg_removed">%1$s is out of the round (%4$s)</string>
+	<string name="msg_revived">%1$s is back from the dead!</string>
+	<string name="msg_revive_blocked">%1$s stops %2$s coming back</string>
+	<string name="msg_shuffling_discard">Shuffling %3$d cards into the draw pile</string>
+	<string name="msg_discard_empty">No cards left to draw</string>
+	<string name="msg_blocked">%1$s blocks it with %4$s</string>
+	<string name="msg_shield_absorbs">%1$s\'s Blue Shield absorbs it</string>
+	<string name="msg_shield_breaks">%1$s\'s Blue Shield breaks</string>
+	<string name="msg_immune">%1$s is immune (Yin and Yang)</string>
+	<string name="msg_sent_back">Fuck You! It goes back to %1$s</string>
+	<string name="msg_redirected">%2$s sends it to %1$s</string>
+	<string name="msg_dodged">%1$s dodges onto %2$s</string>
+	<string name="msg_split">%1$s splits %3$d cards with %2$s</string>
+	<string name="msg_magic_5">%1$s\'s Magic 5 removes %3$d</string>
+	<string name="msg_stacked">%1$s stacks: %3$d</string>
+	<string name="msg_penn_state">%1$s plays Penn State!</string>
+	<string name="msg_skipped">%1$s is skipped</string>
+	<string name="msg_face_up">%1$s\'s hand is face up</string>
+	<string name="msg_ping">%1$s pings %2$s</string>
+	<string name="msg_gift">%1$s gives %2$s a card</string>
+	<string name="msg_gold_coin_up">%1$s\'s Gold Coin lands face up</string>
+	<string name="msg_gold_coin_down">%1$s\'s Gold Coin lands face down</string>
+	<string name="msg_swap">%1$s and %2$s swap hands</string>
+	<string name="msg_clone">Clone repeats %4$s</string>
+	<string name="msg_communism">Communism! Everyone shares</string>
+	<string name="msg_i_dont_like_these">%1$s doesn\'t like these</string>
+	<string name="msg_chosen_one">%1$s is the Chosen One</string>
+	<string name="msg_flood">The Flood washes the table</string>
+	<string name="msg_field_active">%4$s is in play</string>
+	<string name="msg_field_removed">%4$s is gone</string>
+	<string name="msg_virus">%1$s is infected</string>
+	<string name="msg_cured">%1$s is cured</string>
+	<string name="msg_death_clock">%1$s has %3$d turns to live</string>
+	<string name="msg_famine_draw">%1$s draws %3$d (Famine)</string>
+	<string name="msg_war_color">%1$s may not play %4$s\'s color</string>
+	<string name="msg_plague_draw">%1$s draws %3$d (Plague)</string>
+	<string name="msg_plague_over">The Plague ends</string>
+	<string name="msg_team_up">%2$s joins %1$s (Yin and Yang)</string>
+	<string name="msg_invasion">%1$s invades %2$s!</string>
+	<string name="msg_invasion_won">%1$s beats %2$s</string>
+	<string name="msg_invasion_tie">The armies tie</string>
+	<string name="msg_conqueror">%1$s is the Conqueror!</string>
+	<string name="msg_color_change">%1$s changes the color</string>
+	<string name="msg_prophet_sees">The Prophet (%1$s) sees %2$s\'s hand</string>
+	<string name="msg_prophet_question">%1$s asks: does %2$s have %4$s?</string>
+	<string name="msg_prophet_yes">The Prophet says yes</string>
+	<string name="msg_prophet_no">The Prophet says no</string>
+	<string name="msg_accuses">%1$s accuses %2$s of holding Quitter!</string>
+	<string name="msg_accusation_right">%1$s had the Quitter!</string>
+	<string name="msg_accusation_wrong">%1$s was wrong!</string>
+	<string name="msg_caught_quitter">%1$s is caught with the Quitter</string>
+	<string name="msg_recycling">%1$s starts recycling</string>
+	<string name="msg_recycle_dump">%1$s picks up the recycle pile (%3$d)</string>
+	<string name="msg_apocalypse">The Apocalypse! Original Uno rules from now on</string>
+	<string name="msg_direction">Reverse!</string>
+	<string name="msg_sent_back_ff">Forget You! It goes back to %1$s</string>
+	<string name="prompt_reason_ping">Who gets pinged?</string>
+	<string name="prompt_reason_glasnost">Whose hand goes face up?</string>
+	<string name="prompt_reason_gift">Who gets the gift?</string>
+	<string name="prompt_reason_death">Who does Death come for?</string>
+	<string name="prompt_reason_virus">Who gets the Virus?</string>
+	<string name="prompt_reason_mad">Who goes with you?</string>
+	<string name="prompt_reason_martyr">Who gets your cards?</string>
+	<string name="prompt_reason_ftpip">Who takes the attack?</string>
+	<string name="prompt_reason_gold_coin">Who gets this card?</string>
+	<string name="prompt_reason_prophet">Whose hand do you look at?</string>
+	<string name="prompt_reason_necromancer">Who comes back?</string>
+	<string name="prompt_reason_invade">Who do you invade?</string>
+	<string name="prompt_reason_accuse">Who has the Quitter?</string>
+	<string name="prompt_reason_gift_card">Which card do you give?</string>
+	<string name="prompt_reason_army">Choose your army</string>
+	<string name="prompt_reason_chosen_one">Which card do you keep?</string>
+	<string name="prompt_reason_remove_horseman">Remove a Horseman?</string>
+	<string name="prompt_color">Choose a color</string>
+	<string name="prompt_none">None</string>
+	<string name="prompt_ask_prophet">Ask the Prophet about…</string>
+	<string name="lbl_menu_take">TAKE IT</string>
+	<string name="lbl_menu_end_turn">END TURN</string>
+	<string name="lbl_menu_uno">UNO!</string>
+	<string name="lbl_menu_more">MORE</string>
+	<string name="lbl_accuse">Accuse of Quitter</string>
+	<string name="lbl_invade">Invade</string>
+	<string name="lbl_ask_prophet">Ask the Prophet</string>
+	<string name="lbl_change_color">Change color</string>
+	<string name="elimination_title">Elimination mode</string>
+	<string name="elimination_summary">The last player holding cards loses</string>
+	<string name="auto_uno_title">Call UNO for me</string>
+	<string name="auto_uno_summary">Never forget to call UNO</string>
+	<string name="jump_in_title">Jump-in time</string>
+	<string name="jump_in_summary">How long you get to jump in with an identical card</string>
+	<string name="jump_in_0">1 second</string>
+	<string name="jump_in_1">2 seconds</string>
+	<string name="jump_in_2">3 seconds</string>
+	<string name="jump_in_3">5 seconds</string>
+	<string name="a11y_score_entry">%1$s, %2$d wins</string>
+	<string name="a11y_table_round_over">Round over. %1$s</string>
+	<string name="score_wins">%1$d wins</string>
+	<string name="score_losses">%1$d losses</string>
+	<string name="score_out">out</string>
+	<string name="score_removed">removed</string>
+	<string name="score_team">with %1$s</string>
+	<string name="score_death">Death: %1$d</string>
+	<string name="counts_as_red_4">counts as Red 4</string>
+	<string name="dlg_help_text">Hot Death Uno Redux, Constitution v3.1. Match the top card by color, number or name. Attacks are answered straight away: stack, defend or take it. Tap UNO when you have two cards or one, or to catch someone who forgot. Identical cards can jump in. Long-press a card to read what it does.</string>
 </resources>

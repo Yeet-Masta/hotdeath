@@ -29,7 +29,7 @@ class CardImageAdapter(
 			setPadding(8, 8, 8, 8)
 		}
 		val t = types[position]
-		imageView.setImageResource(CardText.drawable(t, familyFriendly))
+		imageView.setImageBitmap(CardArt.bitmap(context, t, familyFriendly))
 		imageView.contentDescription = CardText.cardName(context, t, familyFriendly)
 		return imageView
 	}

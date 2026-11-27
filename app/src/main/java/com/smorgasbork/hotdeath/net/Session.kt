@@ -183,10 +183,10 @@ class ClientSession(private val link: Link, override val me: Seat) : GameSession
 	}
 }
 
-/** Host settings with the seats people play; cheats and open hands are off in multiplayer. */
+/** Host settings with the seats people play; open hands and auto-UNO are off in multiplayer. */
 class MultiplayerConfig(private val base: GameConfig, override val humanSeats: Set<Seat>) : GameConfig by base {
-	override val cheatLevel: Int get() = 0
 	override val faceUp: Boolean get() = false
+	override val autoUno: Boolean get() = false
 }
 
 /** Collects players before a hosted game starts. The host always plays SOUTH. */

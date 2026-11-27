@@ -1,15 +1,15 @@
 package com.smorgasbork.hotdeath.net
 
 import com.smorgasbork.hotdeath.engine.CardColor
-import com.smorgasbork.hotdeath.engine.CardDeck
-import com.smorgasbork.hotdeath.engine.DeckType
+import com.smorgasbork.hotdeath.engine.Decision
 import com.smorgasbork.hotdeath.engine.Game
 import com.smorgasbork.hotdeath.engine.GameEvent
-import com.smorgasbork.hotdeath.engine.GameMessage
 import com.smorgasbork.hotdeath.engine.Prompt
 import com.smorgasbork.hotdeath.engine.Seat
 import com.smorgasbork.hotdeath.engine.TestConfig
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -18,7 +18,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.random.Random
-
 /** Two ends of an in-memory connection; delivery is asynchronous, like a real link. */
 private class MemLink(private val scope: CoroutineScope) : Link {
 	lateinit var peer: MemLink
@@ -56,12 +55,11 @@ private class MemLink(private val scope: CoroutineScope) : Link {
 }
 
 /**
- * Plays from what a [TableView] shows: tries its cards one by one, then
- * draws or passes; answers every prompt; presses Next round.
+ * Plays from what a [TableView] shows: plays the first card it may, else
+ * draws, takes or passes; answers every prompt; presses Next round.
  */
-private class Bot(private val session: GameSession, private val deck: CardDeck) {
-	private val tried = HashSet<Int>()
-	private var turnKey: Any? = null
+private class Bot(private val session: GameSession) {
+	private var lastKey: Any? = null
 	var updates = 0
 	var lastView: TableView? = null
 
@@ -71,35 +69,26 @@ private class Bot(private val session: GameSession, private val deck: CardDeck) 
 		// Every update must survive the wire unchanged.
 		val back = Wire.decode(Wire.encode(WireMessage.Update(v, e))) as WireMessage.Update
 		check(back.view == v && back.event == e) { "wire round trip changed an update" }
+		check(v.player(v.me).held.all { it >= 0 }) { "a player cannot see their own card" }
 
-		if (e is ViewEvent.Message && e.message is GameMessage.CardNoGood) return next(v)
 		when (val p = v.prompt) {
-			Prompt.NumCardsToDeal -> return session.act(PlayerAction.Deal(7))
 			Prompt.Color -> return session.act(PlayerAction.Color(CardColor.BLUE))
-			is Prompt.Victim -> return session.act(PlayerAction.Victim(p.options.first()))
+			is Prompt.Victim -> return session.act(PlayerAction.Victim(if (p.optional) null else p.options.first()))
+			is Prompt.ChooseCard -> return session.act(PlayerAction.ChooseCard(if (p.optional) null else p.options.first()))
 			null -> {}
 		}
 		if (v.showNextRound) return session.act(PlayerAction.NextRound)
-		if (v.showMenu) {
-			val key = Triple(v.currPlayer, v.player(v.me).size, v.discard.size)
-			if (key != turnKey) {
-				turnKey = key
-				tried.clear()
-				next(v)
-			}
+		if (v.decision == Decision.NONE || v.jumpIn) {
+			// A new decision may look exactly like the last one (Luck can make a draw draw nothing).
+			lastKey = null
+			return
 		}
-	}
-
-	private fun next(v: TableView) {
-		if (!v.myTurn) return
-		val mine = v.player(v.me).let { it.table + it.held }
-		check(mine.all { it >= 0 }) { "a player cannot see their own card" }
-		val c = mine.firstOrNull { it !in tried && deck[it] != null }
+		// Act once per decision.
+		val key = listOf(v.decision, v.currPlayer, v.player(v.me).held, v.topCard, v.attack)
+		if (key == lastKey) return
+		lastKey = key
 		when {
-			c != null -> {
-				tried += c
-				session.act(PlayerAction.Play(c))
-			}
+			v.legal.isNotEmpty() -> session.act(PlayerAction.Play(v.legal.first()))
 			v.canDraw -> session.act(PlayerAction.Draw)
 			else -> session.act(PlayerAction.Pass)
 		}
@@ -108,14 +97,12 @@ private class Bot(private val session: GameSession, private val deck: CardDeck) 
 
 class NetworkGameTest {
 
-	private class Table(scope: CoroutineScope, deckType: DeckType, seed: Int) {
+	private class Table(scope: CoroutineScope) {
 		val lobby = HostLobby("Host")
 		val clients = HashMap<Seat, ClientSession>()
 		val bots = HashMap<Seat, Bot>()
-		val links = HashMap<Seat, MemLink>()
 		lateinit var host: HostSession
-		val deck = CardDeck(deckType)
-		val config = TestConfig(deckType)
+		val config = TestConfig()
 
 		init {
 			for (name in listOf("North", "West")) {
@@ -124,95 +111,91 @@ class NetworkGameTest {
 				val cl = ClientLobby(clientEnd, name)
 				cl.onStart = { s ->
 					clients[s.me] = s
-					links[s.me] = clientEnd
-					bots[s.me] = Bot(s, deck).also { b -> s.listener = SessionListener(b::onUpdate) }
+					bots[s.me] = Bot(s).also { b -> s.listener = SessionListener(b::onUpdate) }
 				}
 			}
 		}
 
-		fun start(scope: CoroutineScope, seed: Int) {
+		fun start(scope: CoroutineScope) {
 			host = lobby.start(config, scope, pacing = false)
-			val b = Bot(host, deck)
+			val b = Bot(host)
 			bots[Seat.SOUTH] = b
 			host.listener = SessionListener(b::onUpdate)
 			host.start()
 		}
 	}
 
-	private fun runTable(deckType: DeckType, seed: Int, block: suspend (Table) -> Unit) = runBlocking {
+	private fun runTable(block: suspend (Table) -> Unit) = runBlocking {
 		val scope = CoroutineScope(coroutineContext)
-		val t = Table(scope, deckType, seed)
+		val t = Table(scope)
 		repeat(20) { yield() } // let hellos and lobby updates arrive
 		assertEquals(listOf("Host", "West", "North", null), t.lobby.names)
 		block(t)
+		t.host.close()
+		for (c in t.clients.values) c.close()
+		coroutineContext.cancelChildren()
 	}
 
+	private fun Game.roundsPlayed() = players.sumOf { it.wins }
+
 	@Test
-	fun threePeopleAndAComputerPlayAWholeGame() = runTable(DeckType.STANDARD, 1) { t ->
-		t.start(CoroutineScope(kotlin.coroutines.coroutineContext), 1)
+	fun threePeopleAndAComputerPlayRounds() = runTable { t ->
+		t.start(CoroutineScope(kotlin.coroutines.coroutineContext))
 		val game = t.host.game
 		assertEquals(setOf(Seat.SOUTH, Seat.NORTH, Seat.WEST), game.players.filter { it.isHuman }.map { it.seat }.toSet())
 		try {
-			withTimeout(60_000) { while (!game.gameOver) yield() }
+			withTimeout(60_000) { while (game.roundsPlayed() < 2) yield() }
 		} catch (e: Exception) {
-			val h = game.humanController(game.currPlayer!!.seat)
-			println("STALL curr=${game.currPlayer} prompt=${game.pendingPrompt}/${game.promptSeat} awaiting=${h?.awaitingTurn} waiting=${game.waitingToStartRound} showNext=${game.showNextRoundButton} menu=${game.showMenu} pen=${game.penalty.type}")
-			for ((s, b) in t.bots) println("  $s updates=${b.updates} menu=${b.lastView?.showMenu} curr=${b.lastView?.currPlayer} prompt=${b.lastView?.prompt}")
+			println("STALL curr=${game.currPlayer} prompt=${game.pendingPrompt}/${game.promptSeat} deciding=${game.deciding} ${game.decision}")
+			for ((s, b) in t.bots) println("  $s updates=${b.updates} decision=${b.lastView?.decision} legal=${b.lastView?.legal}")
 			throw e
 		}
 		repeat(50) { yield() }
-		for (seat in listOf(Seat.NORTH, Seat.WEST)) {
-			val v = t.bots[seat]!!.lastView!!
-			assertTrue(v.gameOver)
-			assertEquals(game.gameWinner, v.gameWinner)
-			assertTrue(t.bots[seat]!!.updates > 100)
-		}
+		for (seat in listOf(Seat.NORTH, Seat.WEST)) assertTrue(t.bots[seat]!!.updates > 100)
 	}
 
 	@Test
-	fun aPlayerWhoLeavesIsReplacedByAComputer() = runTable(DeckType.HYBRID, 2) { t ->
-		t.start(CoroutineScope(kotlin.coroutines.coroutineContext), 2)
+	fun aPlayerWhoLeavesIsReplacedByAComputer() = runTable { t ->
+		t.start(CoroutineScope(kotlin.coroutines.coroutineContext))
 		val game = t.host.game
 		var left: SessionStatus? = null
 		t.host.onStatus = { left = it }
 		withTimeout(60_000) { while ((t.bots[Seat.WEST]?.updates ?: 0) < 50) yield() }
 		t.clients[Seat.WEST]!!.close()
-		withTimeout(120_000) { while (!game.gameOver) yield() }
+		withTimeout(120_000) { while (game.roundsPlayed() < 2) yield() }
 		assertEquals(SessionStatus.PlayerLeft(Seat.WEST, "West"), left)
 		assertTrue(!game.player(Seat.WEST).isHuman)
 	}
 
 	@Test
 	fun viewsNeverRevealAnotherPlayersHiddenCards() = runBlocking {
-		val g = Game.newGame(TestConfig(DeckType.EXTENDED, humanSeats = setOf(Seat.SOUTH, Seat.NORTH)), Random(5), pacing = false)
+		val g = Game.newGame(TestConfig(humanSeats = setOf(Seat.SOUTH, Seat.NORTH)), Random(5), pacing = false)
 		var checked = 0
+		var job: Job? = null
 		g.listener = com.smorgasbork.hotdeath.engine.GameListener { e ->
 			for (viewer in Seat.entries) {
 				val v = g.viewFor(viewer)
 				for (p in g.players) {
 					val pv = v.player(p.seat)
-					val visible = if (p.seat == viewer) p.hand.heldCards else p.hand.heldCards.filter { p.hand.isVisible(it) }
+					val seen = g.player(viewer).peeked
+					val visible = p.hand.cards.filter { p.seat == viewer || p.hand.isVisible(it) || it in seen }
 					assertEquals(visible.map { it.deckIndex }.toSet(), pv.held.filter { it >= 0 }.toSet())
-					assertEquals(p.hand.heldCards.size, pv.held.size)
+					assertEquals(p.hand.size, pv.held.size)
 				}
 				if (viewer != g.promptSeat) assertEquals(null, v.prompt)
 				val ev = g.eventFor(e, viewer)
-				if (e is GameEvent.CheatSwap && e.seat != viewer) assertEquals(null, ev)
+				if (e is GameEvent.Message && e.message.to != null && e.message.to != viewer) assertEquals(null, ev)
 			}
 			checked++
-			if (g.waitingToStartRound) g.requestNextRound()
-			// Answer for the two people so the game moves on.
-			for (s in listOf(Seat.SOUTH, Seat.NORTH)) {
-				when (g.pendingPrompt) {
-					Prompt.NumCardsToDeal -> g.submitNumCardsToDeal(s, 7)
-					Prompt.Color -> g.submitColor(s, CardColor.RED)
-					is Prompt.Victim -> g.submitVictim(s, (g.pendingPrompt as Prompt.Victim).options.first())
-					null -> {}
-				}
+			if (g.waitingToStartRound) {
+				if (g.players.sumOf { it.wins } >= 3) job?.cancel() else g.requestNextRound()
 			}
 		}
-		for (s in listOf(Seat.SOUTH, Seat.NORTH)) g.handOverToComputer(s) // computers decide turns
-		withTimeout(120_000) { g.run() }
+		for (s in listOf(Seat.SOUTH, Seat.NORTH)) g.handOverToComputer(s) // computers decide
+		withTimeout(120_000) {
+			job = launch { g.run() }
+			job!!.join()
+		}
 		assertTrue(checked > 100)
 	}
 
@@ -238,8 +221,8 @@ class NetworkGameTest {
 
 	@Test
 	fun clientsCannotActForOtherSeats() {
-		val g = Game.newGame(TestConfig(DeckType.STANDARD, humanSeats = setOf(Seat.SOUTH, Seat.NORTH)), Random(3), pacing = false)
-		// NORTH asks to play SOUTH's cards and draw on SOUTH's turn: nothing happens.
+		val g = Game.newGame(TestConfig(humanSeats = setOf(Seat.SOUTH, Seat.NORTH)), Random(3), pacing = false)
+		// NORTH asks to draw and choose a color for SOUTH: nothing happens.
 		g.apply(Seat.NORTH, PlayerAction.Draw)
 		g.apply(Seat.NORTH, PlayerAction.Color(CardColor.RED))
 		assertEquals(null, g.pendingPrompt)

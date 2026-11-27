@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.smorgasbork.hotdeath.engine.Game
-import com.smorgasbork.hotdeath.engine.SnapshotJson
 import com.smorgasbork.hotdeath.net.GameSession
 import com.smorgasbork.hotdeath.net.HostSession
 import kotlinx.coroutines.CoroutineScope
@@ -71,7 +70,7 @@ class GameViewModel(app: Application, mode: Int) : AndroidViewModel(app) {
 			config.savedGame = null
 			return
 		}
-		host.game.snapshot?.let { config.savedGame = SnapshotJson.toJson(it) }
+		host.game.snapshot?.let { config.savedGame = it }
 	}
 
 	override fun onCleared() {
@@ -83,7 +82,7 @@ class GameViewModel(app: Application, mode: Int) : AndroidViewModel(app) {
 	private fun loadSaved(): Game? {
 		val json = config.savedGame ?: return null
 		return try {
-			Game.restore(SnapshotJson.fromJson(json), config)
+			Game.restore(json, config)
 		} catch (e: Exception) {
 			// A corrupt or incompatible save starts a new game instead.
 			Log.w(TAG, "could not restore saved game", e)

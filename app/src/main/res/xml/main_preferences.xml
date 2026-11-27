@@ -8,13 +8,11 @@
 		android:entries="@array/game_speeds"
 		android:entryValues="@array/game_speed_values"
 		android:icon="@drawable/ic_speed" />
-	<ListPreference
-		android:key="deck_type"
-		android:title="@string/deck_type_title"
-		android:summary="@string/deck_type_summary"
-		android:defaultValue="hybrid"
-		android:entries="@array/deck_types"
-		android:entryValues="@array/deck_type_values"
+	<CheckBoxPreference
+		android:key="elimination"
+		android:title="@string/elimination_title"
+		android:summary="@string/elimination_summary"
+		android:defaultValue="false"
 		android:icon="@drawable/ic_deck" />
 	<CheckBoxPreference
 		android:key="computer_4th"
@@ -34,14 +32,20 @@
 		android:summary="@string/family_friendly_summary"
 		android:defaultValue="true"
 		android:icon="@drawable/ic_family_friendly" />
-	<ListPreference
-		android:key="cheat_level"
-		android:title="@string/cheat_level_title"
-		android:summary="@string/cheat_level_summary"
-		android:defaultValue="0"
-		android:entries="@array/cheat_levels"
-		android:entryValues="@array/cheat_level_values"
+	<CheckBoxPreference
+		android:key="auto_uno"
+		android:title="@string/auto_uno_title"
+		android:summary="@string/auto_uno_summary"
+		android:defaultValue="false"
 		android:icon="@drawable/ic_cheat" />
+	<ListPreference
+		android:key="jump_in_ms"
+		android:title="@string/jump_in_title"
+		android:summary="@string/jump_in_summary"
+		android:defaultValue="2000"
+		android:entries="@array/jump_in_times"
+		android:entryValues="@array/jump_in_values"
+		android:icon="@drawable/ic_speed" />
 	<!-- Navigate to players preferences fragment -->
 	<androidx.preference.Preference
 		android:key="players_prefs"

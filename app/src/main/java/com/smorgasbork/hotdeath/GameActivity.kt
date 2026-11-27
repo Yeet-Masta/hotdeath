@@ -19,7 +19,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.smorgasbork.hotdeath.engine.CardDeck
+import com.smorgasbork.hotdeath.engine.CardColor
 import com.smorgasbork.hotdeath.engine.CardType
+import com.smorgasbork.hotdeath.engine.Special
 import com.smorgasbork.hotdeath.engine.Prompt
 import com.smorgasbork.hotdeath.engine.Seat
 import com.smorgasbork.hotdeath.net.GameSession
@@ -59,6 +61,7 @@ class GameActivity : AppCompatActivity() {
 	private lateinit var btnNextRound: Button
 	private lateinit var btnMenuDraw: Button
 	private lateinit var btnMenuPass: Button
+	private lateinit var btnMenuUno: Button
 	private lateinit var message: TextView
 
 	private var dlgCardCatalog: Dialog? = null
@@ -161,6 +164,8 @@ class GameActivity : AppCompatActivity() {
 		if (v?.showMenu == true) {
 			setButtonEnabled(btnMenuDraw, v.canDraw)
 			setButtonEnabled(btnMenuPass, v.canPass)
+			btnMenuPass.setText(if (v.answering) R.string.lbl_menu_take else R.string.lbl_menu_end_turn)
+			setButtonEnabled(btnMenuUno, true)
 			menuPanel.visibility = View.VISIBLE
 		} else {
 			menuPanel.visibility = View.INVISIBLE
@@ -174,21 +179,68 @@ class GameActivity : AppCompatActivity() {
 		promptDialog = null
 		promptShown = p
 		promptDialog = when (p) {
-			Prompt.NumCardsToDeal -> AlertDialog.Builder(this)
-				.setCancelable(false)
-				.setTitle(R.string.prompt_deal)
-				.setItems(R.array.deal_values) { _, i -> session.act(PlayerAction.Deal(i + 5)) }
-				.show()
-			is Prompt.Victim -> AlertDialog.Builder(this)
-				.setCancelable(false)
-				.setTitle(R.string.prompt_victim)
-				.setItems(p.options.map(::nameOf).toTypedArray()) { _, i ->
-					session.act(PlayerAction.Victim(p.options[i]))
-				}
-				.show()
+			is Prompt.Victim -> {
+				val labels = p.options.map(::nameOf) + if (p.optional) listOf(getString(R.string.prompt_none)) else emptyList()
+				AlertDialog.Builder(this)
+					.setCancelable(false)
+					.setTitle(CardText.reason(this, p.reason))
+					.setItems(labels.toTypedArray()) { _, i -> session.act(PlayerAction.Victim(p.options.getOrNull(i))) }
+					.show()
+			}
+			is Prompt.ChooseCard -> {
+				val deck = CardDeck.STANDARD
+				val labels = p.options.map { id -> deck[id]?.let { CardText.cardName(this, it.type, familyFriendly) } ?: "?" } +
+					if (p.optional) listOf(getString(R.string.prompt_none)) else emptyList()
+				AlertDialog.Builder(this)
+					.setCancelable(false)
+					.setTitle(CardText.reason(this, p.reason))
+					.setItems(labels.toTypedArray()) { _, i -> session.act(PlayerAction.ChooseCard(p.options.getOrNull(i))) }
+					.show()
+			}
 			// The color prompt is drawn on the table itself.
 			Prompt.Color, null -> null
 		}
+	}
+
+	/** Free actions and the card list. */
+	private fun showMore() {
+		val v = view ?: return
+		val items = ArrayList<Pair<String, () -> Unit>>()
+		val others = v.players.filter { it.active && it.seat != v.me }.map { it.seat }
+		if (v.canAccuse && others.isNotEmpty()) items += getString(R.string.lbl_accuse) to {
+			pickSeat(R.string.prompt_reason_accuse, others) { session.act(PlayerAction.Accuse(it)) }
+		}
+		if (v.invadeTargets.isNotEmpty()) items += getString(R.string.lbl_invade) to {
+			pickSeat(R.string.prompt_reason_invade, v.invadeTargets) { session.act(PlayerAction.Invade(it)) }
+		}
+		if (v.canAskProphet) items += getString(R.string.lbl_ask_prophet) to {
+			val specials = Special.entries.map { CardType.special(it) }.sortedBy { CardText.shortName(this, it, familyFriendly) }
+			AlertDialog.Builder(this)
+				.setTitle(R.string.prompt_ask_prophet)
+				.setItems(specials.map { CardText.shortName(this, it, familyFriendly) }.toTypedArray()) { _, i ->
+					session.act(PlayerAction.AskProphet(specials[i]))
+				}
+				.show()
+		}
+		if (v.canChangeColor) items += getString(R.string.lbl_change_color) to {
+			AlertDialog.Builder(this)
+				.setTitle(R.string.prompt_color)
+				.setItems(CardColor.SUITS.map { CardText.colorName(this, it) }.toTypedArray()) { _, i ->
+					session.act(PlayerAction.ChangeColor(CardColor.SUITS[i]))
+				}
+				.show()
+		}
+		items += getString(R.string.lbl_menu_help) to { showCardCatalog() }
+		AlertDialog.Builder(this)
+			.setItems(items.map { it.first }.toTypedArray()) { _, i -> items[i].second() }
+			.show()
+	}
+
+	private fun pickSeat(title: Int, seats: List<Seat>, then: (Seat) -> Unit) {
+		AlertDialog.Builder(this)
+			.setTitle(title)
+			.setItems(seats.map(::nameOf).toTypedArray()) { _, i -> then(seats[i]) }
+			.show()
 	}
 
 	/**
@@ -274,9 +326,11 @@ class GameActivity : AppCompatActivity() {
 	private fun bindMenuButtons() {
 		btnMenuDraw = findViewById(R.id.btn_menu_draw)
 		btnMenuPass = findViewById(R.id.btn_menu_pass)
+		btnMenuUno = findViewById(R.id.btn_menu_uno)
 		btnMenuDraw.setOnClickListener { session.act(PlayerAction.Draw) }
 		btnMenuPass.setOnClickListener { session.act(PlayerAction.Pass) }
-		findViewById<Button>(R.id.btn_menu_help).setOnClickListener { showCardCatalog() }
+		btnMenuUno.setOnClickListener { session.act(PlayerAction.Uno) }
+		findViewById<Button>(R.id.btn_menu_help).setOnClickListener { showMore() }
 	}
 
 	private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density + 0.5f).toInt()
@@ -289,18 +343,17 @@ class GameActivity : AppCompatActivity() {
 			dlgCardHelp = it
 		}
 		dlg.setTitle(CardText.cardName(this, type, familyFriendly))
-		dlg.findViewById<TextView>(R.id.text)?.setText(CardText.help(type, familyFriendly))
-		dlg.findViewById<ImageView>(R.id.image)?.setImageResource(CardText.drawable(type, familyFriendly))
+		dlg.findViewById<TextView>(R.id.text)?.text = CardText.help(this, type, familyFriendly)
+		dlg.findViewById<ImageView>(R.id.image)?.setImageBitmap(CardArt.bitmap(this, type, familyFriendly))
 		dlg.show()
 	}
 
 	private fun showCardCatalog() {
-		val v = view ?: return
 		val dlg = dlgCardCatalog ?: Dialog(this).also { d ->
 			d.requestWindowFeature(Window.FEATURE_NO_TITLE)
 			d.setContentView(R.layout.dlg_card_catalog)
 			// One entry per distinct card in this game's deck, in deck order.
-			val types = CardDeck(v.deckType).cards.map { it.type }.distinct()
+			val types = CardDeck.STANDARD.types
 			d.findViewById<GridView>(R.id.gridview).apply {
 				adapter = CardImageAdapter(this@GameActivity, types, familyFriendly)
 				setOnItemClickListener { _, _, position, _ -> showCardHelp(types[position]) }

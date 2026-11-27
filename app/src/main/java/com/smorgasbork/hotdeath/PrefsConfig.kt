@@ -3,7 +3,6 @@ package com.smorgasbork.hotdeath
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import com.smorgasbork.hotdeath.engine.DeckType
 import com.smorgasbork.hotdeath.engine.GameConfig
 import com.smorgasbork.hotdeath.engine.Seat
 
@@ -18,23 +17,12 @@ class PrefsConfig(context: Context) : GameConfig {
 
 	private fun int(key: String, def: String): Int = prefs.getString(key, def)?.toIntOrNull() ?: def.toInt()
 
-	override val deckType: DeckType
-		get() {
-			prefs.getString(DECK_TYPE, null)?.let { return DeckType.fromKey(it) }
-			// Migrate the old two_decks boolean preference.
-			if (prefs.contains(LEGACY_TWO_DECKS)) {
-				val twoDecks = prefs.getBoolean(LEGACY_TWO_DECKS, false)
-				val t = if (twoDecks) DeckType.STANDARD else DeckType.HALF
-				prefs.edit().putString(DECK_TYPE, t.key).remove(LEGACY_TWO_DECKS).apply()
-				return t
-			}
-			return DeckType.fromKey(DECK_TYPE_DEF)
-		}
-
 	override val faceUp: Boolean get() = prefs.getBoolean(FACE_UP, false)
 	override val humanSeats: Set<Seat>
 		get() = if (prefs.getBoolean(COMPUTER_4TH, false)) emptySet() else setOf(Seat.SOUTH)
-	override val cheatLevel: Int get() = int(CHEAT_LEVEL, "0")
+	override val eliminationMode: Boolean get() = prefs.getBoolean(ELIMINATION, false)
+	override val autoUno: Boolean get() = prefs.getBoolean(AUTO_UNO, false)
+	override val jumpInMs: Long get() = int(JUMP_IN_MS, "2000").toLong()
 	override val pauseLength: Int get() = int(GAME_SPEED, "1")
 	val familyFriendly: Boolean get() = prefs.getBoolean(FAMILY_FRIENDLY, true)
 
@@ -46,7 +34,6 @@ class PrefsConfig(context: Context) : GameConfig {
 	}
 
 	override fun skill(seat: Seat): Int = int("p${opponentNumber(seat)}_skill", "1")
-	override fun aggression(seat: Seat): Int = int("p${opponentNumber(seat)}_aggression", "0")
 
 	// ── saved game ────────────────────────────────────────────────────────────
 
@@ -60,12 +47,11 @@ class PrefsConfig(context: Context) : GameConfig {
 
 	companion object {
 		private const val GAME_SPEED = "game_speed"
-		private const val DECK_TYPE = "deck_type"
-		private const val DECK_TYPE_DEF = "hybrid"
-		private const val LEGACY_TWO_DECKS = "two_decks"
 		private const val COMPUTER_4TH = "computer_4th"
 		private const val FACE_UP = "face_up"
-		private const val CHEAT_LEVEL = "cheat_level"
+		private const val ELIMINATION = "elimination"
+		private const val AUTO_UNO = "auto_uno"
+		private const val JUMP_IN_MS = "jump_in_ms"
 		private const val FAMILY_FRIENDLY = "family_friendly"
 		private const val GAME_STATE = "gamestate"
 	}

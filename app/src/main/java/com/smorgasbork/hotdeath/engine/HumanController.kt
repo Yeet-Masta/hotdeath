@@ -4,8 +4,9 @@ import kotlinx.coroutines.CompletableDeferred
 
 /**
  * Decisions for a person, at this device or a remote one. Each decision
- * suspends until an answer is submitted, and publishes a [Prompt] on the game
- * so a recreated screen (or a reconnecting client) can show it again.
+ * suspends until an answer is submitted, and publishes what is being asked
+ * on the game ([Game.deciding] or a [Prompt]) so a recreated screen (or a
+ * reconnecting client) can show it again.
  *
  * [handOver] gives the seat to a computer player, e.g. when a remote player
  * disconnects; a decision already waiting is then made by the computer.
@@ -16,39 +17,44 @@ class HumanController : PlayerController {
 	var autopilot: PlayerController? = null
 		private set
 
-	private var turn: CompletableDeferred<TurnAction?>? = null
+	private var action: CompletableDeferred<TurnAction?>? = null
 	private var color: CompletableDeferred<CardColor?>? = null
 	private var victim: CompletableDeferred<Seat?>? = null
-	private var numCards: CompletableDeferred<Int?>? = null
+	private var card: CompletableDeferred<Card?>? = null
+	/** Distinguishes "chose none" from "handed over" for optional prompts. */
+	private var handedOver = false
 
-	val awaitingTurn: Boolean get() = turn != null
+	val awaitingAction: Boolean get() = action != null
 
 	fun handOver(computer: PlayerController = ComputerController()) {
 		if (autopilot != null) return
 		autopilot = computer
-		turn?.complete(null)
+		handedOver = true
+		action?.complete(null)
 		color?.complete(null)
 		victim?.complete(null)
-		numCards?.complete(null)
+		card?.complete(null)
 	}
 
 	override suspend fun takeTurn(game: Game, me: Player): TurnAction {
 		autopilot?.let { return it.takeTurn(game, me) }
-		val d = CompletableDeferred<TurnAction?>()
-		turn = d
-		game.turnStarted()
-		val action = try {
-			d.await()
-		} finally {
-			turn = null
-		}
-		return action ?: autopilot!!.takeTurn(game, me)
+		return awaitAction(game) ?: autopilot!!.takeTurn(game, me)
 	}
 
-	override suspend fun chooseNumCardsToDeal(game: Game, me: Player): Int {
-		autopilot?.let { return it.chooseNumCardsToDeal(game, me) }
-		return prompt(game, me, Prompt.NumCardsToDeal, CompletableDeferred<Int?>().also { numCards = it }) { numCards = null }
-			?: autopilot!!.chooseNumCardsToDeal(game, me)
+	override suspend fun answer(game: Game, me: Player, attack: Attack): TurnAction {
+		autopilot?.let { return it.answer(game, me, attack) }
+		return awaitAction(game) ?: autopilot!!.answer(game, me, attack)
+	}
+
+	private suspend fun awaitAction(game: Game): TurnAction? {
+		val d = CompletableDeferred<TurnAction?>()
+		action = d
+		game.turnStarted()
+		try {
+			return d.await()
+		} finally {
+			action = null
+		}
 	}
 
 	override suspend fun chooseColor(game: Game, me: Player): CardColor {
@@ -57,14 +63,27 @@ class HumanController : PlayerController {
 			?: autopilot!!.chooseColor(game, me)
 	}
 
-	override suspend fun chooseVictim(game: Game, me: Player, reason: VictimReason): Seat {
-		autopilot?.let { return it.chooseVictim(game, me, reason) }
-		val options = Seat.entries.filter { it != me.seat && game.player(it).active }
-		// If only one other player is active, select automatically.
-		if (options.size == 1) return options[0]
-		return prompt(game, me, Prompt.Victim(options), CompletableDeferred<Seat?>().also { victim = it }) { victim = null }
-			?: autopilot!!.chooseVictim(game, me, reason)
+	override suspend fun chooseVictim(game: Game, me: Player, reason: Reason, options: List<Seat>, optional: Boolean): Seat? {
+		autopilot?.let { return it.chooseVictim(game, me, reason, options, optional) }
+		// Only one choice: take it.
+		if (options.size == 1 && !optional) return options[0]
+		val r = prompt(game, me, Prompt.Victim(reason, options, optional), CompletableDeferred<Seat?>().also { victim = it }) { victim = null }
+		if (r == null && (autopilot != null && handedOver)) return autopilot!!.chooseVictim(game, me, reason, options, optional)
+		return r ?: if (optional) null else options.first()
 	}
+
+	override suspend fun chooseCard(game: Game, me: Player, reason: Reason, options: List<Card>, optional: Boolean): Card? {
+		autopilot?.let { return it.chooseCard(game, me, reason, options, optional) }
+		if (options.size == 1 && !optional) return options[0]
+		val p = Prompt.ChooseCard(reason, options.map { it.deckIndex }, optional)
+		val r = prompt(game, me, p, CompletableDeferred<Card?>().also { card = it }) { card = null }
+		if (r == null && (autopilot != null && handedOver)) return autopilot!!.chooseCard(game, me, reason, options, optional)
+		return r ?: if (optional) null else options.first()
+	}
+
+	/** People jump in by tapping the card while the window is open. */
+	override fun jumpInDelay(game: Game, me: Player, card: Card, windowMs: Long): Long? =
+		autopilot?.jumpInDelay(game, me, card, windowMs)
 
 	private suspend fun <T> prompt(game: Game, me: Player, p: Prompt, d: CompletableDeferred<T?>, clear: () -> Unit): T? {
 		game.beginPrompt(p, me.seat)
@@ -78,11 +97,11 @@ class HumanController : PlayerController {
 
 	// ── answers (main thread) ─────────────────────────────────────────────────
 
-	fun submitTurn(action: TurnAction): Boolean = turn?.complete(action) ?: false
+	fun submit(a: TurnAction): Boolean = action?.complete(a) ?: false
 
 	fun submitColor(c: CardColor): Boolean = color?.complete(c) ?: false
 
-	fun submitVictim(seat: Seat): Boolean = victim?.complete(seat) ?: false
+	fun submitVictim(seat: Seat?): Boolean = victim?.complete(seat) ?: false
 
-	fun submitNumCardsToDeal(n: Int): Boolean = numCards?.complete(n.coerceIn(5, 15)) ?: false
+	fun submitCard(c: Card?): Boolean = card?.complete(c) ?: false
 }

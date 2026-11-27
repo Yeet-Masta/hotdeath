@@ -28,14 +28,14 @@ import com.smorgasbork.hotdeath.engine.CardColor
 import com.smorgasbork.hotdeath.engine.CardDeck
 import com.smorgasbork.hotdeath.engine.CardType
 import com.smorgasbork.hotdeath.engine.Direction
-import com.smorgasbork.hotdeath.engine.PenaltyType
+import com.smorgasbork.hotdeath.engine.AttackKind
+import com.smorgasbork.hotdeath.engine.Status
 import com.smorgasbork.hotdeath.engine.Prompt
 import com.smorgasbork.hotdeath.engine.Seat
 import com.smorgasbork.hotdeath.net.PlayerAction
 import com.smorgasbork.hotdeath.net.PlayerView
 import com.smorgasbork.hotdeath.net.TableView
 import com.smorgasbork.hotdeath.net.ViewEvent
-import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
@@ -52,7 +52,7 @@ import kotlin.math.min
 class GameTable(context: Context) : View(context) {
 
 	private var view: TableView? = null
-	private var deck: CardDeck? = null
+	private val deck: CardDeck = CardDeck.STANDARD
 	private var familyFriendly = true
 
 	/** Sends the player's moves to the game. */
@@ -134,6 +134,8 @@ class GameTable(context: Context) : View(context) {
 	private val ptDrawPile = PointF()
 	private val ptDiscardPile = PointF()
 	private val ptDiscardBadge = PointF()
+	private val ptRecyclePile = PointF()
+	private val ptNeutral = PointF()
 	private val ptWinner = PointF()
 	private var winnerW = 0f
 	private var winnerH = 0f
@@ -184,7 +186,7 @@ class GameTable(context: Context) : View(context) {
 	/** Who sits at screen position [p]. */
 	private fun seatAt(p: Seat): Seat = Seat.entries[(p.index + me.index) % 4]
 
-	private fun typeOf(id: Int): CardType? = if (id < 0) null else deck?.get(id)?.type
+	private fun typeOf(id: Int): CardType? = if (id < 0) null else deck[id]?.type
 
 	// =========================================================================
 	// Binding
@@ -211,7 +213,6 @@ class GameTable(context: Context) : View(context) {
 	}
 
 	private fun setView(v: TableView) {
-		if (deck?.deckType != v.deckType) deck = CardDeck(v.deckType)
 		view = v
 		contentDescription = describe()
 		a11y.invalidateRoot()
@@ -241,12 +242,16 @@ class GameTable(context: Context) : View(context) {
 					s.move(from.x, from.y, false, e.durationMs, now)
 				}
 			}
-			is ViewEvent.CheatSwap -> {
-				sprite(e.newCard).move(ptDrawPile.x, ptDrawPile.y, false, e.durationMs, now)
-				val old = sprite(e.oldCard)
-				val f = CardSprite().apply { move(old.x, old.y, old.shownFaceUp, e.durationMs, now) }
-				flights += Flight(f, typeOf(e.oldCard))
-				sprites.remove(e.oldCard)
+			is ViewEvent.ToField -> {
+				val s = sprite(e.card)
+				if (!s.placed) {
+					val from = e.from?.let { ptSeat[pos(it).index] } ?: ptDrawPile
+					s.move(from.x, from.y, false, e.durationMs, now)
+				}
+			}
+			is ViewEvent.Passed -> {
+				val from = ptSeat[pos(e.from).index]
+				sprite(e.card).move(from.x, from.y, false, e.durationMs, now)
 			}
 			is ViewEvent.PointerMoved -> pointer.moveTo(pos(e.seat), e.direction, e.durationMs, now)
 			is ViewEvent.IndicatorChanged -> ring.animateTo(e.direction, e.color.rgb(), e.durationMs, now)
@@ -319,6 +324,8 @@ class GameTable(context: Context) : View(context) {
 		ptPointer.set(w / 2f, vertCentre)
 		ptDrawPile.set(w / 2f - cardW * 5 / 4, (h - bottomMargin + topMargin - cardH) / 2)
 		ptDiscardPile.set(w / 2f + cardW / 4, ptDrawPile.y)
+		ptRecyclePile.set(ptDiscardPile.x + cardW * 0.6f, ptDiscardPile.y + cardH * 0.15f)
+		ptNeutral.set(ptDrawPile.x - cardW * 1.1f, ptDrawPile.y)
 		ptDiscardBadge.set(ptDiscardPile.x + cardW - badge / 2, ptDiscardPile.y + cardH - badge / 2)
 
 		val south = at(Seat.SOUTH)
@@ -402,11 +409,16 @@ class GameTable(context: Context) : View(context) {
 		if (cp != null && !v.fastForward) {
 			moving.clear()
 			drawPileRect = drawDrawPile(canvas, v)
-			discardRect = drawDiscardPile(canvas, v, now)
+			discardRect = drawFacePile(canvas, v.discard, ptDiscardPile, now)
+			if (v.recycle.isNotEmpty()) {
+				discardRect.union(drawFacePile(canvas, v.recycle, ptRecyclePile, now))
+				drawBadgeWithText(canvas, PointF(ptRecyclePile.x + cardW - badge / 2, ptRecyclePile.y - badge / 2), "♻" + v.recycle.size)
+			}
+			drawNeutral(canvas, v, now)
 
 			for (i in 0 until 4) {
 				val p = v.players[(cp.index + i) % 4]
-				if (p.active) drawHand(canvas, p, now)
+				if (p.active || p.field.isNotEmpty()) drawHand(canvas, p, now)
 			}
 
 			// Cards in flight go over everything else.
@@ -424,8 +436,8 @@ class GameTable(context: Context) : View(context) {
 			animating = animating || moving.isNotEmpty() || flights.isNotEmpty()
 
 			drawColorChooser(canvas)
-			v.gameWinner?.let { drawBitmap(canvas, bmpWinner[pos(it).index], ptWinner.x, ptWinner.y, winnerW, winnerH) }
-			drawPenalty(canvas, v)
+			if (v.roundComplete) v.roundWinner?.let { drawBitmap(canvas, bmpWinner[pos(it).index], ptWinner.x, ptWinner.y, winnerW, winnerH) }
+			drawAttack(canvas, v)
 		}
 
 		if (animating) postInvalidateOnAnimation()
@@ -470,7 +482,7 @@ class GameTable(context: Context) : View(context) {
 		}
 	}
 
-	private fun stackSkip(v: TableView) = if ((deck?.size ?: 0) > 108) 32 else 16
+	private fun stackSkip(v: TableView) = 32
 
 	/** The draw pile is all backs: no card in it has an identity on this screen. */
 	private fun drawDrawPile(canvas: Canvas, v: TableView): RectF {
@@ -491,14 +503,23 @@ class GameTable(context: Context) : View(context) {
 		return RectF(pt.x, pt.y, x + cardW, y + cardH)
 	}
 
-	private fun drawDiscardPile(canvas: Canvas, v: TableView, now: Long): RectF {
-		val pt = ptDiscardPile
-		val n = v.discard.size
+	/** Neutral play (Famine, War, Horsemen), fanned out to the left of the draw pile. */
+	private fun drawNeutral(canvas: Canvas, v: TableView, now: Long) {
+		v.neutral.forEachIndexed { i, id ->
+			val x = ptNeutral.x - i * cardW / 3
+			val s = sprite(id)
+			val flip = s.frame(now, x, ptNeutral.y, true)
+			if (s.moving) moving += id to flip else drawCard(canvas, typeOf(id), s.x, s.y, s.shownFaceUp, flip)
+		}
+	}
+
+	private fun drawFacePile(canvas: Canvas, ids: List<Int>, pt: PointF, now: Long): RectF {
+		val n = ids.size
 		if (n == 0) return RectF(pt.x, pt.y, pt.x + cardW, pt.y + cardH)
-		val skip = stackSkip(v)
+		val skip = 32
 		var x = pt.x
 		var y = pt.y
-		v.discard.forEachIndexed { i, id ->
+		ids.forEachIndexed { i, id ->
 			val off = (i / skip) * stackStep
 			val s = sprite(id)
 			val flip = s.frame(now, pt.x + off, pt.y + off, true)
@@ -520,7 +541,7 @@ class GameTable(context: Context) : View(context) {
 	private fun drawHand(canvas: Canvas, pv: PlayerView, now: Long) {
 		val p = pos(pv.seat)
 		val i = p.index
-		val table = pv.table
+		val table = pv.field
 		val held = pv.held
 
 		heldOffset[i] = clamp(heldOffset[i], 0, held.size - maxCards)
@@ -532,11 +553,11 @@ class GameTable(context: Context) : View(context) {
 
 		val tl = handLayout(p, true, min(table.size - tableOffset[i], maxCards), sp)
 		tableRect[i] = tl.rect
-		layCards(canvas, table, tOff, tl, now, mine)
+		layCards(canvas, table, tOff, tl, now, mine = false)
 
 		val hl = handLayout(p, false, min(held.size - heldOffset[i], maxCards), sp)
 		heldRect[i] = hl.rect
-		layCards(canvas, held, hOff, hl, now, mine)
+		layCards(canvas, held, hOff, hl, now, mine, if (mine) view?.legal ?: emptyList() else emptyList())
 
 		drawCountBadge(canvas, tOff, ptTableOffsetBadge[i])
 		drawCountBadge(canvas, hOff, ptHeldOffsetBadge[i])
@@ -571,7 +592,8 @@ class GameTable(context: Context) : View(context) {
 		}
 	}
 
-	private fun layCards(canvas: Canvas, ids: List<Int>, offset: Int, l: HandLayout, now: Long, mine: Boolean) {
+	/** [raised] cards (the ones you may play now) sit a little higher. */
+	private fun layCards(canvas: Canvas, ids: List<Int>, offset: Int, l: HandLayout, now: Long, mine: Boolean, raised: List<Int> = emptyList()) {
 		var x = l.x
 		var y = l.y
 		val stop = min(offset + maxCards, ids.size)
@@ -580,7 +602,8 @@ class GameTable(context: Context) : View(context) {
 			val s = sprite(id)
 			when {
 				j in offset until stop -> {
-					val flip = s.frame(now, x, y, face)
+					val lift = if (id in raised) cardH / 8 else 0f
+					val flip = s.frame(now, x, y - lift, face)
 					if (s.moving) moving += id to flip else drawCard(canvas, typeOf(id), s.x, s.y, s.shownFaceUp, flip)
 					if (mine) myCards += A11yCard(id, RectF(x, y, x + if (j == stop - 1) cardW else l.dx, y + cardH))
 					x += l.dx
@@ -620,18 +643,16 @@ class GameTable(context: Context) : View(context) {
 		canvas.drawBitmap(b, null, dst, paintBitmap)
 	}
 
-	private fun drawPenalty(canvas: Canvas, v: TableView) {
-		val p = v.penalty ?: return
-		if (p.type == PenaltyType.CARD) {
-			drawBadgeWithText(canvas, ptDiscardBadge, "+" + p.numCards)
-		} else if (p.origCard >= 0 && p.origCard != v.lastPlayed) {
-			typeOf(p.origCard)?.let { t ->
-				val b = face(t)
-				drawBitmap(canvas, b, ptDiscardBadge.x, ptDiscardBadge.y, badge, badge * b.height / b.width)
-			}
+	private fun drawAttack(canvas: Canvas, v: TableView) {
+		val a = v.attack ?: return
+		if (a.kind == AttackKind.DRAW && a.amount + a.pile > 0) {
+			drawBadgeWithText(canvas, ptDiscardBadge, "+" + (a.amount + a.pile))
+		} else {
+			val b = face(a.card)
+			drawBitmap(canvas, b, ptDiscardBadge.x, ptDiscardBadge.y, badge, badge * b.height / b.width)
 		}
-		drawEmoticon(canvas, v, p.victim, bmpEmoVictim)
-		drawEmoticon(canvas, v, p.generator, bmpEmoAggressor)
+		drawEmoticon(canvas, v, a.victim, bmpEmoVictim)
+		drawEmoticon(canvas, v, a.source, bmpEmoAggressor)
 	}
 
 	private fun drawEmoticon(canvas: Canvas, v: TableView, seat: Seat?, emoticon: Bitmap) {
@@ -640,7 +661,7 @@ class GameTable(context: Context) : View(context) {
 		val pt = ptEmoticon[p.index]
 		var dx = 0f
 		var dy = 0f
-		if (v.player(seat).table.isNotEmpty()) {
+		if (v.player(seat).field.isNotEmpty()) {
 			when (p) {
 				Seat.SOUTH -> dy -= cardH * 2 / 3
 				Seat.WEST -> dx += cardW / 2
@@ -668,10 +689,17 @@ class GameTable(context: Context) : View(context) {
 	}
 
 	private fun scoreText(v: TableView, p: PlayerView): String {
-		if (!v.roundComplete) return p.totalScore.toString()
-		val base = p.totalScore - p.lastScore - p.lastVirusPenalty
-		val template = if (p.lastScore < 0) R.string.msg_round_score_negative else R.string.msg_round_score_positive
-		return context.getString(template, base, abs(p.lastScore), p.lastVirusPenalty, p.totalScore)
+		val parts = ArrayList<String>()
+		parts += if (v.elimination) context.getString(R.string.score_losses, p.losses) else context.getString(R.string.score_wins, p.wins)
+		when (p.status) {
+			Status.FINISHED -> parts += context.getString(R.string.score_out)
+			Status.REMOVED -> parts += context.getString(R.string.score_removed)
+			Status.TEAMED -> p.teammate?.let { parts += context.getString(R.string.score_team, nameOf(it)) }
+			Status.ACTIVE -> {}
+		}
+		if (p.deathClock >= 0) parts += context.getString(R.string.score_death, p.deathClock)
+		if (p.active && p.calledUno && p.size <= 2) parts += context.getString(R.string.lbl_menu_uno)
+		return parts.joinToString(" · ")
 	}
 
 	// =========================================================================
@@ -682,7 +710,6 @@ class GameTable(context: Context) : View(context) {
 		if (!waitingForHold) return@Runnable
 		touchAndHold = true
 		val v = view ?: return@Runnable
-		if (!v.myTurn && !v.roundComplete) return@Runnable
 		val id = findTouchedCard(v, touchDown) ?: return@Runnable
 		val t = typeOf(id) ?: return@Runnable
 		if (!sprite(id).shownFaceUp) return@Runnable
@@ -755,7 +782,7 @@ class GameTable(context: Context) : View(context) {
 			val i = p.index
 			val pv = v.player(seatAt(p))
 			heldOffset[i] = clamp(heldOffset[i] + heldDrag[i], 0, pv.held.size - maxCards)
-			tableOffset[i] = clamp(tableOffset[i] + tableDrag[i], 0, pv.table.size - maxCards)
+			tableOffset[i] = clamp(tableOffset[i] + tableDrag[i], 0, pv.field.size - maxCards)
 			heldDrag[i] = 0
 			tableDrag[i] = 0
 			touchHeldPos = null
@@ -805,7 +832,7 @@ class GameTable(context: Context) : View(context) {
 	}
 
 	private fun findTouchedCard(v: TableView, pt: PointF): Int? {
-		if (touchDiscardPile) return if (discardRect.contains(pt.x, pt.y)) v.discard.lastOrNull() else null
+		if (touchDiscardPile) return if (discardRect.contains(pt.x, pt.y)) v.topCard.takeIf { it >= 0 } else null
 		if (touchDrawPile) return null
 		val p = touchHeldPos ?: touchTablePos ?: return null
 		return findTouchedCardInHand(v, p, pt)
@@ -821,7 +848,7 @@ class GameTable(context: Context) : View(context) {
 			val idx = clamp((along / sp).toInt(), 0, ids.size - offset - 1)
 			return ids.getOrNull(idx + offset)
 		}
-		return pick(heldRect[i], pv.held, heldOffset[i]) ?: pick(tableRect[i], pv.table, tableOffset[i])
+		return pick(heldRect[i], pv.held, heldOffset[i]) ?: pick(tableRect[i], pv.field, tableOffset[i])
 	}
 
 	// =========================================================================
@@ -841,15 +868,15 @@ class GameTable(context: Context) : View(context) {
 		if (v.roundComplete || cp == null) {
 			if (cp == null) return context.getString(R.string.a11y_table_dealing)
 			val scores = v.players.joinToString(", ") {
-				context.getString(R.string.a11y_score_entry, nameOf(it.seat), it.totalScore)
+				context.getString(R.string.a11y_score_entry, nameOf(it.seat), if (v.elimination) it.losses else it.wins)
 			}
 			return context.getString(R.string.a11y_table_round_over, scores)
 		}
-		val hand = v.player(me).let { it.table + it.held }
+		val hand = v.player(me).held
 		return context.getString(
 			R.string.a11y_table_turn,
 			nameOf(cp),
-			if (v.lastPlayed >= 0) cardName(v.lastPlayed) else "",
+			v.top?.let { CardText.cardName(context, it, familyFriendly) } ?: "",
 			CardText.colorName(context, v.currColor),
 			hand.size,
 			hand.joinToString(", ") { cardName(it) },
@@ -916,7 +943,7 @@ class GameTable(context: Context) : View(context) {
 				}
 				else -> {
 					r = discardRect
-					val top = v?.discard?.lastOrNull()
+					val top = v?.topCard?.takeIf { it >= 0 }
 					node.contentDescription = context.getString(R.string.a11y_discard_pile, top?.let(::cardName) ?: "")
 					if (top != null) node.addAction(AccessibilityNodeInfoCompat.ACTION_LONG_CLICK)
 				}
@@ -941,7 +968,7 @@ class GameTable(context: Context) : View(context) {
 					else return false
 				}
 				id == ID_DRAW_PILE && click -> act(if (v.waitingToStartRound) PlayerAction.NextRound else PlayerAction.Draw)
-				id == ID_DISCARD_PILE && longClick -> v.discard.lastOrNull()?.let(::typeOf)?.let { onCardHelp?.invoke(it) }
+				id == ID_DISCARD_PILE && longClick -> typeOf(v.topCard)?.let { onCardHelp?.invoke(it) }
 				else -> return false
 			}
 			return true
@@ -952,7 +979,7 @@ class GameTable(context: Context) : View(context) {
 	// Resources
 	// =========================================================================
 
-	private fun face(t: CardType): Bitmap = faces.getOrPut(t) { decode(CardText.drawable(t, familyFriendly)) }
+	private fun face(t: CardType): Bitmap = faces.getOrPut(t) { CardArt.bitmap(context, t, familyFriendly) }
 
 	private fun decode(@DrawableRes id: Int): Bitmap = BitmapFactory.decodeResource(resources, id)
 
