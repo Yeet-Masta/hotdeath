@@ -7,11 +7,9 @@ The card faces are drawn by the Card Workshop. Their pictures come from
 | Icon | Artist |
 |---|---|
 | [angel-wings](https://game-icons.net/1x1/lorc/angel-wings.html) | lorc |
-| [anticlockwise-rotation](https://game-icons.net/1x1/delapouite/anticlockwise-rotation.html) | delapouite |
 | [backstab](https://game-icons.net/1x1/lorc/backstab.html) | lorc |
 | [biohazard](https://game-icons.net/1x1/lorc/biohazard.html) | lorc |
 | [burning-skull](https://game-icons.net/1x1/skoll/burning-skull.html) | skoll |
-| [cancel](https://game-icons.net/1x1/sbed/cancel.html) | sbed |
 | [card-discard](https://game-icons.net/1x1/faithtoken/card-discard.html) | faithtoken |
 | [card-exchange](https://game-icons.net/1x1/delapouite/card-exchange.html) | delapouite |
 | [checked-shield](https://game-icons.net/1x1/lorc/checked-shield.html) | lorc |
