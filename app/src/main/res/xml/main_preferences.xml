@@ -33,6 +33,11 @@
 		android:defaultValue="true"
 		android:icon="@drawable/ic_family_friendly" />
 	<CheckBoxPreference
+		android:key="haptics"
+		android:title="@string/haptics_title"
+		android:summary="@string/haptics_summary"
+		android:defaultValue="true" />
+	<CheckBoxPreference
 		android:key="auto_uno"
 		android:title="@string/auto_uno_title"
 		android:summary="@string/auto_uno_summary"

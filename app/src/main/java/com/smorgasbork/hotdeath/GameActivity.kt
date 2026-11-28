@@ -18,6 +18,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.smorgasbork.hotdeath.engine.Msg
+import com.smorgasbork.hotdeath.engine.GameMessage
 import com.smorgasbork.hotdeath.engine.CardDeck
 import com.smorgasbork.hotdeath.engine.CardColor
 import com.smorgasbork.hotdeath.engine.CardType
@@ -53,6 +55,7 @@ class GameActivity : AppCompatActivity() {
 	private lateinit var vm: GameViewModel
 	private lateinit var session: GameSession
 	private lateinit var table: GameTable
+	private lateinit var haptics: Haptics
 	private val familyFriendly: Boolean get() = vm.config.familyFriendly
 	private val view: TableView? get() = session.view
 
@@ -87,6 +90,7 @@ class GameActivity : AppCompatActivity() {
 		if (vm.multiplayer) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
 		table = GameTable(this).apply {
+			haptics = Haptics(this) { vm.config.haptics }
 			id = View.generateViewId()
 			bottomMarginExternal = dpToPx(58)
 			onAction = { session.act(it) }
@@ -137,8 +141,24 @@ class GameActivity : AppCompatActivity() {
 
 	private fun onUpdate(v: TableView, e: ViewEvent?) {
 		table.update(v, e)
-		if (e is ViewEvent.Message) showMessage(CardText.message(this, e.message, familyFriendly, ::nameOf))
+		if (e is ViewEvent.Message) {
+			showMessage(CardText.message(this, e.message, familyFriendly, ::nameOf))
+			buzzFor(e.message, v.me)
+		}
 		syncControls()
+	}
+
+	private fun buzzFor(m: GameMessage, me: Seat) {
+		val mine = m.seat == me
+		when (m.kind) {
+			Msg.YOUR_PLAY -> haptics.yourTurn()
+			Msg.JUMP_IN_NOW -> haptics.warn()
+			Msg.CARD_NO_GOOD -> haptics.reject()
+			Msg.WRONG_JUMP_IN, Msg.FALSE_UNO -> if (mine) haptics.reject()
+			Msg.YOUR_ANSWER -> haptics.hit()
+			Msg.TAKES_ATTACK, Msg.CAUGHT_NO_UNO, Msg.REMOVED, Msg.VIRUS -> if (mine) haptics.hit()
+			else -> {}
+		}
 	}
 
 	private fun onStatus(s: SessionStatus) {

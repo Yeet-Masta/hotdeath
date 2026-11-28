@@ -367,4 +367,6 @@
 	<string name="rules_group_field">Field cards (stay in play in front of a player)</string>
 	<string name="rules_group_global">Whole-table cards</string>
 	<string name="rules_group_technical">Technical cards</string>
+	<string name="haptics_title">Vibration</string>
+	<string name="haptics_summary">Buzz on your turn, when you are attacked, and when a card can\'t be played</string>
 </resources>

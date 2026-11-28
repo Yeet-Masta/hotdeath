@@ -25,6 +25,7 @@ class PrefsConfig(context: Context) : GameConfig {
 	override val jumpInMs: Long get() = int(JUMP_IN_MS, "2000").toLong()
 	override val pauseLength: Int get() = int(GAME_SPEED, "1")
 	val familyFriendly: Boolean get() = prefs.getBoolean(FAMILY_FRIENDLY, true)
+	val haptics: Boolean get() = prefs.getBoolean(HAPTICS, true)
 
 	/** WEST is opponent 1, NORTH 2, EAST 3; a computer in SOUTH mirrors opponent 2. */
 	private fun opponentNumber(seat: Seat): Int = when (seat) {
@@ -53,6 +54,7 @@ class PrefsConfig(context: Context) : GameConfig {
 		private const val AUTO_UNO = "auto_uno"
 		private const val JUMP_IN_MS = "jump_in_ms"
 		private const val FAMILY_FRIENDLY = "family_friendly"
+		private const val HAPTICS = "haptics"
 		private const val GAME_STATE = "gamestate"
 	}
 }
