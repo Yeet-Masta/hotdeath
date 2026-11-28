@@ -57,6 +57,15 @@
 	    	android:layout_gravity="center">
 
 			<ImageButton
+				android:src="@drawable/sel_btn_multiplayer"
+				android:id="@+id/btn_multiplayer"
+				android:contentDescription="@string/lbl_multiplayer"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:scaleType="center"
+				android:background="@null" />
+
+			<ImageButton
 				android:src="@drawable/sel_btn_help"
 				android:id="@+id/btn_help"
 				android:layout_width="fill_parent"
