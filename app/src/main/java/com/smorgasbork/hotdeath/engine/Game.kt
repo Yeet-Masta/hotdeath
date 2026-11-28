@@ -225,11 +225,17 @@ class Game private constructor(
 	}
 
 	private suspend fun runRound() {
+		var turns = 0
 		while (!roundComplete) {
 			snapshot = SnapshotJson.capture(this)
 			awaitUnpaused()
 			drainFree()
 			if (roundComplete) break
+			if (++turns > MAX_TURNS) {
+				// E.g. everyone left holds Luck, so nobody can ever draw: call it a draw.
+				finishRound(winner = null, loser = null)
+				break
+			}
 			val p = cp
 			playTurn(p)
 			if (checkRoundEnd()) break
@@ -968,6 +974,8 @@ class Game private constructor(
 
 	companion object {
 		const val HAND_SIZE = 8
+		/** Turns after which a round is called a draw (a real round needs a few hundred at most). */
+		const val MAX_TURNS = 2000
 
 		fun newGame(
 			config: GameConfig,

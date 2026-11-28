@@ -556,7 +556,7 @@ class GameTable(context: Context) : View(context) {
 		layCards(canvas, table, tOff, tl, now, mine = false)
 
 		val hl = handLayout(p, false, min(held.size - heldOffset[i], maxCards), sp)
-		heldRect[i] = hl.rect
+		heldRect[i] = if (mine && p == Seat.SOUTH) RectF(hl.rect).apply { top -= cardH / 8 } else hl.rect
 		layCards(canvas, held, hOff, hl, now, mine, if (mine) view?.legal ?: emptyList() else emptyList())
 
 		drawCountBadge(canvas, tOff, ptTableOffsetBadge[i])
@@ -744,7 +744,13 @@ class GameTable(context: Context) : View(context) {
 		touchTablePos = null
 
 		for (p in TOUCH_ORDER) {
-			if (heldRect[p.index]?.contains(x, y) == true) { touchHeldPos = p; break }
+			if (heldRect[p.index]?.contains(x, y) == true) {
+				// The lift strip of your hand overlaps your field cards.
+				if (tableRect[p.index]?.contains(x, y) == true && y < heldRect[p.index]!!.top + cardH / 8 &&
+					findTouchedCardInHand(v, p, PointF(x, y)) in v.player(seatAt(p)).field) touchTablePos = p
+				else touchHeldPos = p
+				break
+			}
 			if (tableRect[p.index]?.contains(x, y) == true) { touchTablePos = p; break }
 		}
 		if (touchHeldPos != null || touchTablePos != null) {
@@ -754,6 +760,7 @@ class GameTable(context: Context) : View(context) {
 
 		if (v.prompt == Prompt.Color && hypot(x - ptPointer.x, y - ptPointer.y) <= 1.5f * cardW) {
 			act(PlayerAction.Color(colorAt(x, y)))
+			return true
 		}
 		if (drawPileRect.contains(x, y)) {
 			touchDrawPile = true
@@ -844,11 +851,18 @@ class GameTable(context: Context) : View(context) {
 		val sp = spacingFor(p)
 		fun pick(rect: RectF?, ids: List<Int>, offset: Int): Int? {
 			if (rect == null || !rect.contains(pt.x, pt.y) || ids.isEmpty()) return null
+			val start = clamp(offset, 0, ids.size - maxCards)
+			val showing = min(maxCards, ids.size - start)
+			if (showing <= 0) return null
 			val along = if (p == Seat.NORTH || p == Seat.SOUTH) pt.x - rect.left else pt.y - rect.top
-			val idx = clamp((along / sp).toInt(), 0, ids.size - offset - 1)
-			return ids.getOrNull(idx + offset)
+			val idx = clamp((along / sp).toInt(), 0, showing - 1)
+			return ids.getOrNull(idx + start)
 		}
-		return pick(heldRect[i], pv.held, heldOffset[i]) ?: pick(tableRect[i], pv.field, tableOffset[i])
+		val held = pick(heldRect[i], pv.held, heldOffset[i])
+		// The strip above your hand only belongs to a card that is raised there.
+		val inLiftStrip = heldRect[i]?.let { pt.y < it.top + cardH / 8 } == true && p == Seat.SOUTH
+		if (held != null && (!inLiftStrip || held in v.legal)) return held
+		return pick(tableRect[i], pv.field, tableOffset[i]) ?: held.takeIf { tableRect[i]?.contains(pt.x, pt.y) != true }
 	}
 
 	// =========================================================================

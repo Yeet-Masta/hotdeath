@@ -236,7 +236,7 @@
 	<string name="msg_cannot_win_no_uno">%1$s went out without calling UNO: draw 2</string>
 	<string name="msg_round_winner">%1$s wins the round!</string>
 	<string name="msg_round_loser">%1$s is last and loses the round!</string>
-	<string name="msg_round_no_winner">Nobody is left: no winner this round</string>
+	<string name="msg_round_no_winner">No winner this round: nobody can make a move</string>
 	<string name="msg_player_out">%1$s is out!</string>
 	<string name="msg_removed">%1$s is out of the round (%4$s)</string>
 	<string name="msg_revived">%1$s is back from the dead!</string>
