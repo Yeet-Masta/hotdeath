@@ -8,7 +8,7 @@ const fs = require('fs');
   const page = await browser.newPage();
   await page.goto('file://' + tool);
   await page.waitForFunction(() => window.cardWorkshop && document.fonts && document.fonts.status === 'loaded');
-  await page.evaluate(() => Promise.all(['40px "Archivo Black"', '40px "Bangers"', '700 40px "Archivo Narrow"', '700 40px "Source Sans 3"', '900 40px "Source Sans 3"', '40px "Black Ops One"', '40px "Pirata One"', '40px "Metal Mania"'].map(f => document.fonts.load(f))));
+  await page.evaluate(() => Promise.all(['40px "Archivo Black"', '40px "Bangers"', '700 40px "Archivo Narrow"', '700 40px "Source Sans 3"', '900 40px "Source Sans 3"', '40px "Black Ops One"', '40px "Pirata One"', '40px "Metal Mania"', '40px "Bungee"', '40px "Titan One"'].map(f => document.fonts.load(f))));
   const out = [];
   for (const c of job.cards) {
     const pngs = await page.evaluate(async ({ c, densities }) => {

@@ -9,7 +9,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@700&family=Source+Sans+3:wght@600;700;900&family=Black+Ops+One&family=Pirata+One&family=Metal+Mania&family=Archivo+Black&family=Anton&family=Bangers&family=Lilita+One&family=UnifrakturCook:wght@700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@700&family=Source+Sans+3:wght@600;700;900&family=Black+Ops+One&family=Pirata+One&family=Metal+Mania&family=Bungee&family=Titan+One&family=Archivo+Black&family=Anton&family=Bangers&family=Lilita+One&family=UnifrakturCook:wght@700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: a card table. Controls on the left bench, the card under a lamp in the middle, code drawer below. */
 :root {
@@ -391,7 +391,7 @@ function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCode
 /** A family may carry a weight after a colon, e.g. "Source Sans 3:900". */
 function fontFace(fam, px, defWeight) {
   const [name, w] = String(fam).split(":");
-  const weight = w || (["Archivo Black", "Bangers", "Lilita One", "Anton", "Black Ops One", "Pirata One", "Metal Mania"].includes(name) ? 400 : defWeight);
+  const weight = w || (["Archivo Black", "Bangers", "Lilita One", "Anton", "Black Ops One", "Pirata One", "Metal Mania", "Bungee", "Titan One"].includes(name) ? 400 : defWeight);
   return `${weight} ${px}px "${name}", "Myriad Pro", "Segoe UI", Arial, sans-serif`;
 }
 function fontStr(px, fam) { return fontFace(fam, px, fam === "UnifrakturCook" ? 700 : 400); }
@@ -416,7 +416,7 @@ function shapePath(ctx, d, k) {
   const shape = d.shape, cx = W / 2, cy = centerY(d);
   ctx.beginPath();
   if (shape === "square") { const w = (d.shapeW ?? 66) * k, h = (d.shapeH ?? 96) * k; rr(ctx, cx - w / 2, cy - h / 2, w, h, 11 * k); }
-  else if (shape === "oval") { ctx.ellipse(cx, cy, 36 * k, 56 * k, 0.42, 0, Math.PI * 2); }
+  else if (shape === "oval") { ctx.ellipse(cx, cy, (d.shapeW ?? 72) / 2 * k, (d.shapeH ?? 112) / 2 * k, (d.shapeRotate ?? 24) * Math.PI / 180, 0, Math.PI * 2); }
   else if (shape === "circle") { ctx.ellipse(cx, cy, (d.shapeW ?? 80) / 2 * k, (d.shapeH ?? 90) / 2 * k, 0, 0, Math.PI * 2); }
   else if (shape === "shield") {
     const w = 33 * k, t = cy - 38 * k, b = cy + 42 * k;
@@ -455,6 +455,7 @@ function drawArt(ctx, d) {
     const r = Math.min(box * 1.15 / src.w, box * 1.15 / src.h, box / Math.sqrt(src.w * src.h));
     const w = src.w * r, h = src.h * r;
     ctx.save();
+    ctx.globalAlpha = d.artAlpha ?? 1;
     if (d.artShadow) {
       const t = ctx.getTransform().a;
       ctx.shadowColor = "rgba(20,18,16,.45)"; ctx.shadowOffsetX = 1.4 * t; ctx.shadowOffsetY = 1.4 * t; ctx.shadowBlur = 0.6 * t;
@@ -511,6 +512,13 @@ function drawCard(ctx, d, pxW, pxH) {
         });
       }
     }
+    if (d.band) {
+      // a diagonal band of stripes across the card (behind everything else)
+      const b = d.band, n = b.colors.length, bw = b.width / n;
+      ctx.save(); ctx.translate(W / 2, b.cy ?? 80); ctx.rotate((b.rotate ?? -35) * Math.PI / 180);
+      b.colors.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(-120, -b.width / 2 + i * bw, 240, bw + 0.3); });
+      ctx.restore();
+    }
     if (d.frame === "rainbow") {
       // a thin four-color frame just inside the card edge
       const quads = [[0, 0, W / 2, H / 2], [W / 2, 0, W, H / 2], [0, H / 2, W / 2, H], [W / 2, H / 2, W, H]];
@@ -532,6 +540,7 @@ function drawCard(ctx, d, pxW, pxH) {
       { cx: W / 2, cy: centerY(d) + 2 }, fill, 1.6, d.mash69);
   }
   if (!d.artBehind) drawArt(ctx, d);
+  if (d.logo) drawLogo(ctx, d);
   // title & caption
   ctx.textAlign = "center";
   if (d.title) {
@@ -740,6 +749,63 @@ function drawGlyph(ctx, text, fam, capH, maxW, at, fill, shadow, mash) {
     x += widths[i];
   });
   ctx.restore();
+}
+/**
+ * A logo: lettering rotated about a point, like the "HD" on the original card
+ * back. Every letter's outline is drawn before any fill, so tightly packed
+ * letters merge into one shape. Options: font, size (cap height), rotate (deg),
+ * tracking, fill ("fire" or a color), stroke color and width, cracks (count of
+ * red chips), dither (0-100, grain on the logo only), cy (center height).
+ */
+function drawLogo(ctx, d) {
+  const L = d.logo;
+  let g = ctx;
+  if (L.dither) {
+    const c = document.createElement("canvas"); c.width = ctx.canvas.width; c.height = ctx.canvas.height;
+    g = c.getContext("2d"); g.setTransform(ctx.getTransform());
+  }
+  g.save();
+  g.translate(W / 2 + (L.cx ?? 0), L.cy ?? 80); g.rotate((L.rotate ?? 0) * Math.PI / 180);
+  g.font = fontFace(L.font || "Bungee", 100, 400); g.textBaseline = "alphabetic"; g.textAlign = "left";
+  const chars = [...L.text], widths = chars.map(ch => g.measureText(ch).width);
+  const cap = g.measureText("H").actualBoundingBoxAscent;
+  let k = (L.size ?? 60) / cap;
+  const track = (L.tracking ?? 0) / k;
+  let total = widths.reduce((a, b) => a + b, 0) + track * (chars.length - 1);
+  const sx = L.stretch ?? 1;                 // horizontal squeeze/stretch of the letters
+  if (L.maxW && total * k * sx > L.maxW) k = L.maxW / (total * sx);
+  g.scale(k * sx, k);
+  const x0 = -total / 2, base = cap / 2;
+  const each = fn => { let x = x0; chars.forEach((ch, i) => { fn(ch, x); x += widths[i] + track; }); };
+  const sw = (L.strokeW ?? 4) / k;
+  g.lineJoin = "round"; g.miterLimit = 2;
+  // drop shadow, then outline, then fill
+  g.fillStyle = "rgba(10,6,4,.7)"; g.strokeStyle = "rgba(10,6,4,.7)"; g.lineWidth = sw * 2;
+  each((ch, x) => { g.strokeText(ch, x + 1.6 / k, base + 1.6 / k); });
+  g.strokeStyle = L.stroke || "#e3120f"; g.lineWidth = sw * 2;
+  each((ch, x) => g.strokeText(ch, x, base));
+  let fill = L.fill || "#ffc800";
+  if (fill === "fire") {
+    fill = g.createLinearGradient(0, base - cap, 0, base);
+    fill.addColorStop(0, "#ffe23a"); fill.addColorStop(0.6, "#ffc200"); fill.addColorStop(1, "#ff9a00");
+  }
+  g.fillStyle = fill; each((ch, x) => g.fillText(ch, x, base));
+  if (L.cracks) {
+    // red chips cut across the letters, like the crack in the original's D
+    const r = rng(hashStr((d.id || "x") + "/cracks"));
+    g.globalCompositeOperation = "source-atop"; g.fillStyle = L.stroke || "#e3120f";
+    for (let i = 0; i < L.cracks; i++) {
+      const x = x0 + r() * total, y = base - cap * (0.15 + r() * 0.7), len = cap * (0.15 + r() * 0.3), th = cap * (0.03 + r() * 0.05);
+      g.save(); g.translate(x, y); g.rotate((r() - 0.5) * 0.8);
+      g.beginPath(); g.moveTo(0, -th / 2); g.lineTo(len, 0); g.lineTo(0, th / 2); g.closePath(); g.fill(); g.restore();
+    }
+    g.globalCompositeOperation = "source-over";
+  }
+  g.restore();
+  if (g !== ctx) {
+    ditherCanvas(g, g.canvas.width, g.canvas.height, L.dither / 100, hashStr((d.id || "x") + "/logo"));
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(g.canvas, 0, 0); ctx.restore();
+  }
 }
 /**
  * The 69 card's glyph, as on the original card: a 6 and a 9 sharing one bowl,

@@ -213,7 +213,11 @@ def designs(types_kt, icons):
                 out.append((key + "_ff", dict(d, id=key + "_ff", title=extra["ff"])))
     # card back
     d = base_design("back", "WILD")
-    d.update(shape="oval", shapeFill="#cb0d28", center="HD", centerColor="#f5b800", font="Bangers", centerSize=60)
+    # after the original back: a tilted "HD" (yellow, cracked), here on a red oval tilted the same way;
+    # dithered like the rest of the deck
+    d.update(shape="oval", shapeW=104, shapeH=66, shapeRotate=-35, shapeFill="#cb0d28",
+             logo=dict(text="HD", font="Bungee", size=44, stretch=0.72, rotate=-35, tracking=-2, fill="#ffc800",
+                       stroke="#1d1b1a", strokeW=3, cracks=0, cy=80, maxW=74))
     out.append(("back", d))
     return out
 
