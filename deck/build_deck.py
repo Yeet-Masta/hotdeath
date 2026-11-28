@@ -215,9 +215,11 @@ def designs(types_kt, icons):
     d = base_design("back", "WILD")
     # after the original back: a tilted "HD" (yellow, cracked), here on a red oval tilted the same way;
     # dithered like the rest of the deck
-    d.update(shape="oval", shapeW=104, shapeH=66, shapeRotate=-35, shapeFill="#cb0d28",
-             logo=dict(text="HD", font="Bungee", size=44, stretch=0.72, rotate=-35, tracking=-2, fill="#ffc800",
-                       stroke="#1d1b1a", strokeW=3, cracks=0, cy=80, maxW=74))
+    # the original back's off-white border: about 8px, inner panel corners about 3px, a bright rim inside
+    d.update(border=True, borderWidth=8, borderColor="#dad4cb", borderRadius=3, borderRim="#faf7ef",
+             shape="oval", shapeW=92, shapeH=58, shapeRotate=-35, shapeFill="#cb0d28",
+             logo=dict(text="HD", font="Bungee", size=39, stretch=0.72, rotate=-35, tracking=-2, fill="#ffc800",
+                       stroke="#1d1b1a", strokeW=2.8, cracks=0, cy=80, maxW=66))
     out.append(("back", d))
     return out
 
