@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Hot Death Card Workshop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@700&family=Source+Sans+3:wght@600;700;900&family=Black+Ops+One&family=Pirata+One&family=Metal+Mania&family=Archivo+Black&family=Anton&family=Bangers&family=Lilita+One&family=UnifrakturCook:wght@700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a card table. Controls on the left bench, the card under a lamp in the middle, code drawer below. */
+:root {
+  --bg: #e9e6df;
+  --panel: #f7f5f0;
+  --line: #d4cfc4;
+  --fg: #23201c;
+  --muted: #6c665c;
+  --accent: #cb0d28;
+  --accent-fg: #ffffff;
+  --felt: #1f4a37;
+  --felt-2: #173a2b;
+  --code-bg: #f0ede6;
+  --chip: #ffffff;
+  --focus: #0456a5;
+  --ok: #04854a;
+  --warn: #a5620a;
+  --font-ui: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17161a; --panel: #211f24; --line: #36333a; --fg: #ece8e1; --muted: #a39d93;
+    --accent: #ff4d5e; --accent-fg: #1a0005; --felt: #183b2c; --felt-2: #112c21;
+    --code-bg: #1b1a1e; --chip: #2a282e; --focus: #7db4ff; --ok: #4bd18c; --warn: #f0b24a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17161a; --panel: #211f24; --line: #36333a; --fg: #ece8e1; --muted: #a39d93;
+  --accent: #ff4d5e; --accent-fg: #1a0005; --felt: #183b2c; --felt-2: #112c21;
+  --code-bg: #1b1a1e; --chip: #2a282e; --focus: #7db4ff; --ok: #4bd18c; --warn: #f0b24a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.45; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 40px; max-width: 1380px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-block: 4px 14px; }
+header.top h1 { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header.top h1 span { color: var(--accent); }
+header.top p { margin: 0; color: var(--muted); max-width: 62ch; }
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.btn { appearance: none; border: 1px solid var(--line); background: var(--chip); padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.btn.small { padding: 4px 9px; font-size: 12.5px; }
+.btn.ghost { background: transparent; }
+
+.library { display: flex; gap: 10px; overflow-x: auto; padding: 10px 2px 12px; margin-bottom: 14px; border-bottom: 1px solid var(--line); align-items: flex-end; }
+.lib-item { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 2px solid transparent; border-radius: 8px; padding: 4px; cursor: pointer; width: 76px; }
+.lib-item canvas { width: 52px; height: 80px; display: block; }
+.lib-item small { font-size: 11px; color: var(--muted); max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-item.on { border-color: var(--accent); }
+.lib-item .tag { font-size: 9.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--warn); font-weight: 700; }
+.lib-actions { flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px; padding-left: 6px; }
+
+.grid { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.bench { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+details.group { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+details.group > summary { list-style: none; cursor: pointer; padding: 10px 14px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; }
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary::after { content: "+"; font-family: var(--font-mono); color: var(--muted); }
+details.group[open] > summary::after { content: "–"; }
+.fields { padding: 2px 14px 14px; display: grid; gap: 10px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+label.f { display: grid; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 600; min-width: 0; }
+label.f input[type=text], label.f input[type=number], label.f select, label.f textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); color: var(--fg); font-weight: 500; font-size: 14px; }
+label.f textarea { resize: vertical; min-height: 64px; }
+label.f input[type=range] { width: 100%; accent-color: var(--accent); }
+label.chk { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.hint.warn { color: var(--warn); }
+.hint.ok { color: var(--ok); }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw { width: 34px; height: 34px; border-radius: 7px; border: 2px solid var(--line); cursor: pointer; position: relative; }
+.sw[aria-pressed="true"] { border-color: var(--fg); box-shadow: 0 0 0 2px var(--bg) inset; }
+.filebox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filebox input[type=file] { font-size: 12px; max-width: 100%; }
+
+.stage { min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.table { background: radial-gradient(ellipse at 50% 30%, var(--felt) 0%, var(--felt-2) 80%); border-radius: 12px; padding: 22px 18px 18px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; color: #e8efe9; }
+@media (max-width: 640px) { .table { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
+#big { width: 309px; height: 480px; max-width: 100%; height: auto; aspect-ratio: 103 / 160; display: block; filter: drop-shadow(0 8px 14px rgba(0,0,0,.45)); }
+.side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.side h3 { margin: 0 0 6px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: #b9cfc2; font-weight: 700; }
+.sizes { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+.sizes figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.sizes figcaption { font-family: var(--font-mono); font-size: 10.5px; color: #b9cfc2; }
+.hand { position: relative; height: 150px; overflow: hidden; }
+.hand canvas { position: absolute; bottom: 0; width: 77px; height: 120px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.4)); transform-origin: 50% 120%; }
+.exports { display: flex; flex-wrap: wrap; gap: 8px; }
+.exports .btn { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.25); }
+.exports .btn.primary { background: #fff; color: #1f4a37; border-color: #fff; }
+.status { font-size: 12.5px; color: #d6e5dc; min-height: 1.2em; }
+
+.codebox { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.codebox header { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.codebox h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 0; }
+.steps { padding: 4px 14px 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.step { min-width: 0; }
+.step h4 { margin: 10px 0 4px; font-size: 13.5px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.step h4 code { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-weight: 400; }
+.step p { margin: 0 0 6px; color: var(--muted); font-size: 12.5px; max-width: 80ch; }
+pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55; white-space: pre; font-variant-ligatures: none; }
+.pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Hot Death <span>Card Workshop</span></h1>
+    <p>Design a card, check it at real in-game sizes, then download the drawables for every screen density plus the code that adds it to the deck.</p>
+  </header>
+
+  <nav class="library" id="library" aria-label="Your cards"></nav>
+
+  <div class="grid">
+    <div class="bench">
+      <details class="group" open>
+        <summary>Card face</summary>
+        <div class="fields">
+          <div>
+            <div class="hint" style="margin-bottom:6px">Color</div>
+            <div class="swatches" id="colors"></div>
+          </div>
+          <div class="row">
+            <label class="f">Corner index<input type="text" id="corner" maxlength="4"></label>
+            <label class="f">Center shape
+              <select id="shape">
+                <option value="square">Rounded square</option>
+                <option value="oval">Tilted oval</option>
+                <option value="circle">Circle</option>
+                <option value="shield">Shield</option>
+                <option value="none">None</option>
+              </select>
+            </label>
+          </div>
+          <label class="f">Shape size <input type="range" id="shapeScale" min="60" max="125" step="1"></label>
+          <label class="chk"><input type="checkbox" id="border"> White border around the card</label>
+          <label class="f">Worn edges (0 = new deck) <input type="range" id="edgeWear" min="0" max="100" step="1"></label>
+          <label class="f">Scan dithering (0 = smooth) <input type="range" id="dither" min="0" max="100" step="1"></label>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>Text</summary>
+        <div class="fields">
+          <div class="row">
+            <label class="f">Big center text<input type="text" id="center" maxlength="6"></label>
+            <label class="f">Center color
+              <select id="centerColor">
+                <option value="auto">Card color</option>
+                <option value="rainbow">Rainbow (wild)</option>
+                <option value="#ffffff">White</option>
+                <option value="#1d1b1a">Black</option>
+              </select>
+            </label>
+          </div>
+          <label class="f">Center text size <input type="range" id="centerSize" min="12" max="70" step="1"></label>
+          <label class="f">Title (top)<input type="text" id="title" maxlength="24"></label>
+          <label class="f">Caption (bottom)<input type="text" id="caption" maxlength="24"></label>
+          <div class="row">
+            <label class="f">Lettering
+              <select id="font">
+                <option value="Source Sans 3:900">Classic card</option>
+                <option value="Archivo Black">Heavy sans</option>
+                <option value="UnifrakturCook">Blackletter</option>
+                <option value="Bangers">Comic</option>
+                <option value="Anton">Condensed</option>
+                <option value="Lilita One">Rounded</option>
+              </select>
+            </label>
+            <label class="f">Title size <input type="range" id="titleSize" min="8" max="22" step="1"></label>
+          </div>
+          <label class="chk"><input type="checkbox" id="flipCaption"> Print caption upside down (like Hot Death)</label>
+        </div>
+      </details>
+
+      <details class="group">
+        <summary>Artwork</summary>
+        <div class="fields">
+          <p class="hint">Drop in a picture or icon (PNG with transparency works best). It sits in the center, in front of the shape.</p>
+          <div class="filebox"><input type="file" id="artFile" accept="image/*"><button class="btn small ghost" id="artClear" type="button">Remove</button></div>
+          <div class="row3">
+            <label class="f">Size <input type="range" id="artScale" min="10" max="200" step="1"></label>
+            <label class="f">Left/right <input type="range" id="artX" min="-50" max="50" step="1"></label>
+            <label class="f">Up/down <input type="range" id="artY" min="-80" max="80" step="1"></label>
+          </div>
+          <label class="chk"><input type="checkbox" id="artBehind"> Put artwork behind the center text</label>
+          <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:4px 0">
+          <p class="hint">Start from an existing card image instead of a blank face, for example to add a title to <code>card_red_5.png</code>. Text and artwork are drawn on top.</p>
+          <div class="filebox"><input type="file" id="baseFile" accept="image/*"><button class="btn small ghost" id="baseClear" type="button">Remove</button></div>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>Game rules</summary>
+        <div class="fields">
+          <label class="chk"><input type="checkbox" id="existing"> This is a card the game already has (art only)</label>
+          <label class="f">Card name<input type="text" id="name" maxlength="40"></label>
+          <div class="row">
+            <label class="f">Plays like
+              <select id="value"></select>
+            </label>
+            <label class="f">Points<input type="number" id="points" step="1"></label>
+          </div>
+          <p class="hint" id="valueHint"></p>
+          <label class="f">Help text (shown when you long-press the card)<textarea id="help"></textarea></label>
+          <div class="row">
+            <label class="f">Code name<input type="text" id="enumName" spellcheck="false"></label>
+            <label class="f">Card ID<input type="number" id="legacyId" min="194" step="1"></label>
+          </div>
+          <label class="f">Put it in
+            <select id="deck">
+              <option value="extended">Extended deck (added on top)</option>
+              <option value="replace">Hot Death decks (replaces a plain card)</option>
+              <option value="none">No deck (card catalog only)</option>
+            </select>
+          </label>
+          <p class="hint">Code name and card ID fill in automatically; change them only if they clash with a card you already added.</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="stage">
+      <section class="table" aria-label="Preview">
+        <canvas id="big" width="618" height="960" role="img" aria-label="Card preview"></canvas>
+        <div class="side">
+          <div>
+            <h3>Actual size on phones and tablets</h3>
+            <div class="sizes" id="sizes"></div>
+          </div>
+          <div>
+            <h3>In a hand</h3>
+            <div class="hand" id="hand"></div>
+          </div>
+          <div>
+            <h3>Download</h3>
+            <div class="exports">
+              <button class="btn primary" id="dlZip" type="button">Drawables .zip</button>
+              <button class="btn" id="dlPng" type="button">Large PNG</button>
+              <button class="btn" id="dlAll" type="button">All my cards .zip</button>
+            </div>
+            <p class="status" id="status" role="status"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="codebox">
+        <header>
+          <h2>Add it to the game</h2>
+          <span id="codeStatus"></span>
+        </header>
+        <div class="steps" id="steps"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const W = 103, H = 160;
+const COLORS = {
+  RED:    { hex: "#cb0d28", label: "Red" },
+  GREEN:  { hex: "#048540", label: "Green" },
+  BLUE:   { hex: "#0456a5", label: "Blue" },
+  YELLOW: { hex: "#e99206", label: "Yellow" },
+  WILD:   { hex: "#1d1b1a", label: "Wild (black)" },
+};
+const RAINBOW = ["#cb0d28", "#048540", "#0456a5", "#e99206"];
+// [CardValue, label, short token for code names, works without engine code?]
+const VALUES = [
+  ["ZERO","Number 0","0",true],["ONE","Number 1","1",true],["TWO","Number 2","2",true],["THREE","Number 3","3",true],
+  ["FOUR","Number 4","4",true],["FIVE","Number 5","5",true],["SIX","Number 6","6",true],["SEVEN","Number 7","7",true],
+  ["EIGHT","Number 8","8",true],["NINE","Number 9","9",true],
+  ["DRAW","Draw 2","D",true],["DRAW_SPREAD","Spreader (everyone draws 2)","D",true],
+  ["SKIP","Skip","S",true],["SKIP_DOUBLE","Double skip","S",true],
+  ["REVERSE","Reverse","R",true],["REVERSE_SKIP","Reverse skip","R",true],
+  ["REVERSE_BACKSTAB","Backstab (player before draws 2)","R",true],["REVERSE_SWAP","Swap hands, then reverse","R",true],
+  ["CLONE","Clone (copies the top card)","2",false],
+  ["WILD","Wild","",true],["WILD_DRAW","Wild draw (penalty needs code)","",false],
+];
+const WILD_VALUES = ["WILD","WILD_DRAW"];
+const STANDARD_REPLACEABLE = ["ZERO","ONE","TWO","THREE","FOUR","FIVE","SIX","SEVEN","EIGHT","NINE","DRAW","SKIP","REVERSE","WILD"];
+const STD_SUFFIX = { DRAW:"D", SKIP:"S", REVERSE:"R" };
+const DENSITIES = [
+  ["drawable-mdpi", 52, 80], ["drawable-hdpi", 77, 120], ["drawable-xhdpi", 103, 160],
+  ["drawable-xlarge-mdpi", 77, 120], ["drawable-xlarge-hdpi", 103, 160],
+];
+
+// ---------- starter designs ----------
+const base = {
+  color: "RED", corner: "7", shape: "square", shapeScale: 100, dither: 40, edgeWear: 75, border: false,
+  center: "7", centerColor: "auto", centerSize: 51, title: "", caption: "", font: "Source Sans 3:900",
+  titleSize: 14, flipCaption: false, art: null, artScale: 100, artX: 0, artY: 0, artBehind: false, baseImg: null,
+  existing: false, name: "", value: "SEVEN", points: 7, help: "", enumName: "", legacyId: 194, deck: "extended",
+  enumAuto: true, idAuto: true,
+};
+function preset(o) { return Object.assign({}, base, o); }
+const STARTERS = [
+  preset({ id: "ex-lucky", color: "RED", corner: "7", center: "7", title: "Lucky", caption: "Seven", font: "Archivo Black",
+    name: "Lucky Seven", value: "SEVEN", points: 77,
+    help: "Plays like a normal red 7, but it is worth 77 points to whoever is stuck holding it at the end of the hand.",
+    example: true }),
+  ...["RED","GREEN","BLUE","YELLOW"].map(c => preset({ id: "v3-backstab-" + c, color: c, corner: "R", center: "R", shape: "square",
+    title: "Backstab", caption: "+2 behind", name: "Backstab", value: "REVERSE_BACKSTAB", points: 20, existing: true,
+    enumName: c + "_R_BACKSTAB", enumAuto: false, help: "" })),
+  ...["GREEN","YELLOW"].map(c => preset({ id: "v3-clone-" + c, color: c, corner: "2", center: "2", shape: "circle",
+    title: "Clone", caption: "Clone", flipCaption: true, name: "Clone", value: "CLONE", points: 20, existing: true,
+    enumName: c + "_2_CLONE", enumAuto: false })),
+  ...["GREEN","YELLOW"].map(c => preset({ id: "v3-swap-" + c, color: c, corner: "R", center: "⇄", shape: "oval",
+    title: "Swap", caption: "Hands", name: "Swap", value: "REVERSE_SWAP", points: 20, existing: true,
+    enumName: c + "_R_SWAP", enumAuto: false })),
+];
+const EXISTING_FILES = {
+  RED_R_BACKSTAB: "card_red_r_backstab", GREEN_R_BACKSTAB: "card_green_r_backstab", BLUE_R_BACKSTAB: "card_blue_r_backstab",
+  YELLOW_R_BACKSTAB: "card_yellow_r_backstab", GREEN_2_CLONE: "card_green_2_clone", YELLOW_2_CLONE: "card_yellow_2_clone",
+  GREEN_R_SWAP: "card_green_r_swap", YELLOW_R_SWAP: "card_yellow_r_swap",
+};
+
+// ---------- storage (per-browser convenience) ----------
+const KEY = "hd-card-workshop-v1";
+function loadLib() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const v = JSON.parse(raw); if (Array.isArray(v.cards) && v.cards.length) return v; } } catch (e) {}
+  return { cards: STARTERS.map(c => ({ ...c })), current: STARTERS[0].id };
+}
+function saveLib() { try { localStorage.setItem(KEY, JSON.stringify(lib)); } catch (e) { setStatus("Couldn't save to this browser (storage full or blocked). Use “All my cards .zip” to keep a copy."); } }
+let lib = loadLib();
+let cur = lib.cards.find(c => c.id === lib.current) || lib.cards[0];
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+function slug(s) { return (s || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""); }
+function valueInfo(v) { return VALUES.find(x => x[0] === v) || VALUES[0]; }
+function autoEnum(d) {
+  const tok = valueInfo(d.value)[2];
+  const parts = [d.color]; if (tok) parts.push(tok);
+  const s = slug(d.name).toUpperCase(); if (s) parts.push(s);
+  return parts.join("_");
+}
+function enumOf(d) { return d.enumAuto ? autoEnum(d) : d.enumName; }
+function fileOf(d) {
+  const e = enumOf(d);
+  if (d.existing && EXISTING_FILES[e]) return EXISTING_FILES[e];
+  return "card_" + e.toLowerCase();
+}
+function nextId(except) {
+  let m = 193;
+  for (const c of lib.cards) if (!c.existing && c !== except && !c.idAuto) m = Math.max(m, +c.legacyId || 0);
+  // auto-ID cards are numbered in library order after any fixed ones
+  let n = m;
+  for (const c of lib.cards) { if (c.existing || !c.idAuto) continue; n++; if (c === except) return n; }
+  return n + 1;
+}
+function idOf(d) { return d.idAuto ? nextId(d) : +d.legacyId; }
+
+// ---------- rendering ----------
+const imgCache = new Map();
+function getImg(src) {
+  if (!src) return null;
+  let e = imgCache.get(src);
+  if (!e) { e = new Image(); e.onload = () => renderAll(); e.src = src; imgCache.set(src, e); }
+  return e.complete && e.naturalWidth ? e : null;
+}
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function rng(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+/** A family may carry a weight after a colon, e.g. "Source Sans 3:900". */
+function fontFace(fam, px, defWeight) {
+  const [name, w] = String(fam).split(":");
+  const weight = w || (["Archivo Black", "Bangers", "Lilita One", "Anton", "Black Ops One", "Pirata One", "Metal Mania"].includes(name) ? 400 : defWeight);
+  return `${weight} ${px}px "${name}", "Myriad Pro", "Segoe UI", Arial, sans-serif`;
+}
+function fontStr(px, fam) { return fontFace(fam, px, fam === "UnifrakturCook" ? 700 : 400); }
+function fitFont(ctx, text, fam, px, maxW) {
+  ctx.font = fontStr(px, fam);
+  const w = ctx.measureText(text).width;
+  if (w > maxW) { px = px * maxW / w; ctx.font = fontStr(px, fam); }
+  return px;
+}
+function outlinedText(ctx, text, x, y, fill, stroke, lw) {
+  ctx.lineJoin = "round"; ctx.miterLimit = 2;
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.strokeText(text, x, y); }
+  ctx.fillStyle = fill; ctx.fillText(text, x, y);
+}
+// Geometry measured from the original 103x160 card scans: the number pill is
+// 66x96 with an 11px radius (rows 31-126), the wild circle about 80x90.
+const SHAPE_CY = { square: 78.5, circle: 83 };
+/** Vertical center of the card's center panel (a design may move it with shapeCY). */
+const centerY = d => d.shapeCY ?? SHAPE_CY[d.shape] ?? 82;
+const CENTER_MAXW = { square: 56, circle: 74, oval: 62, shield: 52 };
+function shapePath(ctx, d, k) {
+  const shape = d.shape, cx = W / 2, cy = centerY(d);
+  ctx.beginPath();
+  if (shape === "square") { const w = (d.shapeW ?? 66) * k, h = (d.shapeH ?? 96) * k; rr(ctx, cx - w / 2, cy - h / 2, w, h, 11 * k); }
+  else if (shape === "oval") { ctx.ellipse(cx, cy, 36 * k, 56 * k, 0.42, 0, Math.PI * 2); }
+  else if (shape === "circle") { ctx.ellipse(cx, cy, (d.shapeW ?? 80) / 2 * k, (d.shapeH ?? 90) / 2 * k, 0, 0, Math.PI * 2); }
+  else if (shape === "shield") {
+    const w = 33 * k, t = cy - 38 * k, b = cy + 42 * k;
+    ctx.moveTo(cx, t); ctx.quadraticCurveTo(cx + w * 0.6, t + 8 * k, cx + w, t + 4 * k);
+    ctx.lineTo(cx + w, cy + 6 * k); ctx.quadraticCurveTo(cx + w, b - 14 * k, cx, b);
+    ctx.quadraticCurveTo(cx - w, b - 14 * k, cx - w, cy + 6 * k); ctx.lineTo(cx - w, t + 4 * k);
+    ctx.quadraticCurveTo(cx - w * 0.6, t + 8 * k, cx, t); ctx.closePath();
+  }
+}
+// Pictures are fitted by their visible outline, not their (uneven) built-in padding.
+const artCache = new Map();
+function artSource(img, tint) {
+  const key = img.src + "|" + (tint || "");
+  let e = artCache.get(key);
+  if (e) return e;
+  const n = 512, c = document.createElement("canvas"); c.width = n; c.height = n;
+  const g = c.getContext("2d");
+  const r = Math.min(n / img.naturalWidth, n / img.naturalHeight);
+  g.drawImage(img, (n - img.naturalWidth * r) / 2, (n - img.naturalHeight * r) / 2, img.naturalWidth * r, img.naturalHeight * r);
+  if (tint) { g.globalCompositeOperation = "source-in"; g.fillStyle = tint; g.fillRect(0, 0, n, n); }
+  const a = g.getImageData(0, 0, n, n).data;
+  let x0 = n, y0 = n, x1 = -1, y1 = -1;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (a[(y * n + x) * 4 + 3] > 24) {
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  e = x1 < 0 ? { c, x: 0, y: 0, w: n, h: n } : { c, x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+  artCache.set(key, e);
+  return e;
+}
+function drawArt(ctx, d) {
+  const img = getImg(d.art); if (!img) return;
+  const s = d.artScale / 100;
+  if (d.artFit) {
+    // fit the visible outline into a box; area-balanced so wide and tall pictures look the same size
+    const src = artSource(img, d.artTint), box = d.artFit * s;
+    const r = Math.min(box * 1.15 / src.w, box * 1.15 / src.h, box / Math.sqrt(src.w * src.h));
+    const w = src.w * r, h = src.h * r;
+    ctx.save();
+    if (d.artShadow) {
+      const t = ctx.getTransform().a;
+      ctx.shadowColor = "rgba(20,18,16,.45)"; ctx.shadowOffsetX = 1.4 * t; ctx.shadowOffsetY = 1.4 * t; ctx.shadowBlur = 0.6 * t;
+    }
+    ctx.drawImage(src.c, src.x, src.y, src.w, src.h, W / 2 - w / 2 + d.artX * 0.6, centerY(d) - h / 2 + d.artY * 0.6, w, h);
+    ctx.restore();
+    return;
+  }
+  const maxW = 70 * s, maxH = 90 * s;
+  const r = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+  const w = img.naturalWidth * r, h = img.naturalHeight * r;
+  ctx.save();
+  if (d.artShadow) {
+    const t = ctx.getTransform().a;   // shadow offsets are in device pixels
+    ctx.shadowColor = "rgba(20,18,16,.45)"; ctx.shadowOffsetX = 1.4 * t; ctx.shadowOffsetY = 1.4 * t; ctx.shadowBlur = 0.6 * t;
+  }
+  ctx.drawImage(img, W / 2 - w / 2 + d.artX * 0.6, centerY(d) - h / 2 + d.artY * 0.6, w, h);
+  ctx.restore();
+}
+function drawCard(ctx, d, pxW, pxH) {
+  const sx = pxW / W, sy = pxH / H;
+  ctx.save();
+  ctx.clearRect(0, 0, pxW, pxH);
+  ctx.scale(sx, sy);
+  ctx.imageSmoothingQuality = "high";
+  const col = COLORS[d.color].hex;
+  rr(ctx, 0.5, 0.5, W - 1, H - 1, 7);
+  ctx.save(); ctx.clip();
+  const baseImg = getImg(d.baseImg);
+  if (baseImg) {
+    ctx.drawImage(baseImg, 0, 0, W, H);
+  } else {
+    if (d.border) { ctx.fillStyle = "#ebe9e3"; ctx.fillRect(0, 0, W, H); rr(ctx, 4.5, 4.5, W - 9, H - 9, 5); }
+    else rr(ctx, 0, 0, W, H, 7);
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, col); g.addColorStop(1, shade(col, -0.12));
+    ctx.fillStyle = g; ctx.fill();
+    // center shape
+    if (d.shape !== "none") {
+      const k = d.shapeScale / 100;
+      ctx.save(); ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowOffsetX = 1.2; ctx.shadowOffsetY = 1.6; ctx.shadowBlur = 1.5;
+      shapePath(ctx, d, k); ctx.fillStyle = d.shapeFill || "#f6f4ef"; ctx.fill(); ctx.restore();
+      if (d.shape === "shield") { shapePath(ctx, d, k * 0.86); ctx.fillStyle = col; ctx.fill(); }
+      if (d.panel === "quad" || d.panel === "ring") {
+        // the four card colors, one per quarter: as a fill ("quad") or as a ring round a white panel
+        const cy = centerY(d), quads = [[0, 0, W / 2, cy], [W / 2, 0, W, cy], [0, cy, W / 2, H], [W / 2, cy, W, H]];
+        const order = [RAINBOW[0], RAINBOW[2], RAINBOW[3], RAINBOW[1]];
+        quads.forEach(([x0, y0, x1, y1], i) => {
+          ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+          shapePath(ctx, d, k);
+          if (d.panel === "quad") { ctx.fillStyle = order[i]; ctx.fill(); }
+          else { ctx.strokeStyle = order[i]; ctx.lineWidth = 3.2; ctx.stroke(); }
+          ctx.restore();
+        });
+      }
+    }
+    if (d.frame === "rainbow") {
+      // a thin four-color frame just inside the card edge
+      const quads = [[0, 0, W / 2, H / 2], [W / 2, 0, W, H / 2], [0, H / 2, W / 2, H], [W / 2, H / 2, W, H]];
+      const order = [RAINBOW[0], RAINBOW[2], RAINBOW[3], RAINBOW[1]];
+      quads.forEach(([x0, y0, x1, y1], i) => {
+        ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+        rr(ctx, 6, 6, W - 12, H - 12, 5); ctx.strokeStyle = order[i]; ctx.lineWidth = 1.8; ctx.stroke();
+        ctx.restore();
+      });
+    }
+  }
+  if (d.artBehind) drawArt(ctx, d);
+  // center text: sized by its measured cap height (51px on the originals), with a plain drop shadow
+  if (d.center) {
+    const onShield = d.shape === "shield" && !baseImg;
+    let fill = d.centerColor;
+    if (fill === "auto") fill = (d.shape === "none" || onShield || baseImg) ? "#ffffff" : (d.color === "WILD" ? "rainbow" : col);
+    drawGlyph(ctx, d.center, d.centerFont || d.glyphFont || "Source Sans 3", d.centerSize, (CENTER_MAXW[d.shape] || 80) * (d.shape === "circle" && d.shapeW ? d.shapeW / 80 : 1) * (d.shape === "none" ? 1 : d.shapeScale / 100),
+      { cx: W / 2, cy: centerY(d) + 2 }, fill, 1.6, d.mash69);
+  }
+  if (!d.artBehind) drawArt(ctx, d);
+  // title & caption
+  ctx.textAlign = "center";
+  if (d.title) {
+    // A "\n" in the title gives two lines; the upper one stays clear of the corner index.
+    const lines = String(d.title).split("\n").slice(0, 2);
+    const two = lines.length > 1, size = two ? d.titleSize * 0.9 : d.titleSize;
+    // lay the lines out bottom-up, then push them all down if any would touch the corner index
+    let y = d.titleY ?? (two ? 39 : 33 + size * 0.3);
+    const placed = [];
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const px = fitFont(ctx, lines[i], d.font, size, two && i === 0 ? 72 : 86);
+      const m = ctx.measureText(lines[i]);
+      placed.unshift({ text: lines[i], px, y, left: W / 2 - m.width / 2 - 1.5, top: y - m.actualBoundingBoxAscent - 1.5 });
+      y -= size * 0.98;
+    }
+    const cornerRight = d.corner ? (d.cornerX ?? 9) + cornerInkWidth(ctx, d) + 9 : 0, cornerBottom = (d.cornerY ?? 11) + (d.cornerSize ?? 14) + 3;
+    let shift = 0;
+    for (const l of placed) if (l.left < cornerRight && l.top < cornerBottom) shift = Math.max(shift, cornerBottom - l.top);
+    // titleColor "fire": yellow-to-orange letters with a red outline, like the original Hot Death card;
+    // mirrorTitle repeats the title upside down at the bottom, as that card does.
+    const drawTitle = (ctx) => {
+      for (const l of placed) {
+        ctx.font = fontStr(l.px, d.font);
+        const yy = l.y + shift;
+        let fill = d.titleColor || "#ffffff";
+        if (fill === "fire") {
+          fill = ctx.createLinearGradient(0, yy - l.px * 0.75, 0, yy);
+          fill.addColorStop(0, "#fff36b"); fill.addColorStop(0.55, "#ffc81e"); fill.addColorStop(1, "#ff8a00");
+          outlinedText(ctx, l.text, W / 2 + 0.9, yy + 0.9, "rgba(20,10,5,.8)", "rgba(20,10,5,.8)", Math.max(2.2, l.px * 0.26));
+        }
+        outlinedText(ctx, l.text, W / 2, yy, fill, d.titleStroke || "#1d1b1a", Math.max(1.6, l.px * 0.2));
+      }
+    };
+    // titleDither: draw the title on its own layer and dither it hard, for printed-and-worn lettering
+    const target = d.titleDither ? (() => {
+      const L = document.createElement("canvas"); L.width = ctx.canvas.width; L.height = ctx.canvas.height;
+      const g = L.getContext("2d"); g.setTransform(ctx.getTransform()); g.textAlign = "center"; return g;
+    })() : ctx;
+    drawTitle(target);
+    if (d.mirrorTitle) { target.save(); target.translate(W, H); target.rotate(Math.PI); drawTitle(target); target.restore(); }
+    if (target !== ctx) {
+      ditherCanvas(target, target.canvas.width, target.canvas.height, d.titleDither / 100, hashStr((d.id || "x") + "/title"));
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(target.canvas, 0, 0); ctx.restore();
+    }
+  }
+  if (d.caption) {
+    const px = fitFont(ctx, d.caption, d.font, d.titleSize, 72);
+    ctx.save();
+    if (d.flipCaption) { ctx.translate(W / 2, 139); ctx.rotate(Math.PI); ctx.translate(-W / 2, -139); }
+    // baseline kept above the bottom corner index (which starts at y 135)
+    const cy = d.flipCaption ? 139 + px * 0.3 : (d.captionY ?? 131), lw = Math.max(1.6, px * 0.2);
+    if (d.captionColor === "rainbow") {
+      const chars = [...d.caption], widths = chars.map(c => ctx.measureText(c).width);
+      let x = W / 2 - widths.reduce((a, b) => a + b, 0) / 2;
+      ctx.textAlign = "left";
+      const edge = d.color === "WILD" ? "#f6f4ef" : "#1d1b1a";
+      chars.forEach((c, i) => { outlinedText(ctx, c, x, cy, RAINBOW[i % 4], edge, d.color === "WILD" ? lw * 0.7 : lw); x += widths[i]; });
+      ctx.textAlign = "center";
+    } else outlinedText(ctx, d.caption, W / 2, cy, d.captionColor || "#ffffff", "#1d1b1a", lw);
+    ctx.restore();
+  }
+  // corner indices: 14px cap height at (9, 11), like the originals; mirrored bottom-right
+  if (d.corner) {
+    const fam = d.glyphFont || "Source Sans 3";
+    drawGlyph(ctx, d.corner, fam, d.mash69 ? 19 : (d.cornerSize ?? 14), 44, { left: d.cornerX ?? 9, top: d.cornerY ?? 11 }, d.cornerColor || "#ffffff", 1.1, d.mash69);
+    ctx.save(); ctx.translate(W, H); ctx.rotate(Math.PI);
+    drawGlyph(ctx, d.corner, fam, d.mash69 ? 19 : (d.cornerSize ?? 14), 44, { left: d.cornerX ?? 9, top: d.cornerY ?? 11 }, d.cornerColor || "#ffffff", 1.1, d.mash69);
+    ctx.restore();
+  }
+  ctx.restore();
+  rr(ctx, 0.5, 0.5, W - 1, H - 1, 7); ctx.strokeStyle = "rgba(0,0,0,.28)"; ctx.lineWidth = 0.8; ctx.stroke();
+  ctx.restore();
+  const strength = (d.dither ?? 40) / 100;
+  if (strength > 0 && !baseImg) ditherCanvas(ctx, pxW, pxH, strength, hashStr(d.id || "x"));
+  const wear = (d.edgeWear ?? 60) / 100;
+  if (wear > 0 && !baseImg) wearEdges(ctx, pxW, pxH, wear, hashStr((d.id || "x") + "/edge"));
+}
+/*
+ * Played-deck edges, measured from the original scans: the outer 1-3px are
+ * washed out toward a pale grey and partly see-through (alpha ~210-245), the
+ * rounded corners more so (~120-140). Seeded noise makes the wear uneven,
+ * with the odd deeper scuff, and is laid out in card units so every density
+ * gets the same pattern.
+ */
+function wearEdges(ctx, pxW, pxH, strength, seed) {
+  const img = ctx.getImageData(0, 0, pxW, pxH), px = img.data;
+  const sx = pxW / W, sy = pxH / H, R = 7;
+  // value noise on a grid of `cell` card units
+  const lattice = (cell, salt) => {
+    const gw = Math.ceil(W / cell) + 2, gh = Math.ceil(H / cell) + 2, r = rng(seed ^ salt), g = new Float32Array(gw * gh);
+    for (let i = 0; i < g.length; i++) g[i] = r();
+    return (u, v) => {
+      const x = u / cell, y = v / cell, x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
+      const a = g[y0 * gw + x0], b = g[y0 * gw + x0 + 1], c = g[(y0 + 1) * gw + x0], e = g[(y0 + 1) * gw + x0 + 1];
+      const sfx = fx * fx * (3 - 2 * fx), sfy = fy * fy * (3 - 2 * fy);
+      return (a * (1 - sfx) + b * sfx) * (1 - sfy) + (c * (1 - sfx) + e * sfx) * sfy;
+    };
+  };
+  const coarse = lattice(6, 0x51ed), fine = lattice(1.3, 0x2a7b), scuff = lattice(14, 0x9e37);
+  const band = 1.5 + 3.5 * strength;                 // how far in the wear reaches, in card units
+  for (let y = 0; y < pxH; y++) {
+    const v = (y + 0.5) / sy;
+    for (let x = 0; x < pxW; x++) {
+      const i = (y * pxW + x) * 4; if (px[i + 3] === 0) continue;
+      const u = (x + 0.5) / sx;
+      // distance inside the rounded card outline
+      const qx = Math.max(R - u, u - (W - R), 0), qy = Math.max(R - v, v - (H - R), 0);
+      const inCorner = qx > 0 && qy > 0;
+      const dist = inCorner ? R - Math.hypot(qx, qy) : Math.min(u, W - u, v, H - v);
+      if (dist > band + 5) continue;
+      // uneven reach: wobble along the edge plus occasional deeper scuffs
+      const reach = band * (0.55 + 0.7 * coarse(u, v)) + (scuff(u, v) > 0.78 ? 2.2 * strength : 0);
+      // pale specks where the ink has rubbed off, thinning out away from the edge
+      const speck = fine(u * 1.7 + 31, v * 1.7 + 17) > 0.8 - 0.25 * strength * Math.max(0, 1 - dist / (reach * 2.2));
+      let w = 1 - dist / reach;
+      if (speck) w = Math.max(w, 0.55);
+      if (w <= 0) continue;
+      w = Math.min(1, w * w * (0.75 + 0.5 * fine(u, v)) + (inCorner ? 0.25 * strength : 0));
+      // wash toward a pale, slightly warm grey and let some of the table show through
+      const fade = w * (0.45 + 0.45 * strength);
+      px[i] += (214 - px[i]) * fade; px[i + 1] += (208 - px[i + 1]) * fade; px[i + 2] += (200 - px[i + 2]) * fade;
+      px[i + 3] *= 1 - w * (0.12 + 0.38 * strength) - (inCorner ? 0.12 * strength : 0);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+/*
+ * Scan-style dithering, like the original card PNGs (scanned, then reduced
+ * to a 128-color palette). Adds faint seeded grain, then quantizes each
+ * channel with Floyd–Steinberg error diffusion. Works on blocks of `cell`
+ * pixels so the large preview shows the same texture as a 103x160 export.
+ */
+function ditherCanvas(ctx, pxW, pxH, strength, seed) {
+  const cell = Math.max(1, Math.round(pxW / 206));
+  const cw = Math.ceil(pxW / cell), ch = Math.ceil(pxH / cell);
+  const img = ctx.getImageData(0, 0, pxW, pxH), px = img.data;
+  const levels = Math.round(40 - 30 * strength);          // 40 → 10 levels per channel
+  const step = 255 / (levels - 1);
+  const grain = 10 * strength;                             // ± grain amplitude
+  const rand = rng(seed);
+  // average each cell into a working buffer
+  const buf = new Float32Array(cw * ch * 3), alpha = new Uint8Array(cw * ch);
+  for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+    let r = 0, g = 0, b = 0, a = 0, n = 0;
+    for (let y = cy * cell; y < Math.min(pxH, (cy + 1) * cell); y++)
+      for (let x = cx * cell; x < Math.min(pxW, (cx + 1) * cell); x++) {
+        const i = (y * pxW + x) * 4; r += px[i]; g += px[i + 1]; b += px[i + 2]; a += px[i + 3]; n++;
+      }
+    const k = cy * cw + cx, noise = (rand() - 0.5) * 2 * grain;
+    buf[k * 3] = r / n + noise; buf[k * 3 + 1] = g / n + noise; buf[k * 3 + 2] = b / n + noise;
+    alpha[k] = a / n > 160 ? 1 : 0;
+  }
+  const spread = (k, e, f) => { buf[k] += e * f; };
+  for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++) {
+    const k = cy * cw + cx; if (!alpha[k]) continue;
+    for (let c = 0; c < 3; c++) {
+      const o = buf[k * 3 + c], q = Math.max(0, Math.min(255, Math.round(o / step) * step)), e = o - q;
+      buf[k * 3 + c] = q;
+      if (cx + 1 < cw && alpha[k + 1]) spread((k + 1) * 3 + c, e, 7 / 16);
+      if (cy + 1 < ch) {
+        if (cx > 0 && alpha[k + cw - 1]) spread((k + cw - 1) * 3 + c, e, 3 / 16);
+        if (alpha[k + cw]) spread((k + cw) * 3 + c, e, 5 / 16);
+        if (cx + 1 < cw && alpha[k + cw + 1]) spread((k + cw + 1) * 3 + c, e, 1 / 16);
+      }
+    }
+  }
+  for (let y = 0; y < pxH; y++) for (let x = 0; x < pxW; x++) {
+    const k = Math.floor(y / cell) * cw + Math.floor(x / cell); if (!alpha[k]) continue;
+    const i = (y * pxW + x) * 4;
+    px[i] = buf[k * 3]; px[i + 1] = buf[k * 3 + 1]; px[i + 2] = buf[k * 3 + 2];
+  }
+  ctx.putImageData(img, 0, 0);
+}
+/** Width of the corner index as drawGlyph will draw it (14px cap height, at most 44 wide). */
+function cornerInkWidth(ctx, d) {
+  const fam = d.glyphFont || "Source Sans 3";
+  ctx.save(); ctx.font = fontFace(fam, 100, 700);
+  const m = ctx.measureText(d.corner); ctx.restore();
+  const ink = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+  return Math.min(44, ink * (d.cornerSize ?? 14) / ((m.actualBoundingBoxAscent + Math.max(0, m.actualBoundingBoxDescent)) || 70));
+}
+/** Draws text scaled so its ink is `capH` tall (shrunk to fit `maxW`), with a drop shadow. */
+function drawGlyph(ctx, text, fam, capH, maxW, at, fill, shadow, mash) {
+  if (mash && text === "69") return drawMashed69(ctx, fam, capH, at, fill, shadow);
+  ctx.save();
+  ctx.font = fontFace(fam, 100, 700);
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  const chars = [...text], widths = chars.map(c => ctx.measureText(c).width);
+  const m = ctx.measureText(text);
+  const asc = m.actualBoundingBoxAscent, desc = Math.max(0, m.actualBoundingBoxDescent);
+  const inkW = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+  let k = capH / (asc + desc || 70);
+  if (inkW * k > maxW) k = maxW / inkW;
+  const total = widths.reduce((a, b) => a + b, 0);
+  let x0, base;
+  if (at.left !== undefined) { x0 = at.left + m.actualBoundingBoxLeft * k; base = at.top + asc * k; }
+  else { x0 = at.cx - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) * k / 2; base = at.cy + (asc - desc) * k / 2; }
+  ctx.translate(x0, base); ctx.scale(k, k);
+  const off = shadow / k;
+  let x = 0;
+  chars.forEach((c, i) => {
+    const color = fill === "rainbow" ? RAINBOW[i % 4] : fill;
+    ctx.fillStyle = "rgba(29,27,26,.85)"; ctx.fillText(c, x + off, off);
+    if (fill === "rainbow") { ctx.strokeStyle = "#1d1b1a"; ctx.lineWidth = 2.4 / k; ctx.lineJoin = "round"; ctx.strokeText(c, x, 0); }
+    ctx.fillStyle = color; ctx.fillText(c, x, 0);
+    x += widths[i];
+  });
+  ctx.restore();
+}
+/**
+ * The 69 card's glyph, as on the original card: a 6 and a 9 sharing one bowl,
+ * so it has the 6's hook on top and the 9's tail below.
+ */
+function drawMashed69(ctx, fam, capH, at, fill, shadow) {
+  ctx.save();
+  ctx.font = fontFace(fam, 100, 700);
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  const m6 = ctx.measureText("6"), asc = m6.actualBoundingBoxAscent;
+  const off = asc * 0.49;                 // how far the 9 drops so the bowls line up
+  const k = capH / (asc + off), wide = 1.25;   // the original's merged digit is wider than a plain one
+  const cx = at.left !== undefined ? at.left + (m6.actualBoundingBoxLeft + m6.actualBoundingBoxRight) * k / 2 : at.cx;
+  const base = at.left !== undefined ? at.top + asc * k : at.cy - (asc + off) * k / 2 + asc * k;
+  ctx.translate(cx, base); ctx.scale(k * wide, k);
+  const o = shadow / k;
+  ctx.fillStyle = "rgba(29,27,26,.85)"; ctx.fillText("6", o, o); ctx.fillText("9", o, off + o);
+  ctx.fillStyle = fill; ctx.fillText("6", 0, 0); ctx.fillText("9", 0, off);
+  ctx.restore();
+}
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const f = c => Math.max(0, Math.min(255, Math.round(c + c * amt)));
+  return "#" + ((1 << 24) | (f(r) << 16) | (f(g) << 8) | f(b)).toString(16).slice(1);
+}
+function renderTo(d, w, h, dpr = 1) {
+  const c = document.createElement("canvas"); c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+  drawCard(c.getContext("2d"), d, c.width, c.height); return c;
+}
+
+// ---------- UI ----------
+const fields = ["corner","shape","shapeScale","dither","edgeWear","border","center","centerColor","centerSize","title","caption","font","titleSize","flipCaption",
+  "artScale","artX","artY","artBehind","existing","name","value","points","help","enumName","legacyId","deck"];
+function buildColorSwatches() {
+  const box = $("colors"); box.innerHTML = "";
+  for (const [k, v] of Object.entries(COLORS)) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "sw"; b.style.background = v.hex;
+    b.title = v.label; b.setAttribute("aria-label", v.label); b.dataset.c = k;
+    b.addEventListener("click", () => { update({ color: k }); });
+    box.appendChild(b);
+  }
+}
+function fillValueOptions() {
+  const sel = $("value"); const wild = cur.color === "WILD"; sel.innerHTML = "";
+  for (const [v, label] of VALUES) {
+    if (wild !== WILD_VALUES.includes(v)) continue;
+    const o = document.createElement("option"); o.value = v; o.textContent = label; sel.appendChild(o);
+  }
+  if (![...sel.options].some(o => o.value === cur.value)) cur.value = sel.options[0].value;
+  sel.value = cur.value;
+}
+function syncForm() {
+  for (const k of fields) {
+    const el = $(k); if (!el) continue;
+    if (el.type === "checkbox") el.checked = !!cur[k]; else el.value = cur[k] ?? "";
+  }
+  $("enumName").value = enumOf(cur);
+  $("legacyId").value = cur.existing ? "" : idOf(cur);
+  for (const b of $("colors").children) b.setAttribute("aria-pressed", String(b.dataset.c === cur.color));
+  fillValueOptions();
+  const ex = cur.existing;
+  for (const id of ["value","points","help","legacyId","deck","name"]) $(id).disabled = ex;
+  $("enumName").disabled = false;
+  $("deck").querySelector('option[value="replace"]').disabled = !STANDARD_REPLACEABLE.includes(cur.value);
+  if (!STANDARD_REPLACEABLE.includes(cur.value) && cur.deck === "replace") { cur.deck = "extended"; $("deck").value = "extended"; }
+  const vi = valueInfo(cur.value);
+  const vh = $("valueHint");
+  if (ex) { vh.className = "hint"; vh.textContent = "Art only: the game already knows how this card plays. The code below just points it at your new picture."; }
+  else if (vi[3]) { vh.className = "hint ok"; vh.textContent = "Works without new engine code: the game already knows how to play this."; }
+  else { vh.className = "hint warn"; vh.textContent = "Needs a few lines in Game.kt to do anything special; step 5 below shows where."; }
+}
+function readForm(e) {
+  const el = e.target; const k = el.id; if (!fields.includes(k)) return;
+  let v = el.type === "checkbox" ? el.checked : el.value;
+  if (el.type === "range" || el.type === "number") v = v === "" ? "" : +v;
+  const patch = { [k]: v };
+  if (k === "enumName") { patch.enumName = String(v).toUpperCase().replace(/[^A-Z0-9_]/g, "_"); patch.enumAuto = false; }
+  if (k === "legacyId") patch.idAuto = false;
+  update(patch, k === "enumName" || k === "legacyId" ? false : true);
+}
+function update(patch, resync = true) {
+  Object.assign(cur, patch);
+  if (patch.color === "WILD" && !WILD_VALUES.includes(cur.value)) { cur.value = "WILD"; cur.corner = ""; }
+  if (patch.color && patch.color !== "WILD" && WILD_VALUES.includes(cur.value)) cur.value = "SEVEN";
+  if (resync) syncForm();
+  else { if (patch.enumName !== undefined) {} }
+  saveLib(); renderAll();
+}
+
+// ---------- library ----------
+function renderLibrary() {
+  const nav = $("library"); nav.innerHTML = "";
+  for (const c of lib.cards) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "lib-item" + (c === cur ? " on" : "");
+    const cv = renderTo(c, 52, 80, 2); b.appendChild(cv);
+    const tag = document.createElement("span"); tag.className = "tag";
+    tag.textContent = c.existing ? "needs art" : (c.example ? "example" : "new");
+    if (!c.existing && !c.example) tag.style.color = "var(--ok)";
+    const s = document.createElement("small"); s.textContent = (c.existing ? COLORS[c.color].label + " " : "") + (c.name || enumOf(c));
+    b.append(tag, s);
+    b.addEventListener("click", () => { cur = c; lib.current = c.id; saveLib(); syncForm(); renderAll(); });
+    nav.appendChild(b);
+  }
+  const act = document.createElement("div"); act.className = "lib-actions";
+  const mk = (t, fn, cls = "btn small") => { const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = t; b.addEventListener("click", fn); return b; };
+  act.append(
+    mk("+ New card", () => addCard(preset({ id: uid(), name: "", corner: "5", center: "5", value: "FIVE", points: 5, color: "BLUE" })), "btn small primary"),
+    mk("Duplicate", () => addCard({ ...JSON.parse(JSON.stringify(cur)), id: uid(), existing: false, example: false, enumAuto: true, idAuto: true, name: (cur.name || "Card") + " copy" })),
+    delBtn(),
+    importBtn(),
+  );
+  nav.appendChild(act);
+}
+let delArmed = false;
+function delBtn() {
+  const b = document.createElement("button"); b.type = "button"; b.className = "btn small ghost";
+  b.textContent = delArmed ? "Tap again to delete" : "Delete";
+  b.addEventListener("click", () => {
+    if (!delArmed) { delArmed = true; renderLibrary(); setTimeout(() => { delArmed = false; renderLibrary(); }, 3000); return; }
+    delArmed = false;
+    const i = lib.cards.indexOf(cur); lib.cards.splice(i, 1);
+    if (!lib.cards.length) lib.cards.push(preset({ id: uid() }));
+    cur = lib.cards[Math.max(0, i - 1)]; lib.current = cur.id; saveLib(); syncForm(); renderAll();
+  });
+  return b;
+}
+function importBtn() {
+  const l = document.createElement("label"); l.className = "btn small ghost"; l.textContent = "Import designs";
+  const i = document.createElement("input"); i.type = "file"; i.accept = ".json,application/json"; i.hidden = true;
+  i.addEventListener("change", async () => {
+    const f = i.files[0]; if (!f) return;
+    try {
+      const data = JSON.parse(await f.text()); const arr = Array.isArray(data) ? data : data.cards;
+      if (!Array.isArray(arr)) throw new Error("no cards");
+      for (const c of arr) lib.cards.push(Object.assign({}, base, c, { id: uid() }));
+      cur = lib.cards[lib.cards.length - 1]; lib.current = cur.id; saveLib(); syncForm(); renderAll();
+      setStatus(`Imported ${arr.length} design${arr.length === 1 ? "" : "s"}.`);
+    } catch (e) { setStatus("That file isn't a card-designs JSON. Use the designs.json from an “All my cards” zip."); }
+    i.value = "";
+  });
+  l.appendChild(i); return l;
+}
+function uid() { return "c" + Math.random().toString(36).slice(2, 9); }
+function addCard(c) { lib.cards.push(c); cur = c; lib.current = c.id; saveLib(); syncForm(); renderAll(); }
+
+// ---------- previews ----------
+function renderAll() {
+  const big = $("big"); drawCard(big.getContext("2d"), cur, big.width, big.height);
+  const sizes = $("sizes"); sizes.innerHTML = "";
+  const dpr = window.devicePixelRatio || 1;
+  for (const [label, w, h] of [["phone · mdpi", 52, 80], ["phone · hdpi", 77, 120], ["tablet · xhdpi", 103, 160]]) {
+    const f = document.createElement("figure");
+    const cv = renderTo(cur, w, h, 1); // exact export pixels
+    cv.style.width = w + "px"; cv.style.height = h + "px"; cv.style.imageRendering = "auto";
+    const fc = document.createElement("figcaption"); fc.textContent = `${label} ${w}×${h}`;
+    f.append(cv, fc); sizes.appendChild(f);
+  }
+  const hand = $("hand"); hand.innerHTML = "";
+  const neighbors = [
+    preset({ id: "n1", color: "GREEN", corner: "4", center: "4" }),
+    preset({ id: "n2", color: "BLUE", corner: "9", center: "9" }),
+    cur,
+    preset({ id: "n3", color: "YELLOW", corner: "S", center: "S", title: "", caption: "" }),
+    preset({ id: "n4", color: "WILD", corner: "", center: "Wild", centerColor: "rainbow", shape: "oval", centerSize: 30 }),
+  ];
+  const width = hand.clientWidth || 360; const step = Math.min(58, (width - 90) / 4); const start = (width - (step * 4 + 77)) / 2;
+  neighbors.forEach((d, i) => {
+    const cv = renderTo(d, 77, 120, Math.min(dpr, 2));
+    cv.style.left = (start + i * step) + "px";
+    cv.style.transform = `rotate(${(i - 2) * 7}deg) translateY(${d === cur ? -18 : Math.abs(i - 2) * 4}px)`;
+    cv.style.zIndex = d === cur ? 5 : i;
+    hand.appendChild(cv);
+  });
+  renderLibrary();
+  renderCode();
+}
+
+// ---------- code generation ----------
+function xmlEscape(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+function htmlEscape(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+function snippets(d) {
+  const E = enumOf(d), file = fileOf(d), key = file.replace(/^card_/, "");
+  const out = [];
+  out.push({ t: "Copy the pictures into the app", where: "app/src/main/res/",
+    p: "Unzip the drawables .zip inside app/src/main. It holds one PNG per screen density, already named and sized.",
+    code: `unzip -o ${file}.zip -d app/src/main` });
+  if (d.existing) {
+    out.push({ t: "Point the card at its new picture", where: "CardText.kt · fun drawable()",
+      p: `Take ${E} off the “No artwork yet” line (the one that returns R.drawable.card_back) and add:`,
+      code: `\t\tCardType.${E} -> R.drawable.${file}` });
+    return out;
+  }
+  const std = d.value === "WILD" ? "WILD" : `${d.color}_${(STD_SUFFIX[d.value] || valueInfo(d.value)[2])}`;
+  out.push({ t: "Add the card type", where: "engine/Types.kt · enum class CardType",
+    p: "Add this after the last card (YELLOW_R_SWAP), and move the semicolon from that line to the end of this one.",
+    code: `\t${E}(CardColor.${d.color}, CardValue.${d.value}, ${+d.points || 0}, ${idOf(d)});` });
+  if (d.deck === "extended") out.push({ t: "Put it in the deck", where: "engine/Cards.kt · EXTENDED_CARDS",
+    p: "Add it to the list of extra cards dealt into the Extended deck.", code: `\t\t\tCardType.${E},` });
+  else if (d.deck === "replace") out.push({ t: "Put it in the deck", where: "engine/Cards.kt · HD_CARDS",
+    p: `Swaps one plain ${std.replace(/_/g, " ").toLowerCase()} for your card in the Standard, Half and Hybrid decks.`,
+    code: `\t\t\tHdRow(CardType.${std}, 1, CardType.${E}),` });
+  out.push({ t: "Name, picture and help text", where: "CardText.kt",
+    p: "One line in each of the three when blocks: specialName(), drawable() and help(). drawable() has no else branch, so the app won't compile until this line is in.",
+    code: `// in specialName()\n\t\tCardType.${E} -> R.string.cardname_${key}\n\n// in drawable()\n\t\tCardType.${E} -> R.drawable.${file}\n\n// in help(), above the else\n\t\tCardType.${E} -> R.string.cardhelp_${key}` });
+  out.push({ t: "Words players see", where: "res/values/strings.xml",
+    p: "Paste next to the other cardname_ and cardhelp_ strings.",
+    code: `\t<string name="cardname_${key}">${xmlEscape(d.name || E)}</string>\n\t<string name="cardhelp_${key}">${xmlEscape((d.help || "").trim() || (d.name || E))} Value: ${+d.points || 0} points</string>` });
+  if (!valueInfo(d.value)[3]) out.push({ t: "Teach the engine its special move", where: "engine/Game.kt",
+    p: d.value === "CLONE"
+      ? "Clone is matched by card type, not value. Add your card next to the existing Clones in handleOtherSpecialCards()."
+      : "Wild draws give their penalty by card type. Add a branch in handleWildCards() with the number of cards to draw.",
+    code: d.value === "CLONE"
+      ? `\t\t\tCardType.GREEN_2_CLONE, CardType.YELLOW_2_CLONE, CardType.${E} -> {`
+      : `\t\t\tCardType.${E} -> {\n\t\t\t\tpenalty.addCards(curr, 6, generator, if (virtualPlayer) currPlayer else getNextPlayer())\n\t\t\t\tchanged()\n\t\t\t}` });
+  return out;
+}
+function renderCode() {
+  const list = snippets(cur); const box = $("steps"); box.innerHTML = "";
+  const st = $("codeStatus");
+  st.innerHTML = cur.existing ? '<span class="pill ok">art only</span>' : (valueInfo(cur.value)[3] ? '<span class="pill ok">no engine code needed</span>' : '<span class="pill warn">needs engine code</span>');
+  list.forEach((s, i) => {
+    const div = document.createElement("div"); div.className = "step";
+    div.innerHTML = `<h4><span>${i + 1}. ${htmlEscape(s.t)} <code>${htmlEscape(s.where)}</code></span></h4><p>${htmlEscape(s.p)}</p>`;
+    const pre = document.createElement("pre"); pre.className = "code"; pre.textContent = s.code.replace(/\t/g, "    ");
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn small"; btn.textContent = "Copy";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(s.code); btn.textContent = "Copied"; }
+      catch (e) { const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Selected – press Ctrl+C"; }
+      setTimeout(() => btn.textContent = "Copy", 1800);
+    });
+    div.querySelector("h4").appendChild(btn); div.appendChild(pre); box.appendChild(div);
+  });
+}
+function snippetsText(d) {
+  return `${d.name || enumOf(d)} (${enumOf(d)})\n${"=".repeat(40)}\n\n` +
+    snippets(d).map((s, i) => `${i + 1}. ${s.t}  [${s.where}]\n${s.p}\n\n${s.code}\n`).join("\n");
+}
+
+// ---------- zip (stored, no compression) ----------
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(); const parts = []; const central = []; let off = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name); const data = typeof f.data === "string" ? enc.encode(f.data) : f.data; const crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true);
+    lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+    ch.setUint16(10, 0, true); ch.setUint16(12, 0, true); ch.setUint16(14, 0x21, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+function canvasBytes(cv) { return new Promise(res => cv.toBlob(b => b.arrayBuffer().then(a => res(new Uint8Array(a))), "image/png")); }
+async function drawableFiles(d, prefix = "") {
+  const file = fileOf(d); const out = [];
+  for (const [dir, w, h] of DENSITIES) out.push({ name: `${prefix}res/${dir}/${file}.png`, data: await canvasBytes(renderTo(d, w, h)) });
+  return out;
+}
+
+// ---------- saving files ----------
+let downloadsApi; const dlReady = (async () => { try { downloadsApi = window.claude?.use ? await window.claude.use("downloads") : null; } catch (e) { downloadsApi = null; } })();
+function setStatus(t) { $("status").textContent = t; }
+async function offer(filename, blob) {
+  if (downloadsApi === undefined) await Promise.race([dlReady, new Promise(r => setTimeout(r, 1500))]);
+  if (downloadsApi) {
+    try { await downloadsApi.save({ filename, data: blob }); setStatus(`Saved ${filename}.`); }
+    catch (e) {
+      const c = e && e.code;
+      setStatus(c === "declined" ? "Download cancelled." : c === "rate_limited" ? "Another download prompt is open. Finish that one first." : c === "host_unavailable" ? "This app can't save files. Open the page in a browser to download." : "Couldn't save the file here. Open the page in a browser to download.");
+    }
+    return;
+  }
+  const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  setStatus(`Downloaded ${filename}.`);
+}
+$("dlZip").addEventListener("click", async () => {
+  setStatus("Building zip…");
+  const files = await drawableFiles(cur);
+  files.push({ name: `${fileOf(cur)}-code.txt`, data: snippetsText(cur) });
+  files.push({ name: `${fileOf(cur)}-design.json`, data: JSON.stringify([cur], null, 2) });
+  await offer(`${fileOf(cur)}.zip`, makeZip(files));
+});
+$("dlPng").addEventListener("click", async () => {
+  const cv = renderTo(cur, W * 6, H * 6);
+  const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+  await offer(`${fileOf(cur)}-large.png`, blob);
+});
+$("dlAll").addEventListener("click", async () => {
+  setStatus("Building zip…");
+  let files = [];
+  for (const d of lib.cards) {
+    if (d.example) continue;
+    files = files.concat(await drawableFiles(d));
+  }
+  const notes = lib.cards.filter(d => !d.example).map(snippetsText).join("\n\n");
+  files.push({ name: "code-for-all-cards.txt", data: notes || "No cards yet." });
+  files.push({ name: "designs.json", data: JSON.stringify({ cards: lib.cards }, null, 2) });
+  await offer("hotdeath-custom-cards.zip", makeZip(files));
+});
+
+// ---------- image uploads ----------
+function readImage(file, maxSide) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const r = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL("image/png"));
+      };
+      img.onerror = () => rej(new Error("not an image")); img.src = fr.result;
+    };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+$("artFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { update({ art: await readImage(f, 480) }); } catch (err) { setStatus("That file couldn't be opened as a picture. Try a PNG or JPG."); }
+});
+$("artClear").addEventListener("click", () => { $("artFile").value = ""; update({ art: null }); });
+$("baseFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { update({ baseImg: await readImage(f, 618) }); } catch (err) { setStatus("That file couldn't be opened as a picture. Try a PNG or JPG."); }
+});
+$("baseClear").addEventListener("click", () => { $("baseFile").value = ""; update({ baseImg: null }); });
+
+// ---------- boot ----------
+document.querySelector(".bench").addEventListener("input", readForm);
+document.querySelector(".bench").addEventListener("change", e => { if (e.target.tagName === "SELECT" || e.target.type === "checkbox") readForm(e); });
+$("enumName").addEventListener("blur", () => { if (!$("enumName").value.trim()) update({ enumAuto: true }); });
+$("legacyId").addEventListener("blur", () => { if (!$("legacyId").value) update({ idAuto: true }); });
+addEventListener("resize", () => renderAll());
+// Scripting hook: lets a build script render cards with exactly the same drawing code.
+window.cardWorkshop = {
+  W, H, DENSITIES, defaults: base,
+  preload: src => new Promise((res, rej) => { const i = getImg(src); if (i) return res(); const e = imgCache.get(src); e.addEventListener("load", () => res(), { once: true }); e.addEventListener("error", rej, { once: true }); }),
+  pngDataUrl: (design, w, h) => renderTo(Object.assign({}, base, design), w, h).toDataURL("image/png"),
+};
+buildColorSwatches(); syncForm(); renderAll();
+if (document.fonts) {
+  Promise.all(["Source Sans 3","Archivo Narrow","Archivo Black","UnifrakturCook","Bangers","Anton","Lilita One"].map(f => document.fonts.load(`${f === "UnifrakturCook" || f === "Archivo Narrow" || f === "Source Sans 3" ? "700 " : ""}40px "${f}"`).catch(() => {}))).then(() => renderAll());
+}
+})();
+</script>
+
+</body>
+</html>
