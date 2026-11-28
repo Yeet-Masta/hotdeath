@@ -146,3 +146,9 @@ without a card of the current color, and you may play the card you draw.
 `CardText.drawable` looks for a drawable named `card_<type key>` (for example
 `card_red_4_death`). Until one exists, the base card's art is shown with the
 special's name drawn across it.
+
+Every card in the deck has its own drawable, drawn by the Card Workshop
+(no white border; the card's name on top, a game-icons.net picture in the
+middle and its category at the bottom; wild cards say "Wild"). The older
+scanned drawables are still in the project but no longer shown, because
+`card_<type key>` wins over them. Picture credits: `docs/ARTWORK_CREDITS.md`.
