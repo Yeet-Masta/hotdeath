@@ -320,4 +320,7 @@
 	<string name="stats_favourite_none">Favourite card: none yet</string>
 	<string name="stats_reset">Reset</string>
 	<string name="stats_reset_confirm">Reset all statistics? This can\'t be undone.</string>
+	<string name="rules_play_title">How to play</string>
+	<string name="rules_cards_title">The cards</string>
+	<string name="rules_cards_intro">Every card in the deck chosen in Settings. Long-press a card in a game to read this again.</string>
 </resources>

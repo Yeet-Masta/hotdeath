@@ -532,11 +532,20 @@ class GameTable(context: Context) : View(context) {
 
 		val tl = handLayout(p, true, min(table.size - tableOffset[i], maxCards), sp)
 		tableRect[i] = tl.rect
-		layCards(canvas, table, tOff, tl, now, mine = false)
-
 		val hl = handLayout(p, false, min(held.size - heldOffset[i], maxCards), sp)
 		heldRect[i] = if (mine && p == Seat.SOUTH) RectF(hl.rect).apply { top -= cardH / 8 } else hl.rect
-		layCards(canvas, held, hOff, hl, now, mine, if (mine) view?.legal ?: emptyList() else emptyList())
+		val raised = if (mine) view?.legal ?: emptyList() else emptyList()
+
+		// Face-up table cards lie in front of the hand, toward the middle of the
+		// table, so they go on top of it. Only your own hand stays on top of your
+		// table cards, so you can read your cards.
+		if (p == Seat.SOUTH) {
+			layCards(canvas, table, tOff, tl, now, mine = false)
+			layCards(canvas, held, hOff, hl, now, mine, raised)
+		} else {
+			layCards(canvas, held, hOff, hl, now, mine, raised)
+			layCards(canvas, table, tOff, tl, now, mine = false)
+		}
 
 		drawCountBadge(canvas, tOff, ptTableOffsetBadge[i])
 		drawCountBadge(canvas, hOff, ptHeldOffsetBadge[i])
@@ -718,6 +727,7 @@ class GameTable(context: Context) : View(context) {
 		touchTablePos = null
 
 		for (p in TOUCH_ORDER) {
+			if (p != Seat.SOUTH && tableRect[p.index]?.contains(x, y) == true) { touchTablePos = p; break }
 			if (heldRect[p.index]?.contains(x, y) == true) {
 				// The lift strip of your hand overlaps your table cards.
 				if (tableRect[p.index]?.contains(x, y) == true && y < heldRect[p.index]!!.top + cardH / 8 &&
@@ -832,6 +842,8 @@ class GameTable(context: Context) : View(context) {
 			val idx = clamp((along / sp).toInt(), 0, showing - 1)
 			return ids.getOrNull(idx + start)
 		}
+		// Other players' table cards are drawn over their hands.
+		if (p != Seat.SOUTH) return pick(tableRect[i], pv.table, tableOffset[i]) ?: pick(heldRect[i], pv.held, heldOffset[i])
 		val held = pick(heldRect[i], pv.held, heldOffset[i])
 		// The strip above your hand only belongs to a card that is raised there.
 		val inLiftStrip = heldRect[i]?.let { pt.y < it.top + cardH / 8 } == true && p == Seat.SOUTH

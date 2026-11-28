@@ -24,9 +24,7 @@ class Main : AppCompatActivity() {
 		findViewById<View>(R.id.btn_multiplayer).setOnClickListener { startActivity(Intent(this, MultiplayerActivity::class.java)) }
 		findViewById<View>(R.id.btn_settings).setOnClickListener { startActivity(Intent(this, Prefs::class.java)) }
 		findViewById<View>(R.id.btn_stats).setOnClickListener { showStats() }
-		findViewById<View>(R.id.btn_help).setOnClickListener {
-			showTextDialog(R.layout.dlg_help, R.string.dlg_help_title, getString(R.string.dlg_help_text))
-		}
+		findViewById<View>(R.id.btn_help).setOnClickListener { startActivity(Intent(this, RulesActivity::class.java)) }
 		findViewById<View>(R.id.btn_about).setOnClickListener {
 			showTextDialog(R.layout.dlg_about, R.string.dlg_about_title, getString(R.string.dlg_about_text, versionName()))
 		}
